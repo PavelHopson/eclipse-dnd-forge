@@ -1,48 +1,125 @@
-# Visual Story-Writing: Writing by Manipulating Visual Representations
-<img src="demo.gif">
+<div align="center">
 
-## [Online Demo](https://damienmasson.com/VisualStoryWriting) / [How to build](#how-to-build-and-run) / [Publication](#publication)
+# ⚔️ Eclipse DnD Forge
 
-This system automatically **visualizes** a story (chronological events, character and their actions and movements) and allows users to **edit** the story by manipulating these visual representations. For example:
-- Hover over the timeline allows reviewing the chronology of events and visualizing the movements of the characters
-- Connecting two characters suggests edits to the text to reflect the new interaction
-- Moving a character suggests edits to the text to reflect the new position
-- Reordering the events in the timeline suggests edits to the text to reflect the new chronology
+### AI-powered D&D Campaign Manager
 
-The system relies on a GPT-4o to extract the information from the text and suggest edits.
+**Визуальная карта мира · Таймлайн сессий · AI Dungeon Master · Генератор квестов и NPC**
 
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
+[![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-## How to build and run
-The code is written in TypeScript and uses React and Vite. To build and run the code, you will need to have Node.js installed on your machine. You can download it [here](https://nodejs.org/en/download/).
-First install the dependencies:
+> **Статус:** 🏗️ В разработке — форк [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting), адаптируется под D&D
+
+</div>
+
+---
+
+## Что это
+
+Eclipse DnD Forge — инструмент для мастеров D&D и писателей фэнтези. Основан на Visual Story-Writing (интерактивный AI-генератор рассказов с картой мира), адаптированный под настольные ролевые игры.
+
+**Ядро (от VisualStoryWriting):**
+- Интерактивная карта мира — перетаскивай персонажей, AI адаптирует нарратив
+- Таймлайн событий — хронология кампании, переупорядочивание влияет на сюжет
+- AI-редактор — соединяешь персонажей → AI предлагает сцену взаимодействия
+- Rich text editor (Slate) с markdown поддержкой
+
+**D&D адаптация (в разработке):**
+- 🎲 Расы, классы, монстры из SRD 5.1 (Open Gaming License)
+- 🗺️ Генератор подземелий и карт локаций
+- 🧙 AI Dungeon Master — генерирует квесты, NPC, энкаунтеры
+- ⚔️ Трекер инициативы и боевых сцен
+- 📋 Листы персонажей (Character Sheets)
+- 🎭 Генератор NPC с личностью, мотивацией и квестами
+- 🏰 Шаблоны локаций (таверна, подземелье, лес, город)
+- 🎵 Атмосферные пресеты (описания обстановки для разных сцен)
+
+---
+
+## Стек
+
+| Технология | Роль |
+|-----------|------|
+| React 18 + TypeScript | UI компоненты |
+| Vite | Сборка |
+| Tailwind CSS | Стилизация |
+| @xyflow/react | Интерактивные графы (карта мира) |
+| Slate | Rich text editor |
+| Zustand | Стейт-менеджмент |
+| d3-force | Физика расположения на карте |
+| OpenAI API | AI Dungeon Master |
+| react-d3-tree | Дерево сюжетных веток |
+
+---
+
+## Быстрый старт
+
 ```bash
+git clone https://github.com/PavelHopson/eclipse-dnd-forge.git
+cd eclipse-dnd-forge
 npm install
-```
-Then build the code:
-```bash
 npm run dev
 ```
 
+Открыть http://localhost:5173 и ввести OpenAI API ключ.
 
-## How to use?
-After entering your OpenAI API key, you can test Visual Story-Writing using the shortcuts or you can run the studies.
-Note that the system was tested and developped for recent versions of **Google Chrome** or **Mozilla Firefox**.
+---
 
+## Roadmap
 
-## How to get an OpenAI API key?
-Because Visual Story-Writing relies on the OpenAI API, you will need a key to make it work. You will need an account properly configured, see [here](https://platform.openai.com/account/api-keys) for more info.
-Your key is never stored and the application runs locally and sends requests to the OpenAI API only.
+### v0.1 — Адаптация VisualStoryWriting под D&D
+- [ ] Ребрендинг UI (фэнтези тема, иконки, цветовая схема)
+- [ ] D&D терминология в интерфейсе (персонажи → герои/NPC, события → сессии)
+- [ ] Шаблоны стартовых кампаний (Lost Mine of Phandelver, Curse of Strahd стиль)
+- [ ] Мультипровайдерный AI (Gemini, Claude, Ollama — как в CryptoPulse)
 
+### v0.2 — D&D Core
+- [ ] Генератор NPC (раса, класс, характер, мотивация, квестовые зацепки)
+- [ ] Генератор случайных энкаунтеров по CR (Challenge Rating)
+- [ ] Библиотека монстров (SRD 5.1)
+- [ ] Dice roller (d4, d6, d8, d10, d12, d20, d100)
+- [ ] Трекер инициативы
 
-## Can I try without an API key?
-The systen depends on the OpenAI API to work. If you enter an incorrect key, you will still be able to go through the study but executing prompts will yield an error.
+### v0.3 — Карты и подземелья
+- [ ] Процедурный генератор подземелий (dungeon crawl)
+- [ ] Hex-карта мира с биомами
+- [ ] Точки интереса (POI) на карте с описаниями
+- [ ] Fog of War для игроков
 
+### v0.4 — Кампания и сессии
+- [ ] Session notes — заметки по каждой сессии
+- [ ] Таймлайн кампании с ключевыми событиями
+- [ ] Character sheets (STR, DEX, CON, INT, WIS, CHA)
+- [ ] Inventory и loot tracker
+- [ ] Экспорт кампании в PDF/Markdown
 
-## Where are the video tutorials?
-From the launcher, you can start the studies to see the exact ordering and video tutorials participants went through.
-Alternatively, you can go in the ``public/videos`` to review all the video tutorials.
+### v1.0 — Полноценный DM Tool
+- [ ] Мультиплеер (игроки видят свою карту, DM видит всё)
+- [ ] AI DM mode — полностью автономный Dungeon Master
+- [ ] Импорт/экспорт кампаний (D&D Beyond, Roll20 формат)
+- [ ] Звуковые эффекты и амбиент для сцен
 
-## Publication
-Coming soon!
+---
 
-You can also find the paper on [arXiv](https://arxiv.org/abs/2410.07486)
+## Вдохновение
+
+- [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting) — ядро проекта (MIT)
+- [D&D 5.1 SRD](https://www.dndbeyond.com/sources/srd) — Open Gaming License
+- [donjon](https://donjon.bin.sh/) — генераторы для D&D
+- [Dungeon Scrawl](https://dungeonscrawl.com/) — редактор карт подземелий
+
+---
+
+## Лицензия
+
+[MIT](LICENSE) — форк [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting) (MIT)
+
+---
+
+<div align="center">
+<sub>Eclipse Forge · Сделано для мастеров подземелий</sub>
+</div>
