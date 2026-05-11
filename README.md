@@ -71,6 +71,12 @@ npm run dev
 
 ## Roadmap
 
+### R&D adopted — May 2026
+- [ ] Обновить prompt layer под GPT-5.5: меньше шаблонного шума, сильнее output contract для сцен, NPC и квестов
+- [ ] Добавить дешёвые/быстрые режимы генерации для NPC, summary и scene variants через compression profiles
+- [ ] Подготовить asset pipeline для портретов, карт и карточек локаций: upscale / cleanup / reuse старых артов
+- [ ] Исследовать presentation layer для NPC и DM: portrait/video avatar, voiced encounters, story briefings
+
 ### v0.1 — Адаптация VisualStoryWriting под D&D
 - [ ] Ребрендинг UI (фэнтези тема, иконки, цветовая схема)
 - [ ] D&D терминология в интерфейсе (персонажи → герои/NPC, события → сессии)
@@ -89,13 +95,17 @@ npm run dev
 - [ ] Hex-карта мира с биомами
 - [ ] Точки интереса (POI) на карте с описаниями
 - [ ] Fog of War для игроков
+- [ ] Temporal world states: древняя/разрушенная/текущая версия локации (inspired by WenWare)
+- [ ] Upscale pipeline для карт, портретов NPC и handout-артов
 - [ ] 3D-сцены из скетчей через [VIGA](https://github.com/Fugtemypt123/VIGA) — фото/скетч подземелья → 3D Blender сцена
+- [ ] R&D: blockout сцен и хабов через Unity AI / AI-assisted scene generation
 
 ### v0.4 — Кампания и сессии
 - [ ] Session notes — заметки по каждой сессии
 - [ ] Таймлайн кампании с ключевыми событиями
 - [ ] Character sheets (STR, DEX, CON, INT, WIS, CHA)
 - [ ] Inventory и loot tracker
+- [ ] NPC presentation cards: portrait, voice profile, hooks, secrets, quest ties
 - [ ] Экспорт кампании в PDF/Markdown
 
 ### v1.0 — Полноценный DM Tool
@@ -103,6 +113,7 @@ npm run dev
 - [ ] AI DM mode — полностью автономный Dungeon Master
 - [ ] Импорт/экспорт кампаний (D&D Beyond, Roll20 формат)
 - [ ] Звуковые эффекты и амбиент для сцен
+- [ ] Cinematic briefings: talking NPC / session opener / recap mode
 
 ---
 
