@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Статус:** 🏗️ В разработке — форк [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting), адаптируется под D&D
+> **Статус:** 🏗️ Early access — форк [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting), адаптируется под D&D. Launcher, domain model и extractor-промпты уже переведены в D&D-плоскость. Roadmap ниже отражает реальное состояние, не маркетинг.
 
 </div>
 
@@ -78,10 +78,14 @@ npm run dev
 - [ ] Исследовать presentation layer для NPC и DM: portrait/video avatar, voiced encounters, story briefings
 
 ### v0.1 — Адаптация VisualStoryWriting под D&D
-- [ ] Ребрендинг UI (фэнтези тема, иконки, цветовая схема)
-- [ ] D&D терминология в интерфейсе (персонажи → герои/NPC, события → сессии)
-- [ ] Шаблоны стартовых кампаний (Lost Mine of Phandelver, Curse of Strahd стиль)
+- [x] Ребрендинг UI (фэнтези заголовок, иконки `GiCrossedSwords`/`GiCastle`, тёплая палитра)
+- [x] D&D терминология в интерфейсе (Heroes & NPCs / Realms & Locations, kind-бейджи на entity-нодах, danger-ring на локациях)
+- [x] Domain model расширена — `Entity.kind/role/abilities/hp/ac/cr`, `Location.kind/biome/danger`
+- [x] D&D-vocabulary в `EntitiesExtractor` и `LocationsExtractor` (структурированный JSON под D&D)
+- [x] Шаблоны стартовых кампаний — Phandalin / Barovia / Cinder Hollow / Blank Campaign
 - [ ] Мультипровайдерный AI (Gemini, Claude, Ollama — как в CryptoPulse)
+- [ ] Sessions/Encounters как отдельный first-class слой (сейчас action edges всё ещё generic narrative actions)
+- [ ] Скрыть/архивировать HCI study-роуты, оставшиеся от VisualStoryWriting
 
 ### v0.2 — D&D Core
 - [ ] Генератор NPC (раса, класс, характер, мотивация, квестовые зацепки)

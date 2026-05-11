@@ -40,6 +40,29 @@ eclipse-dnd-forge/
 - Slate editor for rich text story editing
 - Zustand for global state management
 
+## D&D Domain Model (current)
+
+Entities and locations carry optional D&D-flavoured fields on top of the original visual primitives:
+
+- `Entity.kind`: `hero | npc | monster | faction | unknown`
+- `Entity.role`: short archetype string ("Half-elf Ranger", "Vampire Lord")
+- `Entity.abilities`: optional `{str, dex, con, int, wis, cha}` block
+- `Entity.hp / ac / cr`: optional combat stats
+- `Location.kind`: `dungeon | town | wild | plane | stronghold | unknown`
+- `Location.biome`: short descriptor
+- `Location.danger`: 1-10 threat scale, drives the colored ring around the location node
+
+The `EntitiesExtractor` and `LocationExtractor` prompts now classify entities/locations in D&D vocabulary and return these fields. The original `properties` array remains intact (Slate sliders still wired to it via `ChangePropertyPrompt`).
+
+## Campaign Launcher
+
+`src/model/dnd/campaignTemplates.ts` seeds three concrete starters (Phandalin / Barovia / Cinder Hollow) + a Blank Campaign. Each template provides text + pre-built entity & location nodes. The Launcher view is brand-consistent ("Eclipse DnD Forge") and is the entry point — the old HCI study routes (`/study`, `/baseline`) are still wired in `App.tsx` but no longer surfaced on the Launcher.
+
+## What is still legacy
+
+- `src/study/` — HCI research study scaffolding from VisualStoryWriting, kept for completeness but not part of the D&D product surface
+- Action edges still represent generic narrative actions; "scene beats" / "encounters" / "session timeline" semantics live only in naming, not yet in the model
+
 ## D&D Context
 
 - SRD 5.1 content (Open Gaming License) is the baseline

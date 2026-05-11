@@ -28,8 +28,12 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
       return 0;
     } else if (field instanceof z.ZodBoolean) {
       return false;
+    } else if (field instanceof z.ZodEnum) {
+      // First enum option is the safe fallback during streaming (later overwritten by real value)
+      const opts = (field as any).options || (field as any)._def?.values;
+      return Array.isArray(opts) && opts.length > 0 ? opts[0] : null;
     } else {
-      // Default fallback for other types (e.g., ZodUnion, ZodEnum)
+      // Default fallback for other types (e.g., ZodUnion)
       return null;
     }
   };

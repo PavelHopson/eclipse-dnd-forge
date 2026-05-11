@@ -3,9 +3,17 @@ import { useCallback, useEffect } from 'react';
 
 import { Slider } from '@nextui-org/react';
 import '@xyflow/react/dist/style.css';
-import { Entity, EntityNode, useModelStore } from '../../model/Model';
+import { Entity, EntityKind, EntityNode, useModelStore } from '../../model/Model';
 import { ChangePropertyPrompt } from '../../model/prompts/textEditors/ChangePropertyPrompt';
 import { RemoveEntityPrompt } from '../../model/prompts/textEditors/RemoveEntityPrompt';
+
+const KIND_STYLE: Record<EntityKind, { label: string; bg: string; fg: string }> = {
+  hero: { label: 'Hero', bg: '#1e3a8a', fg: '#dbeafe' },
+  npc: { label: 'NPC', bg: '#854d0e', fg: '#fef3c7' },
+  monster: { label: 'Monster', bg: '#7f1d1d', fg: '#fecaca' },
+  faction: { label: 'Faction', bg: '#3f3f46', fg: '#e4e4e7' },
+  unknown: { label: '—', bg: '#e5e7eb', fg: '#374151' },
+};
 
 
 export function CreateEntityNode(entity: Entity, index: number): EntityNode {
@@ -118,7 +126,28 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 10, background: 'rgb(243 244 246)', width: 40, height: 40, borderRadius: 99999 }}>
           {props.data.emoji}
         </div>
-        <span style={{ fontWeight: 800 }}>{props.data.name} </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+          <span style={{ fontWeight: 800, lineHeight: 1.1 }}>{props.data.name}</span>
+          {props.data.kind && props.data.kind !== 'unknown' && (
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                padding: '1px 6px',
+                borderRadius: 999,
+                background: KIND_STYLE[props.data.kind].bg,
+                color: KIND_STYLE[props.data.kind].fg,
+                letterSpacing: 0.3,
+                textTransform: 'uppercase',
+              }}
+            >
+              {KIND_STYLE[props.data.kind].label}
+            </span>
+          )}
+          {props.data.role && (
+            <span style={{ fontSize: 10, color: '#6b7280', lineHeight: 1.1 }}>{props.data.role}</span>
+          )}
+        </div>
       </div>
 
       {!isReadOnly && isSelected && <div style={{position: 'absolute', zIndex: 99999, border: '1px solid #e5e7eb', width: '100%', top: '100%', left: 0, background: 'white', padding: 10, borderRadius: 5, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px'}}>

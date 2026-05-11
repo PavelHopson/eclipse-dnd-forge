@@ -5,14 +5,10 @@ import { Descendant, Node as SlateNode } from 'slate';
 import { create } from 'zustand';
 import { shallow } from 'zustand/shallow';
 import { useStudyStore } from '../study/StudyModel';
-import { dataTextD } from '../study/data/TextD';
 import { globalEditor } from '../view/TextEditor';
 import { useHistoryModelStore } from './HistoryModel';
 import { SlateUtils } from './SlateUtils';
 import { TextActionMatch, TextUtils } from './TextUtils';
-import { extractedEntitiesToNodeEntities } from './prompts/textExtractors/EntitiesExtractor';
-import { extractedLocationsToNodeLocations } from './prompts/textExtractors/LocationsExtractor';
-import { extractedActionsToEdgeActions } from './prompts/textExtractors/SentenceActionsExtractor';
 
 const hashSplitted = window.location.hash.split("?");
 const search = hashSplitted[hashSplitted.length-1]
@@ -40,10 +36,27 @@ export interface EntityProperty {
     value: number
 }
 
+export type EntityKind = "hero" | "npc" | "monster" | "faction" | "unknown";
+
+export interface AbilityScores {
+    str?: number
+    dex?: number
+    con?: number
+    int?: number
+    wis?: number
+    cha?: number
+}
+
 export type Entity = {
     name: string
     emoji: string
     properties: EntityProperty[]
+    kind?: EntityKind
+    role?: string
+    abilities?: AbilityScores
+    hp?: number
+    ac?: number
+    cr?: number
 }
 export type EntityNode = Node<Entity>;
 
@@ -55,22 +68,27 @@ export type Action = {
 }
 export type ActionEdge = Edge<Action>;
 
+export type LocationKind = "dungeon" | "town" | "wild" | "plane" | "stronghold" | "unknown";
+
 export type Location = {
     name: string
     emoji: string
+    kind?: LocationKind
+    biome?: string
+    danger?: number
 }
 export type LocationNode = Node<Location>;
 
-const hardcodedText = `Anna sat on the beach, watching the waves crash against the shore. The wind blew her hair around, but she didn’t mind. She loved the sound of the ocean. It helped her forget her worries, at least for a little while. She had been thinking about her brother, David, who lived far away. They hadn’t spoken in weeks, and she missed him.
+const hardcodedText = `Session 1 — The Stonefang Pass
 
-David was in the city, sitting at his desk, staring at his computer. He was tired from a long day of work. His job was stressful, and he often felt lonely in the big, noisy city. He wanted to call Anna, but he was afraid she might be too busy. He knew she was going through a tough time, and he didn’t want to add to her troubles.
+The party arrived at the gates of Phandalin just before dusk. Thalia, a half-elf ranger, scouted the treeline while Bren, a dwarven cleric of Moradin, addressed the worried townsfolk gathered at the Stonehill Inn. Mira, a tiefling rogue, slipped into the market crowd to listen for rumors about the missing caravan.
 
-Meanwhile, their friend Emma was in the mountains, hiking up a trail. She loved the peacefulness of nature. The trees were tall, and the air was fresh. As she reached the top of the hill, she thought about Anna and David. They used to do everything together, but now they were all in different places. She hoped they could reunite soon, even if just for a little while.`
+In the Stonehill common room, the innkeeper Toblen told them that goblin raiders had been seen near the Triboar Trail. A merchant named Linan Swift offered fifty gold pieces for the rescue of his guard captain, Sildar, who had been taken alive into Cragmaw Hideout — a cave warren somewhere in the Neverwinter Wood.
 
-const hardcodedData = dataTextD
+At first light the party rode north. Two miles up the trail they found a dead horse pierced by black-fletched arrows. Thalia spotted goblin tracks leading off into the undergrowth. Mira readied her shortbow. Bren raised the symbol of Moradin and whispered a prayer for the road ahead.`
 
-/** 
- * Model 
+/**
+ * Model
  **/
 export interface ModelState {
     entityNodes: EntityNode[];
@@ -124,24 +142,20 @@ function getInitialState() {
         },
     ]
 
-    const text = SlateUtils.stateToText(initialTextState);;
-    const entityNodes = extractedEntitiesToNodeEntities(hardcodedData);
-    const locationNodes = extractedLocationsToNodeLocations(hardcodedData);
-    const actionEdges = hardcodedData.actions.map(h => extractedActionsToEdgeActions({actions: [h]}, h.passage, entityNodes)).flat();
+    const text = SlateUtils.stateToText(initialTextState);
 
-    
     const initialState: ModelState = {
-        entityNodes: entityNodes,
-        actionEdges: actionEdges,
-        locationNodes: locationNodes,
+        entityNodes: [],
+        actionEdges: [],
+        locationNodes: [],
         suggestModeUntilTimestamp: 0,
         selectedNodes: [],
         selectedEdges: [],
-        isStale: false,
+        isStale: true,
         highlightedActionsSegment: null,
         filteredActionsSegment: null,
         highlightedEntities: [],
-        textActionMatches: TextUtils.matchActionsToText(actionEdges.map((edge) => edge.data!), text),
+        textActionMatches: [],
         textState: initialTextState,
         text: text,
         isReadOnly: false
