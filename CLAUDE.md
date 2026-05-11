@@ -58,6 +58,10 @@ The `EntitiesExtractor` and `LocationExtractor` prompts now classify entities/lo
 
 `src/model/dnd/campaignTemplates.ts` seeds three concrete starters (Phandalin / Barovia / Cinder Hollow) + a Blank Campaign. Each template provides text + pre-built entity & location nodes. The Launcher view is brand-consistent ("Eclipse DnD Forge") and is the entry point — the old HCI study routes (`/study`, `/baseline`) are still wired in `App.tsx` but no longer surfaced on the Launcher.
 
+## Roadmap
+
+Single source of truth: [`ROADMAP.md`](ROADMAP.md). Done / active / next / backlog. Update it on every shipped slice (tick the box, move under Done with commit SHA, promote one item from Next into Active, bump the date).
+
 ## What is still legacy
 
 - `src/study/` — HCI research study scaffolding from VisualStoryWriting, kept for completeness but not part of the D&D product surface

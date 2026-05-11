@@ -71,53 +71,12 @@ npm run dev
 
 ## Roadmap
 
-### R&D adopted — May 2026
-- [ ] Обновить prompt layer под GPT-5.5: меньше шаблонного шума, сильнее output contract для сцен, NPC и квестов
-- [ ] Добавить дешёвые/быстрые режимы генерации для NPC, summary и scene variants через compression profiles
-- [ ] Подготовить asset pipeline для портретов, карт и карточек локаций: upscale / cleanup / reuse старых артов
-- [ ] Исследовать presentation layer для NPC и DM: portrait/video avatar, voiced encounters, story briefings
+The full roadmap lives in **[`ROADMAP.md`](ROADMAP.md)** — done / active / next / backlog, updated on every shipped slice. Short version:
 
-### v0.1 — Адаптация VisualStoryWriting под D&D
-- [x] Ребрендинг UI (фэнтези заголовок, иконки `GiCrossedSwords`/`GiCastle`, тёплая палитра)
-- [x] D&D терминология в интерфейсе (Heroes & NPCs / Realms & Locations, kind-бейджи на entity-нодах, danger-ring на локациях)
-- [x] Domain model расширена — `Entity.kind/role/abilities/hp/ac/cr`, `Location.kind/biome/danger`
-- [x] D&D-vocabulary в `EntitiesExtractor` и `LocationsExtractor` (структурированный JSON под D&D)
-- [x] Шаблоны стартовых кампаний — Phandalin / Barovia / Cinder Hollow / Blank Campaign
-- [ ] Мультипровайдерный AI (Gemini, Claude, Ollama — как в CryptoPulse)
-- [ ] Sessions/Encounters как отдельный first-class слой (сейчас action edges всё ещё generic narrative actions)
-- [ ] Скрыть/архивировать HCI study-роуты, оставшиеся от VisualStoryWriting
-
-### v0.2 — D&D Core
-- [ ] Генератор NPC (раса, класс, характер, мотивация, квестовые зацепки)
-- [ ] Генератор случайных энкаунтеров по CR (Challenge Rating)
-- [ ] Библиотека монстров (SRD 5.1)
-- [ ] Dice roller (d4, d6, d8, d10, d12, d20, d100)
-- [ ] Трекер инициативы
-
-### v0.3 — Карты и подземелья
-- [ ] Процедурный генератор подземелий (dungeon crawl)
-- [ ] Hex-карта мира с биомами
-- [ ] Точки интереса (POI) на карте с описаниями
-- [ ] Fog of War для игроков
-- [ ] Temporal world states: древняя/разрушенная/текущая версия локации (inspired by WenWare)
-- [ ] Upscale pipeline для карт, портретов NPC и handout-артов
-- [ ] 3D-сцены из скетчей через [VIGA](https://github.com/Fugtemypt123/VIGA) — фото/скетч подземелья → 3D Blender сцена
-- [ ] R&D: blockout сцен и хабов через Unity AI / AI-assisted scene generation
-
-### v0.4 — Кампания и сессии
-- [ ] Session notes — заметки по каждой сессии
-- [ ] Таймлайн кампании с ключевыми событиями
-- [ ] Character sheets (STR, DEX, CON, INT, WIS, CHA)
-- [ ] Inventory и loot tracker
-- [ ] NPC presentation cards: portrait, voice profile, hooks, secrets, quest ties
-- [ ] Экспорт кампании в PDF/Markdown
-
-### v1.0 — Полноценный DM Tool
-- [ ] Мультиплеер (игроки видят свою карту, DM видит всё)
-- [ ] AI DM mode — полностью автономный Dungeon Master
-- [ ] Импорт/экспорт кампаний (D&D Beyond, Roll20 формат)
-- [ ] Звуковые эффекты и амбиент для сцен
-- [ ] Cinematic briefings: talking NPC / session opener / recap mode
+- ✅ **v0.1 slice 1** — D&D rebrand of the entry point: Campaign Launcher, domain model (kind/role/abilities/hp/ac/cr · biome/danger), extractor prompts in D&D vocabulary, fantasy UI.
+- 🚧 **v0.2 slice 1 — NPC Generator** (active): one-click full 5e NPC with stat block + scene hook, dropped onto the visual graph.
+- 🎯 Next: Encounter Generator · inline dice roller · initiative tracker · multi-provider AI · Sessions as a first-class layer.
+- 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, AI DM mode, cinematic NPC briefings.
 
 ---
 
