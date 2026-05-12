@@ -2,6 +2,7 @@ import { Button, Textarea, Tooltip } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
 import { GiBroom, GiChatBubble, GiScrollQuill } from "react-icons/gi";
 import { IoClose, IoSend } from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
 import { Entity, EntityKind, useModelStore } from "../../model/Model";
 import { runNpcDialogue } from "../../model/agents/NpcAgent";
 import { appendNpcQuoteToSession } from "../../model/agents/sessionInjector";
@@ -190,11 +191,16 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                                 color: isAssistant ? "#2a1a1a" : "#fdf6e3",
                                 fontSize: 12,
                                 lineHeight: 1.45,
-                                whiteSpace: "pre-wrap",
                                 wordBreak: "break-word",
                             }}
                         >
-                            {m.content || (isAssistant && streaming ? "…" : "")}
+                            {m.content
+                                ? (
+                                    <div className="agent-md">
+                                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                                    </div>
+                                )
+                                : (isAssistant && streaming ? "…" : "")}
                             {isAssistant && m.content && (
                                 <div style={{ marginTop: 4, display: "flex", justifyContent: "flex-end" }}>
                                     <Tooltip content={`Quote ${entity.name} into the session text`} closeDelay={0}>

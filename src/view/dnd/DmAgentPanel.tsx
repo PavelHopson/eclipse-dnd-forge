@@ -2,6 +2,7 @@ import { Button, Textarea, Tooltip } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
 import { GiBroom, GiCrown, GiScrollQuill } from "react-icons/gi";
 import { IoClose, IoSend } from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
 import { DM_AGENT_ID, runDmTurn } from "../../model/agents/DmAgent";
 import { appendParagraphToSession } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
@@ -136,11 +137,16 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                                 color: isAssistant ? "#2a1a1a" : "#fdf6e3",
                                 fontSize: 12.5,
                                 lineHeight: 1.5,
-                                whiteSpace: "pre-wrap",
                                 wordBreak: "break-word",
                             }}
                         >
-                            {m.content || (isAssistant && streaming ? "…" : "")}
+                            {m.content
+                                ? (
+                                    <div className="agent-md">
+                                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                                    </div>
+                                )
+                                : (isAssistant && streaming ? "…" : "")}
                             {isAssistant && m.content && (
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
                                     <Tooltip content="Insert this narration as a new paragraph in the session text" closeDelay={0}>
