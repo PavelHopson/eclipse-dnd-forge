@@ -28,10 +28,12 @@ export interface AiStreamResult {
     text: string;
 }
 
-export type AiProviderId = "openai" | "ollama";
+/** User-facing provider choices. The fallback wrapper has its own internal id. */
+export type AiProviderId = "openai" | "ollama" | "anthropic";
 
 export interface AiProvider {
-    readonly id: AiProviderId;
+    /** Stable identifier — one of `AiProviderId` for real providers, or `"fallback"` for the chain wrapper. */
+    readonly id: AiProviderId | "fallback";
     readonly displayName: string;
     /** Stream a chat completion. Each delta is also forwarded through `options.onPartial`. */
     streamChat(messages: AiMessage[], options?: AiStreamOptions): Promise<AiStreamResult>;

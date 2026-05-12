@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-12** (Multi-provider AI shipped — OpenAI + Ollama under unified AiProvider interface). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
+Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-provider; provider story complete). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -83,6 +83,15 @@ Last update: **2026-05-12** (Multi-provider AI shipped — OpenAI + Ollama under
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 6 — Anthropic provider + Fallback chain 🔀⛓️
+*Shipped 2026-05-12. Provider story completes — three real providers + a graceful degradation path.*
+
+- [x] **`src/model/ai/AnthropicProvider.ts`** — Claude over `POST /v1/messages` with `stream: true`. Splits system prompt out-of-band (Anthropic API shape). Parses SSE `data: {...}` lines, consumes `content_block_delta` text deltas, surfaces inline `error` events. Browser-direct calls use the `anthropic-dangerous-direct-browser-access` opt-in header (local prototype only).
+- [x] **`src/model/ai/FallbackProvider.ts`** — wraps an ordered list of providers. Tries each in turn; on error logs and moves to the next. Resets the visible partial to `""` between providers so the chat bubble doesn't show a broken fragment glued to the next reply. Aggregates errors and throws if all fail.
+- [x] **`useAiConfigStore` v2** — adds `anthropicApiKey`, `anthropicModel`, `useFallback`. Storage key bumped to `eclipse_dnd_ai_config_v2`. `getProvider()` now returns `FallbackProvider` when `useFallback` is on, with chain order `[primary, ...eligible others]` where eligibility means "has enough config to attempt a call".
+- [x] **Launcher updated** — third provider tab "Anthropic Claude (cloud)" with key + model fields and the same optional-OpenAI-key shape Ollama already had. Below the tabs, a single "Enable fallback chain" checkbox with a one-paragraph explainer.
+- [x] **`AiProviderId` widened to `"openai" | "ollama" | "anthropic"`**, `AiProvider.id` accepts `AiProviderId | "fallback"` so the wrapper has a clean identity without polluting the user-facing union.
+
 ---
 
 ## 🚧 Active
@@ -95,13 +104,11 @@ Last update: **2026-05-12** (Multi-provider AI shipped — OpenAI + Ollama under
 
 ### Agent layer extensions (priority — same architecture, new agent types)
 
-- [ ] **Provider fallback chain** — if the active provider errors out (Ollama daemon down, OpenAI rate-limited), automatically retry on the next available provider; mirror Star CRM AutoChain pattern
-- [ ] **Anthropic provider** — add Claude as a third option; same `AiProvider` interface
-- [ ] **Cross-provider structured outputs** — wrap JSON-mode for Ollama / function-calling for Anthropic so the entity extractors and NPC generator can also run off-OpenAI
+- [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
+- [ ] **Off-screen world tick** *(design item — not bounded for one slice yet)* — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface. Needs scheduling architecture, event log, persistent agent state.
 - [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
-- [ ] **Off-screen world tick** — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface
-- [ ] **DM ↔ NPC cross-reference** — when the DM narrates an NPC speaking, link the line back to that NPC's chat history so context stays consistent across both panels
-- [ ] **Insert-at-cursor** — current Insert buttons append to the end of the session text; add a variant that inserts at the current Slate cursor position
+- [ ] **DM ↔ NPC cross-reference** — when the DM narrates an NPC speaking (`**Name:** "..."` pattern), mirror that quote into the NPC's chat history so future per-NPC conversations stay consistent
+- [ ] **Insert-at-cursor** — current Insert buttons append to the end of the session text; add a variant that uses the Slate cursor position
 
 ### Classic DM tools (parked under the Agent vector)
 

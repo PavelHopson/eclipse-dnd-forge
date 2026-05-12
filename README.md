@@ -83,7 +83,8 @@ Short version:
 - ✅ **v0.2 slice 3 — DM Agent** — global AI Dungeon Master that narrates scenes from world state, voices NPCs through quoted lines, reacts to player actions.
 - ✅ **v0.2 slice 4 — Hook → editor injection** — every AI output (NPC reply, DM narration, NPC generator hook) has a one-click "Insert into session" button that promotes it into the canonical Slate session text.
 - ✅ **v0.2 slice 5 — Multi-provider AI** — conversational agents (NPC dialogue, DM narration) run through a unified `AiProvider` interface. Two providers shipped: OpenAI (cloud) and Ollama (self-hosted). Choice persists in localStorage; switcher lives on the Launcher.
-- 🎯 Next (Agent-first): provider fallback chain · Anthropic provider · cross-provider structured outputs · Combat AI · off-screen world tick.
+- ✅ **v0.2 slice 6 — Anthropic + Fallback chain** — Claude added as third provider. Optional fallback chain wraps the active provider and retries on the next configured one if it fails (rate limits, daemon down, expired key).
+- 🎯 Next (Agent-first): Combat AI · DM ↔ NPC cross-reference · Insert-at-cursor · (design items) cross-provider structured outputs · off-screen world tick.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 

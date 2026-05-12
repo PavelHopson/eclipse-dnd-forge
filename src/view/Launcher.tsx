@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, CardHeader, Divider, Input, Tab, Tabs } from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader, Checkbox, Divider, Input, Tab, Tabs } from "@nextui-org/react";
 import { useState } from "react";
 import { GiCrossedSwords } from "react-icons/gi";
 import { useModelStore } from '../model/Model';
@@ -18,15 +18,24 @@ export default function Launcher() {
   const ollamaBaseUrl = useAiConfigStore((s) => s.ollamaBaseUrl);
   const ollamaModel = useAiConfigStore((s) => s.ollamaModel);
   const openaiModel = useAiConfigStore((s) => s.openaiModel);
+  const anthropicApiKey = useAiConfigStore((s) => s.anthropicApiKey);
+  const anthropicModel = useAiConfigStore((s) => s.anthropicModel);
+  const useFallback = useAiConfigStore((s) => s.useFallback);
   const setProviderId = useAiConfigStore((s) => s.setProviderId);
   const setOllamaBaseUrl = useAiConfigStore((s) => s.setOllamaBaseUrl);
   const setOllamaModel = useAiConfigStore((s) => s.setOllamaModel);
   const setOpenaiModel = useAiConfigStore((s) => s.setOpenaiModel);
+  const setAnthropicApiKey = useAiConfigStore((s) => s.setAnthropicApiKey);
+  const setAnthropicModel = useAiConfigStore((s) => s.setAnthropicModel);
+  const setUseFallback = useAiConfigStore((s) => s.setUseFallback);
 
   // Campaign-start is gated differently per provider:
   //  - openai: needs an API key (entered now or via VITE_OPENAI_API_KEY)
   //  - ollama: no key needed; local daemon is the dependency
-  const startGated = providerId === "openai" && accessKey.length === 0;
+  //  - anthropic: needs an Anthropic key
+  const startGated =
+    (providerId === "openai" && accessKey.length === 0) ||
+    (providerId === "anthropic" && anthropicApiKey.length === 0);
 
   function startCampaign(template: CampaignTemplate) {
     resetModel();
@@ -85,6 +94,7 @@ export default function Launcher() {
             >
               <Tab key="openai" title="OpenAI (cloud)" />
               <Tab key="ollama" title="Ollama (self-hosted)" />
+              <Tab key="anthropic" title="Anthropic Claude (cloud)" />
             </Tabs>
 
             {providerId === "openai" && (
@@ -157,6 +167,56 @@ export default function Launcher() {
                 />
               </div>
             )}
+
+            {providerId === "anthropic" && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
+                  Paste an Anthropic API key — used for NPC dialogue and DM narration through Claude. Browser-direct calls use Anthropic's <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>anthropic-dangerous-direct-browser-access</code> opt-in (local prototype only — route through a backend before any hosted release). Get a key at{' '}
+                  <a href="https://console.anthropic.com/" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>console.anthropic.com</a>.
+                </p>
+                <Input
+                  size="sm"
+                  variant="faded"
+                  label="Anthropic API key"
+                  placeholder="sk-ant-..."
+                  type="password"
+                  value={anthropicApiKey}
+                  onValueChange={setAnthropicApiKey}
+                />
+                <Input
+                  size="sm"
+                  variant="faded"
+                  label="Claude model"
+                  value={anthropicModel}
+                  onValueChange={setAnthropicModel}
+                />
+                <p style={{ fontSize: 11, color: '#7a6a5a', margin: 0 }}>
+                  Entity extraction and NPC generation still need an OpenAI key (structured outputs are OpenAI-specific). Paste one below if you want those features too.
+                </p>
+                <Input
+                  size="sm"
+                  variant="faded"
+                  label="OpenAI API key (optional, for structured-output paths)"
+                  placeholder="sk-... — optional with Claude"
+                  type="password"
+                  onChange={(e) => {
+                    setAccessKey(e.target.value);
+                    setOpenAIKey(e.target.value);
+                  }}
+                />
+              </div>
+            )}
+
+            <Divider style={{ margin: '4px 0' }} />
+            <Checkbox
+              size="sm"
+              isSelected={useFallback}
+              onValueChange={setUseFallback}
+            >
+              <span style={{ fontSize: 12, color: '#3a2a2a' }}>
+                <strong>Enable fallback chain</strong> — if the active provider errors out (rate-limited, daemon down, expired key), automatically retry on the next configured provider. Order: active first, then the rest with valid config.
+              </span>
+            </Checkbox>
           </div>
         </CardBody>
         <Divider />
