@@ -1,11 +1,12 @@
 import { Button, Textarea, Tooltip } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
-import { GiBroom, GiChatBubble, GiScrollQuill } from "react-icons/gi";
+import { GiBroom, GiChatBubble, GiCrossedSwords, GiScrollQuill } from "react-icons/gi";
 import { IoClose, IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import { Entity, EntityKind, useModelStore } from "../../model/Model";
+import { suggestCombatTactic } from "../../model/agents/CombatAgent";
 import { runNpcDialogue } from "../../model/agents/NpcAgent";
-import { insertNpcQuoteAtCursor } from "../../model/agents/sessionInjector";
+import { insertTextAtCursor, insertNpcQuoteAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 
 interface NpcDialoguePanelProps {
@@ -28,6 +29,8 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
 
     const [input, setInput] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [tactic, setTactic] = useState<string>("");
+    const [tacticStreaming, setTacticStreaming] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll the chat log to the bottom on new content.
@@ -79,8 +82,25 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
         useAgentStore.getState().clearHistory(entityId);
         setError(null);
         setInput("");
+        setTactic("");
     };
 
+    const suggestTactic = async () => {
+        if (tacticStreaming) return;
+        setError(null);
+        setTactic("");
+        setTacticStreaming(true);
+        try {
+            await suggestCombatTactic(entityId, (partial) => setTactic(partial));
+        } catch (e: any) {
+            const message = typeof e?.message === "string" ? e.message : "Tactic suggestion failed.";
+            setError(message);
+        } finally {
+            setTacticStreaming(false);
+        }
+    };
+
+    const isMonster = entity.kind === "monster";
     const kindStyle = KIND_STYLE[entity.kind ?? "unknown"];
 
     return (
@@ -226,6 +246,46 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                     );
                 })}
             </div>
+
+            {isMonster && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 6, border: "1px dashed #b09060", borderRadius: 6, background: "#fff5e0" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#7a1f1f", display: "flex", alignItems: "center", gap: 4 }}>
+                            <GiCrossedSwords /> Combat AI
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="flat"
+                            isLoading={tacticStreaming}
+                            isDisabled={tacticStreaming}
+                            onClick={suggestTactic}
+                            style={{ height: 22, minHeight: 22, fontSize: 10, background: "#7a1f1f", color: "white" }}
+                        >
+                            {tacticStreaming ? "Thinking…" : "Suggest tactic"}
+                        </Button>
+                    </div>
+                    {tactic && (
+                        <>
+                            <div style={{ fontSize: 12, color: "#3a2a2a", lineHeight: 1.4, fontStyle: "italic" }}>
+                                {tactic}
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                <Tooltip content="Insert this proposed action into the session text at the cursor" closeDelay={0}>
+                                    <Button
+                                        size="sm"
+                                        variant="flat"
+                                        startContent={<GiScrollQuill />}
+                                        onClick={() => insertTextAtCursor(tactic)}
+                                        style={{ height: 22, minHeight: 22, fontSize: 10, background: "#fffbf0", border: "1px solid #d4c5a0" }}
+                                    >
+                                        Insert tactic
+                                    </Button>
+                                </Tooltip>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
 
             {error && (
                 <div style={{ fontSize: 11, color: "#7a1f1f", background: "#fde2e2", padding: 6, borderRadius: 6 }}>

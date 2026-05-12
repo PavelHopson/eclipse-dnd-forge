@@ -83,6 +83,14 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 9 — Combat AI ⚔️
+*Shipped 2026-05-12. Third agent type on the same architecture — monsters as tactical advisors.*
+
+- [x] **`src/model/agents/CombatAgent.ts`** — `buildCombatSystemPrompt(ctx)` assembles a *DM-side combat advisor* prompt: full creature card (incl. goal), heroes / NPCs / other creatures present, battlefield narrative. Strict output rules: one sentence, present tense, no game-mechanic mentions, no dice asks, match player language.
+- [x] **`suggestCombatTactic(monsterEntityId, onPartial)`** — single-shot streaming call. System + one user line ("Propose this creature's next action."). Goes through the same `currentProvider()` pipeline — supports OpenAI / Ollama / Anthropic / Fallback chain transparently.
+- [x] **NpcDialoguePanel — "Combat AI" block** — visible only when the selected entity is `kind === "monster"`. Shows the proposed tactic in italic + an "Insert tactic" button that drops the sentence into the session text at the cursor.
+- [x] One-sentence proposals are deliberately decision-only: the DM still narrates the actual outcome (hit / miss / status), keeping the agent in advisory role rather than overstepping the table.
+
 ### v0.2 slice 8 — Insert-at-cursor ✒️
 *Shipped 2026-05-12. Promotes Agent output into wherever the writer is currently editing.*
 
@@ -120,7 +128,6 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 
 - [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
 - [ ] **Off-screen world tick** *(design item — not bounded for one slice yet)* — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface. Needs scheduling architecture, event log, persistent agent state.
-- [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
 
 ### Classic DM tools (parked under the Agent vector)
 
