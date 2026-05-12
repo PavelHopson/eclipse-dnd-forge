@@ -83,6 +83,13 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 7 — DM ↔ NPC cross-reference 🪶
+*Shipped 2026-05-12. Continuity between DM narration and per-NPC chat.*
+
+- [x] **`src/model/agents/dmCrossReference.ts`** — `extractNpcQuotes(dmText, entityNodes)` parses `**Name:** ...` lines from DM output (greedy on the speech body until the next blank line, the next `**Name:**`, or end). Filters to entities that exist in the current world graph (exact case-insensitive name match).
+- [x] **`mirrorDmQuotesToNpcHistories(quotes)`** — appends each quoted line as an `assistant` message in that NPC's chat history. Prepends a one-time `user` framing note (`"(DM narrated this scene; the following lines are what you said aloud during it.)"`) so the per-NPC chat preserves context coherence.
+- [x] **DmAgentPanel wired** — after each DM turn finishes, extract + mirror runs automatically. A small green "Mirrored DM-narrated lines into … " indicator confirms which entities received lines.
+
 ### v0.2 slice 6 — Anthropic provider + Fallback chain 🔀⛓️
 *Shipped 2026-05-12. Provider story completes — three real providers + a graceful degradation path.*
 
@@ -107,7 +114,6 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 - [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
 - [ ] **Off-screen world tick** *(design item — not bounded for one slice yet)* — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface. Needs scheduling architecture, event log, persistent agent state.
 - [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
-- [ ] **DM ↔ NPC cross-reference** — when the DM narrates an NPC speaking (`**Name:** "..."` pattern), mirror that quote into the NPC's chat history so future per-NPC conversations stay consistent
 - [ ] **Insert-at-cursor** — current Insert buttons append to the end of the session text; add a variant that uses the Slate cursor position
 
 ### Classic DM tools (parked under the Agent vector)

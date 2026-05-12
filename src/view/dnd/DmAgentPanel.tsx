@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { GiBroom, GiCrown, GiScrollQuill } from "react-icons/gi";
 import { IoClose, IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
+import { useModelStore } from "../../model/Model";
 import { DM_AGENT_ID, runDmTurn } from "../../model/agents/DmAgent";
+import { extractNpcQuotes, mirrorDmQuotesToNpcHistories } from "../../model/agents/dmCrossReference";
 import { appendParagraphToSession } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 
@@ -17,6 +19,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
 
     const [input, setInput] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [lastMirrored, setLastMirrored] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -40,9 +43,21 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
         agent.updateAssistantStream(DM_AGENT_ID, "");
 
         try {
-            await runDmTurn(priorHistory, trimmed, (partial) => {
+            const finalText = await runDmTurn(priorHistory, trimmed, (partial) => {
                 useAgentStore.getState().updateAssistantStream(DM_AGENT_ID, partial);
             });
+
+            // Mirror any **Name:** "..." quotes the DM voiced into the
+            // matching NPC chat histories so future per-NPC conversations
+            // pick up the context.
+            const entityNodes = useModelStore.getState().entityNodes;
+            const quotes = extractNpcQuotes(finalText, entityNodes);
+            if (quotes.length > 0) {
+                mirrorDmQuotesToNpcHistories(quotes);
+                setLastMirrored(Array.from(new Set(quotes.map((q) => q.entityName))));
+            } else {
+                setLastMirrored([]);
+            }
         } catch (e: any) {
             const message = typeof e?.message === "string"
                 ? e.message
@@ -172,6 +187,14 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                     );
                 })}
             </div>
+
+            {lastMirrored.length > 0 && !streaming && (
+                <div style={{ fontSize: 11, color: "#3a2a2a", background: "#e6f0d2", padding: 6, borderRadius: 6, lineHeight: 1.35 }}>
+                    🪶 Mirrored DM-narrated lines into the chat history of:{" "}
+                    <strong>{lastMirrored.join(", ")}</strong>.{" "}
+                    Click those entity nodes to continue the conversation.
+                </div>
+            )}
 
             {error && (
                 <div style={{ fontSize: 11, color: "#7a1f1f", background: "#fde2e2", padding: 6, borderRadius: 6 }}>
