@@ -4,6 +4,8 @@
 
 Last update: **2026-05-11** (NPC Generator slice). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
 
+> ⏸️ **Status: paused — 2026-05-11.** Owner switched focus to other Eclipse work. v0.1 slice 1 and v0.2 slice 1 are committed locally on `main` (SHAs `7bee46d`, `69195f2`). Resume point = the **Active** block below (Encounter Generator). When picking this back up: run `npm install && npm run build` first to verify the two paused slices compile in a clean environment — they were shipped without a successful build run because of repeated `ECONNRESET` against npm registry during the dev session.
+
 ---
 
 ## ✅ Done
