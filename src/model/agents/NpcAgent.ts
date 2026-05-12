@@ -1,4 +1,5 @@
-import { Entity, openai, useModelStore } from "../Model";
+import { Entity, useModelStore } from "../Model";
+import { currentModel, currentProvider } from "../../store/useAiConfigStore";
 
 export type AgentMessageRole = "user" | "assistant";
 
@@ -139,21 +140,11 @@ export async function runNpcDialogue(
 
     const messages = buildMessages(ctx, newPlayerMessage);
 
-    const stream = await openai.chat.completions.create({
-        model: "gpt-4o-2024-08-06",
-        messages,
-        stream: true,
+    const { text } = await currentProvider().streamChat(messages, {
+        model: currentModel(),
         temperature: 0.8,
+        onPartial,
     });
 
-    let response = "";
-    for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content || "";
-        if (delta) {
-            response += delta;
-            onPartial(response);
-        }
-    }
-
-    return response;
+    return text;
 }

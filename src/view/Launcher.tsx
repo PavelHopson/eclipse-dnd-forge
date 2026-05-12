@@ -1,16 +1,32 @@
-import { Button, Card, CardBody, CardHeader, Divider, Input } from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader, Divider, Input, Tab, Tabs } from "@nextui-org/react";
 import { useState } from "react";
 import { GiCrossedSwords } from "react-icons/gi";
 import { useModelStore } from '../model/Model';
 import { CAMPAIGN_TEMPLATES, CampaignTemplate, seedToNodes } from "../model/dnd/campaignTemplates";
 import { VisualRefresher } from "../model/prompts/textExtractors/VisualRefresher";
 import { useStudyStore } from "../study/StudyModel";
+import { useAiConfigStore } from "../store/useAiConfigStore";
+import { AiProviderId } from "../model/ai/types";
 
 export default function Launcher() {
   const [accessKey, setAccessKey] = useState('');
   const setOpenAIKey = useModelStore((state) => state.setOpenAIKey);
   const resetModel = useModelStore((state) => state.reset);
   const resetStudyModel = useStudyStore((state) => state.reset);
+
+  const providerId = useAiConfigStore((s) => s.providerId);
+  const ollamaBaseUrl = useAiConfigStore((s) => s.ollamaBaseUrl);
+  const ollamaModel = useAiConfigStore((s) => s.ollamaModel);
+  const openaiModel = useAiConfigStore((s) => s.openaiModel);
+  const setProviderId = useAiConfigStore((s) => s.setProviderId);
+  const setOllamaBaseUrl = useAiConfigStore((s) => s.setOllamaBaseUrl);
+  const setOllamaModel = useAiConfigStore((s) => s.setOllamaModel);
+  const setOpenaiModel = useAiConfigStore((s) => s.setOpenaiModel);
+
+  // Campaign-start is gated differently per provider:
+  //  - openai: needs an API key (entered now or via VITE_OPENAI_API_KEY)
+  //  - ollama: no key needed; local daemon is the dependency
+  const startGated = providerId === "openai" && accessKey.length === 0;
 
   function startCampaign(template: CampaignTemplate) {
     resetModel();
@@ -57,24 +73,91 @@ export default function Launcher() {
         </CardHeader>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
-          <p style={{ fontSize: 14, color: '#3a2a2a' }}>
-            Paste an OpenAI API key to enable AI extraction and scene rewriting. Get one at{' '}
-            <a href="https://platform.openai.com/account/api-keys" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>
-              platform.openai.com
-            </a>
-            . The key stays in your browser.
-          </p>
-          <Input
-            variant="faded"
-            label="OpenAI API Key"
-            placeholder="sk-..."
-            type="password"
-            style={{ marginTop: 10 }}
-            onChange={(e) => {
-              setAccessKey(e.target.value);
-              setOpenAIKey(e.target.value);
-            }}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontWeight: 800, fontSize: 14, color: '#2a1a1a' }}>AI provider</span>
+            <Tabs
+              size="sm"
+              selectedKey={providerId}
+              onSelectionChange={(k) => setProviderId(k as AiProviderId)}
+              color="primary"
+              variant="bordered"
+              classNames={{ tabList: 'bg-white' }}
+            >
+              <Tab key="openai" title="OpenAI (cloud)" />
+              <Tab key="ollama" title="Ollama (self-hosted)" />
+            </Tabs>
+
+            {providerId === "openai" && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
+                  Paste an OpenAI API key — used for NPC dialogue, DM narration, entity extraction and NPC generation. Get one at{' '}
+                  <a href="https://platform.openai.com/account/api-keys" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>
+                    platform.openai.com
+                  </a>
+                  . The key stays in your browser.
+                </p>
+                <Input
+                  size="sm"
+                  variant="faded"
+                  label="OpenAI API key"
+                  placeholder="sk-..."
+                  type="password"
+                  onChange={(e) => {
+                    setAccessKey(e.target.value);
+                    setOpenAIKey(e.target.value);
+                  }}
+                />
+                <Input
+                  size="sm"
+                  variant="faded"
+                  label="OpenAI model"
+                  value={openaiModel}
+                  onValueChange={setOpenaiModel}
+                />
+              </div>
+            )}
+
+            {providerId === "ollama" && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
+                  Talks to a local <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — used for NPC dialogue and DM narration. Entity extraction and NPC generation still need an OpenAI key (they rely on structured outputs).
+                  Start Ollama with <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="*"</code> so the browser can reach it.
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Input
+                    size="sm"
+                    variant="faded"
+                    label="Base URL"
+                    value={ollamaBaseUrl}
+                    onValueChange={setOllamaBaseUrl}
+                    style={{ flex: 1 }}
+                  />
+                  <Input
+                    size="sm"
+                    variant="faded"
+                    label="Model"
+                    value={ollamaModel}
+                    onValueChange={setOllamaModel}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <p style={{ fontSize: 11, color: '#7a6a5a', margin: 0 }}>
+                  Optional but still useful: paste an OpenAI key below to also enable extraction / NPC generation. Without it, only the visual graph and seed-campaign starter NPCs are available — Living-NPC and DM chat will still work through Ollama.
+                </p>
+                <Input
+                  size="sm"
+                  variant="faded"
+                  label="OpenAI API key (optional, for structured-output paths)"
+                  placeholder="sk-... — optional with Ollama"
+                  type="password"
+                  onChange={(e) => {
+                    setAccessKey(e.target.value);
+                    setOpenAIKey(e.target.value);
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </CardBody>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
@@ -90,10 +173,12 @@ export default function Launcher() {
               gap: 14,
             }}
           >
-            {CAMPAIGN_TEMPLATES.map((template) => (
+            {CAMPAIGN_TEMPLATES.map((template) => {
+              const disabled = startGated && template.id !== 'blank-campaign';
+              return (
               <button
                 key={template.id}
-                disabled={accessKey.length === 0 && template.id !== 'blank-campaign'}
+                disabled={disabled}
                 onClick={() => startCampaign(template)}
                 style={{
                   textAlign: 'left',
@@ -101,13 +186,13 @@ export default function Launcher() {
                   borderRadius: 8,
                   border: '1px solid #d4c5a0',
                   background: '#fffbf0',
-                  cursor: accessKey.length === 0 && template.id !== 'blank-campaign' ? 'not-allowed' : 'pointer',
-                  opacity: accessKey.length === 0 && template.id !== 'blank-campaign' ? 0.5 : 1,
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                  opacity: disabled ? 0.5 : 1,
                   transition: 'transform 120ms, box-shadow 120ms',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                 }}
                 onMouseEnter={(e) => {
-                  if (accessKey.length > 0 || template.id === 'blank-campaign') {
+                  if (!disabled) {
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(122,31,31,0.18)';
                   }
@@ -131,13 +216,14 @@ export default function Launcher() {
                   </span>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         </CardBody>
         <Divider />
         <CardBody style={{ padding: '12px 24px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 11, color: '#7a6a5a' }}>
-            Forked from VisualStoryWriting (MIT). Engine: React 18 · @xyflow/react · Slate · OpenAI.
+            Forked from VisualStoryWriting (MIT). Engine: React 18 · @xyflow/react · Slate · OpenAI · Ollama.
           </span>
           <Button
             size="sm"

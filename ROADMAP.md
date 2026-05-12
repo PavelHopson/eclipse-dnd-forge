@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-12** (DM Agent + Hook → editor injection shipped on top of Living NPCs). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
+Last update: **2026-05-12** (Multi-provider AI shipped — OpenAI + Ollama under unified AiProvider interface). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -72,6 +72,17 @@ Last update: **2026-05-12** (DM Agent + Hook → editor injection shipped on top
       - NPC Generator hook block — one button on the result card, inserts the hook as a paragraph
 - [x] All three buttons share the same scroll-quill icon + parchment styling, making the "promote to canon" gesture consistent across the product.
 
+### v0.2 slice 5 — Multi-provider AI 🔀
+*Shipped 2026-05-12. Cost-control and privacy/control story for the conversational paths.*
+
+- [x] **`src/model/ai/types.ts`** — provider-neutral `AiProvider` interface with `streamChat(messages, options) → AiStreamResult`. Options carry model, temperature, abort signal, and an `onPartial` chunk callback. Provider-neutral `AiMessage` shape.
+- [x] **`src/model/ai/OpenAIProvider.ts`** — wraps the existing `openai.chat.completions.create` streaming path. Default model: `gpt-4o-2024-08-06`.
+- [x] **`src/model/ai/OllamaProvider.ts`** — self-hosted Ollama HTTP client. Calls `POST /api/chat` with `stream: true`, parses NDJSON chunks, exposes errors cleanly. Default base URL: `http://localhost:11434`, default model: `llama3.2`. Includes user-facing setup notes (model pull + `OLLAMA_ORIGINS="*"` for CORS).
+- [x] **`src/store/useAiConfigStore.ts`** — Zustand store with localStorage persistence (`eclipse_dnd_ai_config_v1`). Holds provider id + per-provider config (base URL, model). Exposes `currentProvider()` and `currentModel()` accessors for non-React callers.
+- [x] **`NpcAgent` and `DmAgent`** — both rewired through `currentProvider().streamChat(...)`. No more direct `openai` references in the conversational path.
+- [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
+- [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
+
 ---
 
 ## 🚧 Active
@@ -84,7 +95,9 @@ Last update: **2026-05-12** (DM Agent + Hook → editor injection shipped on top
 
 ### Agent layer extensions (priority — same architecture, new agent types)
 
-- [ ] **Multi-provider AI** — factor `openai` client out of `Model.tsx` into `ai/Provider.ts`, allow Gemini / Claude / Ollama as fallback (cost-control becomes critical with conversational agents)
+- [ ] **Provider fallback chain** — if the active provider errors out (Ollama daemon down, OpenAI rate-limited), automatically retry on the next available provider; mirror Star CRM AutoChain pattern
+- [ ] **Anthropic provider** — add Claude as a third option; same `AiProvider` interface
+- [ ] **Cross-provider structured outputs** — wrap JSON-mode for Ollama / function-calling for Anthropic so the entity extractors and NPC generator can also run off-OpenAI
 - [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
 - [ ] **Off-screen world tick** — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface
 - [ ] **DM ↔ NPC cross-reference** — when the DM narrates an NPC speaking, link the line back to that NPC's chat history so context stays consistent across both panels

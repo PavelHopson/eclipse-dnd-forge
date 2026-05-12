@@ -1,4 +1,5 @@
-import { Entity, Location, openai, useModelStore } from "../Model";
+import { Entity, Location, useModelStore } from "../Model";
+import { currentModel, currentProvider } from "../../store/useAiConfigStore";
 import { AgentMessage } from "./NpcAgent";
 
 /** Special agent key used by `useAgentStore` for the global DM conversation. */
@@ -114,21 +115,11 @@ export async function runDmTurn(
 
     const messages = buildDmMessages(ctx, newPlayerMessage);
 
-    const stream = await openai.chat.completions.create({
-        model: "gpt-4o-2024-08-06",
-        messages,
-        stream: true,
+    const { text } = await currentProvider().streamChat(messages, {
+        model: currentModel(),
         temperature: 0.85,
+        onPartial,
     });
 
-    let response = "";
-    for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content || "";
-        if (delta) {
-            response += delta;
-            onPartial(response);
-        }
-    }
-
-    return response;
+    return text;
 }

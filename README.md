@@ -82,7 +82,8 @@ Short version:
 - ✅ **v0.2 slice 2 — Living NPCs (Agent layer foundation)** — click an entity → talk to it. Streaming AI dialogue, per-entity memory, scene-aware system prompts, hand-authored backstories for all seed-campaign NPCs.
 - ✅ **v0.2 slice 3 — DM Agent** — global AI Dungeon Master that narrates scenes from world state, voices NPCs through quoted lines, reacts to player actions.
 - ✅ **v0.2 slice 4 — Hook → editor injection** — every AI output (NPC reply, DM narration, NPC generator hook) has a one-click "Insert into session" button that promotes it into the canonical Slate session text.
-- 🎯 Next (Agent-first): multi-provider AI · Combat AI · off-screen world tick · DM ↔ NPC cross-reference.
+- ✅ **v0.2 slice 5 — Multi-provider AI** — conversational agents (NPC dialogue, DM narration) run through a unified `AiProvider` interface. Two providers shipped: OpenAI (cloud) and Ollama (self-hosted). Choice persists in localStorage; switcher lives on the Launcher.
+- 🎯 Next (Agent-first): provider fallback chain · Anthropic provider · cross-provider structured outputs · Combat AI · off-screen world tick.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 
