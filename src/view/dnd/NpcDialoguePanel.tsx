@@ -1,9 +1,10 @@
-import { Button, Textarea } from "@nextui-org/react";
+import { Button, Textarea, Tooltip } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
-import { GiBroom, GiChatBubble } from "react-icons/gi";
+import { GiBroom, GiChatBubble, GiScrollQuill } from "react-icons/gi";
 import { IoClose, IoSend } from "react-icons/io5";
 import { Entity, EntityKind, useModelStore } from "../../model/Model";
 import { runNpcDialogue } from "../../model/agents/NpcAgent";
+import { appendNpcQuoteToSession } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 
 interface NpcDialoguePanelProps {
@@ -175,25 +176,49 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                         <div style={{ marginTop: 6 }}>Say something to {entity.name}.</div>
                     </div>
                 )}
-                {history.map((m, idx) => (
-                    <div
-                        key={idx}
-                        style={{
-                            alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-                            maxWidth: "85%",
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            background: m.role === "user" ? "#7a1f1f" : "#f0e4c8",
-                            color: m.role === "user" ? "#fdf6e3" : "#2a1a1a",
-                            fontSize: 12,
-                            lineHeight: 1.45,
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                        }}
-                    >
-                        {m.content || (m.role === "assistant" && streaming ? "…" : "")}
-                    </div>
-                ))}
+                {history.map((m, idx) => {
+                    const isAssistant = m.role === "assistant";
+                    return (
+                        <div
+                            key={idx}
+                            style={{
+                                alignSelf: isAssistant ? "flex-start" : "flex-end",
+                                maxWidth: "85%",
+                                padding: "6px 10px",
+                                borderRadius: 8,
+                                background: isAssistant ? "#f0e4c8" : "#7a1f1f",
+                                color: isAssistant ? "#2a1a1a" : "#fdf6e3",
+                                fontSize: 12,
+                                lineHeight: 1.45,
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                            }}
+                        >
+                            {m.content || (isAssistant && streaming ? "…" : "")}
+                            {isAssistant && m.content && (
+                                <div style={{ marginTop: 4, display: "flex", justifyContent: "flex-end" }}>
+                                    <Tooltip content={`Quote ${entity.name} into the session text`} closeDelay={0}>
+                                        <Button
+                                            size="sm"
+                                            variant="flat"
+                                            startContent={<GiScrollQuill />}
+                                            onClick={() => appendNpcQuoteToSession(entity.name, m.content)}
+                                            style={{
+                                                height: 22,
+                                                minHeight: 22,
+                                                fontSize: 10,
+                                                background: "#fffbf0",
+                                                border: "1px solid #d4c5a0",
+                                            }}
+                                        >
+                                            Insert as quote
+                                        </Button>
+                                    </Tooltip>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             {error && (

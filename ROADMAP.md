@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-12** (Living NPCs slice — AI Agents layer started). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
+Last update: **2026-05-12** (DM Agent + Hook → editor injection shipped on top of Living NPCs). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -54,6 +54,24 @@ Last update: **2026-05-12** (Living NPCs slice — AI Agents layer started). Bra
 - [x] **Dialogue UI (`src/view/dnd/NpcDialoguePanel.tsx`)** — chat panel keyed by entity id: avatar + name + role + kind badge, collapsible DM-only context (goal/secret), scrolling conversation log with streaming-aware rendering, send + clear, in-character error fallback.
 - [x] **Wire-in (`VisualWritingInterface.tsx`)** — when exactly one entity node is selected on the Heroes & NPCs canvas, a Talk-icon button appears next to Generate NPC. Click → opens dialogue panel for that entity; switching selection while the panel is open re-targets it; opening NPC Generator closes the dialogue and vice versa.
 
+### v0.2 slice 3 — DM Agent 👑
+*Shipped 2026-05-12 (same session). The second agent type on the same architecture.*
+
+- [x] **`src/model/agents/DmAgent.ts`** — `buildDmSystemPrompt` assembles a narrator/referee system prompt: full scene text + every entity (kind + role) + every location (kind + biome + danger) + conversation history. Strict rules forbid game-mechanic mentions and enforce in-language replies.
+- [x] **`DM_AGENT_ID` constant** — special key reuses `useAgentStore` so DM conversation history lives in the same store as NPC histories (no duplicate state machinery).
+- [x] **`src/view/dnd/DmAgentPanel.tsx`** — wider chat panel (440px) with crown header, neutral background, multi-paragraph rendering. Empty-state shows example prompts in three languages.
+- [x] **Toolbar wire-in** — global "Run scene with AI DM" crown button visible on both Heroes and Locations tabs. DM panel is mutually exclusive with NPC dialogue and NPC generator panels.
+
+### v0.2 slice 4 — Hook → editor injection 📜
+*Shipped 2026-05-12 (same session). Ties the Agent layer back into the canonical session text.*
+
+- [x] **`src/model/agents/sessionInjector.ts`** — `appendParagraphToSession(text)` and `appendNpcQuoteToSession(speakerName, text)` append a new Slate paragraph to the session text via the existing `setTextState` path (so undo/redo + visual-refresh staleness work automatically). NPC quotes get a `**Name:**` bold prefix for natural reading once promoted.
+- [x] **"Insert into session" buttons** added on three surfaces:
+      - NPC dialogue replies — one button under each assistant message, formatted as quoted speech
+      - DM narration — one button under each DM beat, inserted as a plain paragraph
+      - NPC Generator hook block — one button on the result card, inserts the hook as a paragraph
+- [x] All three buttons share the same scroll-quill icon + parchment styling, making the "promote to canon" gesture consistent across the product.
+
 ---
 
 ## 🚧 Active
@@ -67,10 +85,10 @@ Last update: **2026-05-12** (Living NPCs slice — AI Agents layer started). Bra
 ### Agent layer extensions (priority — same architecture, new agent types)
 
 - [ ] **Multi-provider AI** — factor `openai` client out of `Model.tsx` into `ai/Provider.ts`, allow Gemini / Claude / Ollama as fallback (cost-control becomes critical with conversational agents)
-- [ ] **DM Agent** — same Agent abstraction, narrator/referee system prompt. Given world state + recent player turn → narrates the next beat. First step toward "AI runs the table".
 - [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
 - [ ] **Off-screen world tick** — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface
-- [ ] **Hook → editor injection** — NPC hook (and AI dialogue lines) → one-click insert into Slate at the cursor; ties dialogue back into the session text
+- [ ] **DM ↔ NPC cross-reference** — when the DM narrates an NPC speaking, link the line back to that NPC's chat history so context stays consistent across both panels
+- [ ] **Insert-at-cursor** — current Insert buttons append to the end of the session text; add a variant that inserts at the current Slate cursor position
 
 ### Classic DM tools (parked under the Agent vector)
 

@@ -1,7 +1,8 @@
-import { Button, Input, Select, SelectItem, Textarea } from "@nextui-org/react";
+import { Button, Input, Select, SelectItem, Textarea, Tooltip } from "@nextui-org/react";
 import { useState } from "react";
-import { GiSpellBook } from "react-icons/gi";
+import { GiScrollQuill, GiSpellBook } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
+import { appendParagraphToSession } from "../../model/agents/sessionInjector";
 import { GeneratedNpc, NpcCriteria, generateNpcIntoScene } from "../../model/prompts/generators/NpcGenerator";
 
 interface NpcGeneratorPanelProps {
@@ -199,6 +200,25 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                     <div style={{ fontSize: 12, color: "#3a2a2a", background: "#f0e4c8", padding: 8, borderRadius: 6, lineHeight: 1.4 }}>
                         <span style={{ fontWeight: 700, marginRight: 4 }}>Hook:</span>
                         {result.hook}
+                        <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
+                            <Tooltip content="Insert this hook as a new paragraph in the session text" closeDelay={0}>
+                                <Button
+                                    size="sm"
+                                    variant="flat"
+                                    startContent={<GiScrollQuill />}
+                                    onClick={() => appendParagraphToSession(result.hook)}
+                                    style={{
+                                        height: 22,
+                                        minHeight: 22,
+                                        fontSize: 10,
+                                        background: "#fffbf0",
+                                        border: "1px solid #d4c5a0",
+                                    }}
+                                >
+                                    Insert hook into session
+                                </Button>
+                            </Tooltip>
+                        </div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                         <Button size="sm" variant="bordered" onClick={() => { setResult(null); setError(null); }}>

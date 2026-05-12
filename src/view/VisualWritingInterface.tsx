@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiCastle, GiChatBubble, GiCrossedSwords, GiSpellBook } from 'react-icons/gi';
+import { GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSpellBook } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -15,6 +15,7 @@ import { useStudyStore } from '../study/StudyModel';
 import HistoryTree from './HistoryTree';
 import TextEditor from './TextEditor';
 import ActionTimeline from './actionTimeline/ActionTimeline';
+import DmAgentPanel from './dnd/DmAgentPanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
 import EntitiesEditor from './entityActionView/EntitiesEditor';
@@ -26,6 +27,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [selectedTab, setSelectedTab] = useState('entities');
   const [isNpcPanelOpen, setIsNpcPanelOpen] = useState(false);
   const [talkingToEntityId, setTalkingToEntityId] = useState<string | null>(null);
+  const [isDmPanelOpen, setIsDmPanelOpen] = useState(false);
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
   const selectedNodes = useModelStore(state => state.selectedNodes);
@@ -123,6 +125,23 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
 
             {!isReadOnly && (
               <div style={{ position: 'absolute', right: 10, top: 10, display: 'flex', gap: 6 }}>
+                <Tooltip content="Run scene with the AI Dungeon Master" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isDmPanelOpen ? '#7a1f1f' : undefined, color: isDmPanelOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isDmPanelOpen;
+                      setIsDmPanelOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                      }
+                    }}
+                    aria-label="Toggle DM panel"
+                  >
+                    <GiCrown />
+                  </Button>
+                </Tooltip>
                 {selectedTab === 'entities' && selectedEntityId && (
                   <Tooltip content="Talk to this character (AI agent)" closeDelay={0}>
                     <Button
@@ -134,6 +153,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         } else {
                           setTalkingToEntityId(selectedEntityId);
                           setIsNpcPanelOpen(false);
+                          setIsDmPanelOpen(false);
                         }
                       }}
                       aria-label="Talk to selected character"
@@ -150,7 +170,10 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                       onClick={() => {
                         const next = !isNpcPanelOpen;
                         setIsNpcPanelOpen(next);
-                        if (next) setTalkingToEntityId(null);
+                        if (next) {
+                          setTalkingToEntityId(null);
+                          setIsDmPanelOpen(false);
+                        }
                       }}
                       aria-label="Toggle NPC generator"
                     >
@@ -187,6 +210,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                 entityId={talkingToEntityId}
                 onClose={() => setTalkingToEntityId(null)}
               />
+            )}
+            {isDmPanelOpen && !isReadOnly && (
+              <DmAgentPanel onClose={() => setIsDmPanelOpen(false)} />
             )}
           </div>
           <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
