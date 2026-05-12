@@ -83,6 +83,13 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 8 — Insert-at-cursor ✒️
+*Shipped 2026-05-12. Promotes Agent output into wherever the writer is currently editing.*
+
+- [x] **`insertTextAtCursor(text)` and `insertNpcQuoteAtCursor(speaker, text)`** added to `sessionInjector.ts`. Uses `Transforms.insertText(globalEditor, "\n\n" + text + "\n", { at: editor.selection })`. Falls back to `appendParagraphToSession` when there is no selection (e.g. editor not yet focused).
+- [x] **All three Insert buttons** (NPC dialogue replies, DM narration, NPC generator hook) switched from append-at-end to cursor-aware. Tooltips updated.
+- [x] **Slate normalisation respected** — the editor in this codebase merges multiple paragraphs into one with embedded `\n` separators (see `globalEditor.normalizeNode`), so inserting newlines + text is the right shape; we do not need to insert paragraph nodes manually.
+
 ### v0.2 slice 7 — DM ↔ NPC cross-reference 🪶
 *Shipped 2026-05-12. Continuity between DM narration and per-NPC chat.*
 
@@ -114,7 +121,6 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 - [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
 - [ ] **Off-screen world tick** *(design item — not bounded for one slice yet)* — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface. Needs scheduling architecture, event log, persistent agent state.
 - [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
-- [ ] **Insert-at-cursor** — current Insert buttons append to the end of the session text; add a variant that uses the Slate cursor position
 
 ### Classic DM tools (parked under the Agent vector)
 

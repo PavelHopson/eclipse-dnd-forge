@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { useModelStore } from "../../model/Model";
 import { DM_AGENT_ID, runDmTurn } from "../../model/agents/DmAgent";
 import { extractNpcQuotes, mirrorDmQuotesToNpcHistories } from "../../model/agents/dmCrossReference";
-import { appendParagraphToSession } from "../../model/agents/sessionInjector";
+import { insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 
 interface DmAgentPanelProps {
@@ -164,12 +164,12 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                                 : (isAssistant && streaming ? "…" : "")}
                             {isAssistant && m.content && (
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                                    <Tooltip content="Insert this narration as a new paragraph in the session text" closeDelay={0}>
+                                    <Tooltip content="Insert this narration at the editor cursor (or append at the end if no cursor)" closeDelay={0}>
                                         <Button
                                             size="sm"
                                             variant="flat"
                                             startContent={<GiScrollQuill />}
-                                            onClick={() => appendParagraphToSession(m.content)}
+                                            onClick={() => insertTextAtCursor(m.content)}
                                             style={{
                                                 height: 24,
                                                 minHeight: 24,

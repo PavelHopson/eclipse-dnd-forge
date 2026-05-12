@@ -5,7 +5,7 @@ import { IoClose, IoSend } from "react-icons/io5";
 import ReactMarkdown from "react-markdown";
 import { Entity, EntityKind, useModelStore } from "../../model/Model";
 import { runNpcDialogue } from "../../model/agents/NpcAgent";
-import { appendNpcQuoteToSession } from "../../model/agents/sessionInjector";
+import { insertNpcQuoteAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 
 interface NpcDialoguePanelProps {
@@ -203,12 +203,12 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                                 : (isAssistant && streaming ? "…" : "")}
                             {isAssistant && m.content && (
                                 <div style={{ marginTop: 4, display: "flex", justifyContent: "flex-end" }}>
-                                    <Tooltip content={`Quote ${entity.name} into the session text`} closeDelay={0}>
+                                    <Tooltip content={`Quote ${entity.name} at the editor cursor (or append at the end if no cursor)`} closeDelay={0}>
                                         <Button
                                             size="sm"
                                             variant="flat"
                                             startContent={<GiScrollQuill />}
-                                            onClick={() => appendNpcQuoteToSession(entity.name, m.content)}
+                                            onClick={() => insertNpcQuoteAtCursor(entity.name, m.content)}
                                             style={{
                                                 height: 22,
                                                 minHeight: 22,

@@ -2,7 +2,7 @@ import { Button, Input, Select, SelectItem, Textarea, Tooltip } from "@nextui-or
 import { useState } from "react";
 import { GiScrollQuill, GiSpellBook } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
-import { appendParagraphToSession } from "../../model/agents/sessionInjector";
+import { insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { GeneratedNpc, NpcCriteria, generateNpcIntoScene } from "../../model/prompts/generators/NpcGenerator";
 
 interface NpcGeneratorPanelProps {
@@ -201,12 +201,12 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                         <span style={{ fontWeight: 700, marginRight: 4 }}>Hook:</span>
                         {result.hook}
                         <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                            <Tooltip content="Insert this hook as a new paragraph in the session text" closeDelay={0}>
+                            <Tooltip content="Insert this hook at the editor cursor (or append at the end if no cursor)" closeDelay={0}>
                                 <Button
                                     size="sm"
                                     variant="flat"
                                     startContent={<GiScrollQuill />}
-                                    onClick={() => appendParagraphToSession(result.hook)}
+                                    onClick={() => insertTextAtCursor(result.hook)}
                                     style={{
                                         height: 22,
                                         minHeight: 22,

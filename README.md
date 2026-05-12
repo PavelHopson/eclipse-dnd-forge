@@ -85,7 +85,8 @@ Short version:
 - ✅ **v0.2 slice 5 — Multi-provider AI** — conversational agents (NPC dialogue, DM narration) run through a unified `AiProvider` interface. Two providers shipped: OpenAI (cloud) and Ollama (self-hosted). Choice persists in localStorage; switcher lives on the Launcher.
 - ✅ **v0.2 slice 6 — Anthropic + Fallback chain** — Claude added as third provider. Optional fallback chain wraps the active provider and retries on the next configured one if it fails (rate limits, daemon down, expired key).
 - ✅ **v0.2 slice 7 — DM ↔ NPC cross-reference** — after every DM turn, any `**Name:**` quote in the narration is auto-mirrored into that NPC's chat history. Future "Talk to that NPC" picks up the DM-narrated context.
-- 🎯 Next (Agent-first): Combat AI · Insert-at-cursor · (design items) cross-provider structured outputs · off-screen world tick.
+- ✅ **v0.2 slice 8 — Insert-at-cursor** — all "Insert into session" buttons now drop into the current Slate cursor position (falls back to append at end when there's no selection).
+- 🎯 Next (Agent-first): Combat AI · (design items) cross-provider structured outputs · off-screen world tick.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 
