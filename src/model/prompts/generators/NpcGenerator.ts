@@ -27,6 +27,9 @@ const NPC_SCHEMA = z.object({
     ac: z.number(),
     cr: z.number(),
     hook: z.string(),
+    goal: z.string(),
+    secret: z.string(),
+    knowledge: z.array(z.string()),
 });
 
 export type GeneratedNpc = z.infer<typeof NPC_SCHEMA>;
@@ -67,7 +70,10 @@ export function buildNpcPrompt(criteria: NpcCriteria): string {
         `- cr: Challenge Rating as a number (fractional allowed: 0.125, 0.25, 0.5, then integers). Calibrate so the NPC is interesting but not an instant TPK against the level-${party} party.\n` +
         `- hook: ONE sentence the DM can read aloud to introduce this NPC into the current scene. ` +
         `Anchor it to "${criteria.location?.trim() || "the current scene"}" if that helps. ` +
-        `Make it concrete and actionable, not generic ("introduces themselves" is bad, "is haggling with the innkeeper over the price of a stained map" is good).`;
+        `Make it concrete and actionable, not generic ("introduces themselves" is bad, "is haggling with the innkeeper over the price of a stained map" is good).\n` +
+        `- goal: ONE concise sentence describing what this NPC wants right now (motivation that drives subtext during dialogue). This is DM-visible only — never directly stated by the NPC.\n` +
+        `- secret: ONE concise sentence describing something this NPC actively hides. Affects reactions in conversation, never volunteered, only revealed under pressure / persuasion / leverage.\n` +
+        `- knowledge: 3-5 short factual bullets the NPC knows about the world / scene / other characters. Each bullet is a single concrete fact (a name, a place, a rumour, a habit), not a generalisation. These ground the NPC's answers in concrete detail when the player asks.`;
 }
 
 export async function generateNpc(criteria: NpcCriteria): Promise<GeneratedNpc> {
@@ -96,6 +102,9 @@ export async function generateNpcIntoScene(
         hp: npc.hp,
         ac: npc.ac,
         cr: npc.cr,
+        goal: npc.goal,
+        secret: npc.secret,
+        knowledge: npc.knowledge,
     };
 
     const existing = useModelStore.getState().entityNodes;

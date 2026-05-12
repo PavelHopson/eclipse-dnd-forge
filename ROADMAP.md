@@ -2,9 +2,9 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-11** (NPC Generator slice). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
+Last update: **2026-05-12** (Living NPCs slice — AI Agents layer started). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
 
-> ⏸️ **Status: paused — 2026-05-11.** Owner switched focus to other Eclipse work. v0.1 slice 1 and v0.2 slice 1 are committed locally on `main` (SHAs `7bee46d`, `69195f2`). Resume point = the **Active** block below (Encounter Generator). When picking this back up: run `npm install && npm run build` first to verify the two paused slices compile in a clean environment — they were shipped without a successful build run because of repeated `ECONNRESET` against npm registry during the dev session.
+> 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
 ---
 
@@ -34,37 +34,51 @@ Last update: **2026-05-11** (NPC Generator slice). Branch: `main`. Remote: archi
 **Verified by:** manual TypeScript review (npm install kept failing with `ECONNRESET` to npm registry in the session that shipped this).
 
 ### v0.2 slice 1 — NPC Generator ✨
-*Shipped 2026-05-11 in the same session as v0.1 slice 1.*
+*Shipped 2026-05-11.*
 
 - [x] `NpcGenerator` prompt — structured JSON for a full 5e NPC (name, emoji, kind, role, 6 abilities, hp, ac, cr, DM hook). Anchored to party level + location + hostility + DM notes.
 - [x] `generateNpcIntoScene` — generates, hydrates an `Entity` with all D&D fields, adds to the graph, re-runs layout.
 - [x] UI: dedicated "Generate NPC" button on the Heroes & NPCs tab toolbar (only visible on that tab).
 - [x] Inline form panel — race / occupation / party level / location / hostility / DM notes.
-- [x] On success — shows the NPC stat block (HP / AC / CR + 6 abilities as chips) + the DM hook in a copy-friendly card, plus "Forge another" + "Done" actions.
+- [x] Result card: HP/AC/CR + 6 abilities as chips, DM hook block, "Forge another" + "Done".
 - [x] Existing "Clear canvas" trash button rewired into the same toolbar group with its own tooltip.
+
+### v0.2 slice 2 — Living NPCs (Agent layer foundation) 🧠
+*Shipped 2026-05-12. The strategic pivot: every entity becomes an addressable AI agent.*
+
+- [x] **Domain extension** — `Entity.goal` (DM-visible motivation), `Entity.secret` (hidden), `Entity.knowledge[]` (concrete facts). All optional, additive.
+- [x] **`NpcGenerator` schema upgrade** — now also returns goal + secret + 3-5 knowledge bullets. Old generator path stays backwards-compatible.
+- [x] **Seed campaigns backfilled** — Phandalin / Barovia / Cinder Hollow NPCs (10+ characters) each have hand-authored goal / secret / knowledge so the first-click demo lands.
+- [x] **Agent layer (`src/model/agents/NpcAgent.ts`)** — `buildNpcSystemPrompt` assembles a full in-character system prompt (character card, knowledge, goal, secret, scene text, other present entities, RP rules). `runNpcDialogue` streams the reply via OpenAI chat-completions.
+- [x] **Agent state (`src/store/useAgentStore.ts`)** — Zustand store with per-entity chat history (`Record<entityId, AgentMessage[]>`), streaming flag, append / clear API. History persists across panel close & reopen within a session.
+- [x] **Dialogue UI (`src/view/dnd/NpcDialoguePanel.tsx`)** — chat panel keyed by entity id: avatar + name + role + kind badge, collapsible DM-only context (goal/secret), scrolling conversation log with streaming-aware rendering, send + clear, in-character error fallback.
+- [x] **Wire-in (`VisualWritingInterface.tsx`)** — when exactly one entity node is selected on the Heroes & NPCs canvas, a Talk-icon button appears next to Generate NPC. Click → opens dialogue panel for that entity; switching selection while the panel is open re-targets it; opening NPC Generator closes the dialogue and vice versa.
 
 ---
 
 ## 🚧 Active
 
-### v0.2 slice 2 — Encounter Generator
-**Goal:** pick a location → generate a CR-balanced encounter sized for the party → drop the monsters onto the graph at that location.
-
-- [ ] `EncounterGenerator` prompt: structured JSON returning 1-N monsters with roles ("brute", "skirmisher", "controller") + an environmental twist hook
-- [ ] UI on Realms & Locations tab: select a location node → toolbar shows "Generate encounter here" → form (party level + party size + difficulty: easy/medium/hard/deadly)
-- [ ] Encounter math: implement XP budget per DMG, log per-monster CR + total budget so the DM can sanity-check
-- [ ] Drop monsters as new `Entity` nodes (kind = monster) with `hp / ac / cr` populated; create `ActionEdge`s connecting each monster to the selected location
+*(slot open — next slice to be promoted from below)*
 
 ---
 
 ## 🎯 Next (small, bounded)
 
-- [ ] **Inline dice roller** — `/roll d20+5` syntax inside the Slate editor, result chip inline
-- [ ] **Initiative tracker** — minimal: ordered list of entities with init scores, current-turn marker
-- [ ] **Multi-provider AI** — factor `openai` client out of `Model.tsx` into `ai/Provider.ts`, allow Gemini / Claude / Ollama as fallback (mirror Star CRM auto-chain pattern)
-- [ ] **Session / Encounter as first-class layer** — today `ActionEdge` is still generic narrative-action; introduce a `Session` group containing ordered scene beats and link to encounters
-- [ ] **D&D-aware text editors** — `ChangeAbilityScorePrompt` (slider on STR rewrites the scene mechanically), `ChangeHpPrompt` (drops HP after combat), `ChangeDangerPrompt` (location danger up/down)
-- [ ] **Hook → editor injection** — currently the NPC hook is shown read-only in the generator panel; add a one-click "Insert into session text" button that drops the hook at the cursor position in the Slate editor
+### Agent layer extensions (priority — same architecture, new agent types)
+
+- [ ] **Multi-provider AI** — factor `openai` client out of `Model.tsx` into `ai/Provider.ts`, allow Gemini / Claude / Ollama as fallback (cost-control becomes critical with conversational agents)
+- [ ] **DM Agent** — same Agent abstraction, narrator/referee system prompt. Given world state + recent player turn → narrates the next beat. First step toward "AI runs the table".
+- [ ] **Combat AI** — same Agent class, tactical-reasoning system prompt for `kind: monster` entities. Monsters propose actions (flank, focus, retreat) given a battlefield snapshot.
+- [ ] **Off-screen world tick** — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface
+- [ ] **Hook → editor injection** — NPC hook (and AI dialogue lines) → one-click insert into Slate at the cursor; ties dialogue back into the session text
+
+### Classic DM tools (parked under the Agent vector)
+
+- [ ] **Encounter Generator** — pick a location → CR-balanced monster squad → drop into the graph. Will benefit from Combat AI once that ships.
+- [ ] **Inline dice roller** — `/roll d20+5` inside the Slate editor, inline result chip
+- [ ] **Initiative tracker** — ordered list of entities with init scores, current-turn marker
+- [ ] **Session / Encounter as first-class layer** — reframe `ActionEdge` as scene beats inside a `Session` container
+- [ ] **D&D-aware text editors** — `ChangeAbilityScorePrompt`, `ChangeHpPrompt`, `ChangeDangerPrompt` (slider on a stat rewrites the scene mechanically)
 
 ---
 

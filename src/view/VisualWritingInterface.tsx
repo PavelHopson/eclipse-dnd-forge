@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiCastle, GiCrossedSwords, GiSpellBook } from 'react-icons/gi';
+import { GiCastle, GiChatBubble, GiCrossedSwords, GiSpellBook } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -15,6 +15,7 @@ import { useStudyStore } from '../study/StudyModel';
 import HistoryTree from './HistoryTree';
 import TextEditor from './TextEditor';
 import ActionTimeline from './actionTimeline/ActionTimeline';
+import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
 import EntitiesEditor from './entityActionView/EntitiesEditor';
 import LocationsEditor from './locationView/LocationsEditor';
@@ -24,9 +25,26 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedTab, setSelectedTab] = useState('entities');
   const [isNpcPanelOpen, setIsNpcPanelOpen] = useState(false);
+  const [talkingToEntityId, setTalkingToEntityId] = useState<string | null>(null);
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
+  const selectedNodes = useModelStore(state => state.selectedNodes);
+  const entityNodes = useModelStore(state => state.entityNodes);
   const escapePressed = useKeyPress(["Escape"]);
+
+  // A selection is "talkable" when exactly one entity node is currently selected.
+  const selectedEntityId = (() => {
+    if (selectedNodes.length !== 1) return null;
+    const id = selectedNodes[0];
+    return entityNodes.some((n) => n.id === id) ? id : null;
+  })();
+
+  // If the dialogue panel is open and the user clicks a different entity, switch the panel to it.
+  useEffect(() => {
+    if (talkingToEntityId && selectedEntityId && selectedEntityId !== talkingToEntityId) {
+      setTalkingToEntityId(selectedEntityId);
+    }
+  }, [selectedEntityId, talkingToEntityId]);
 
   const visualPanelRef = React.createRef<HTMLDivElement>();
 
@@ -105,12 +123,35 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
 
             {!isReadOnly && (
               <div style={{ position: 'absolute', right: 10, top: 10, display: 'flex', gap: 6 }}>
+                {selectedTab === 'entities' && selectedEntityId && (
+                  <Tooltip content="Talk to this character (AI agent)" closeDelay={0}>
+                    <Button
+                      style={{ fontSize: 18, background: talkingToEntityId === selectedEntityId ? '#7a1f1f' : undefined, color: talkingToEntityId === selectedEntityId ? 'white' : undefined }}
+                      isIconOnly
+                      onClick={() => {
+                        if (talkingToEntityId === selectedEntityId) {
+                          setTalkingToEntityId(null);
+                        } else {
+                          setTalkingToEntityId(selectedEntityId);
+                          setIsNpcPanelOpen(false);
+                        }
+                      }}
+                      aria-label="Talk to selected character"
+                    >
+                      <GiChatBubble />
+                    </Button>
+                  </Tooltip>
+                )}
                 {selectedTab === 'entities' && (
                   <Tooltip content="Generate NPC" closeDelay={0}>
                     <Button
                       style={{ fontSize: 18, background: isNpcPanelOpen ? '#7a1f1f' : undefined, color: isNpcPanelOpen ? 'white' : undefined }}
                       isIconOnly
-                      onClick={() => setIsNpcPanelOpen((v) => !v)}
+                      onClick={() => {
+                        const next = !isNpcPanelOpen;
+                        setIsNpcPanelOpen(next);
+                        if (next) setTalkingToEntityId(null);
+                      }}
                       aria-label="Toggle NPC generator"
                     >
                       <GiSpellBook />
@@ -126,6 +167,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     useModelStore.getState().setFilteredActionsSegment(null, null);
                     useModelStore.getState().setHighlightedActionsSegment(null, null);
                     VisualRefresher.getInstance().reset();
+                    setTalkingToEntityId(null);
                   }}><FaTrashAlt /></Button>
                 </Tooltip>
               </div>
@@ -138,6 +180,12 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                   y: visualPanelRef.current.clientHeight / 2,
                 }}
                 defaultLocation={useModelStore.getState().locationNodes[0]?.data.name}
+              />
+            )}
+            {talkingToEntityId && selectedTab === 'entities' && !isReadOnly && (
+              <NpcDialoguePanel
+                entityId={talkingToEntityId}
+                onClose={() => setTalkingToEntityId(null)}
               />
             )}
           </div>

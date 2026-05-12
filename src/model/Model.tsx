@@ -57,6 +57,12 @@ export type Entity = {
     hp?: number
     ac?: number
     cr?: number
+    // Agent layer (Living NPCs slice) — all optional, additive on top of the
+    // visual graph entity. None of these are exposed in dialogue as raw text;
+    // the NpcAgent uses them to shape voice, knowledge, subtext.
+    goal?: string          // What this entity wants — drives subtext, never blurted out
+    secret?: string        // What this entity hides — never directly revealed
+    knowledge?: string[]   // Concrete facts the entity is aware of about the world / scene
 }
 export type EntityNode = Node<Entity>;
 

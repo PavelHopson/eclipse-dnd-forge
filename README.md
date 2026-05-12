@@ -71,12 +71,18 @@ npm run dev
 
 ## Roadmap
 
-The full roadmap lives in **[`ROADMAP.md`](ROADMAP.md)** — done / active / next / backlog, updated on every shipped slice. Short version:
+The full roadmap lives in **[`ROADMAP.md`](ROADMAP.md)** — done / active / next / backlog, updated on every shipped slice.
 
-- ✅ **v0.1 slice 1** — D&D rebrand of the entry point: Campaign Launcher, domain model (kind/role/abilities/hp/ac/cr · biome/danger), extractor prompts in D&D vocabulary, fantasy UI.
-- 🚧 **v0.2 slice 1 — NPC Generator** (active): one-click full 5e NPC with stat block + scene hook, dropped onto the visual graph.
-- 🎯 Next: Encounter Generator · inline dice roller · initiative tracker · multi-provider AI · Sessions as a first-class layer.
-- 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, AI DM mode, cinematic NPC briefings.
+**Strategic direction:** Eclipse DnD Forge is a **tabletop with AI agents**, not a DM helper. Every entity on the visual graph is an addressable agent — NPC, monster, faction, hero, or DM. Encounter generators, dice rollers and initiative trackers are second-class tools that hang off the Agent layer.
+
+Short version:
+
+- ✅ **v0.1 slice 1** — D&D rebrand: Campaign Launcher, domain model (kind/role/abilities/hp/ac/cr · biome/danger), extractor prompts in D&D vocabulary, fantasy UI.
+- ✅ **v0.2 slice 1 — NPC Generator** — one-click full 5e NPC with stat block + scene hook + goal + secret + knowledge.
+- ✅ **v0.2 slice 2 — Living NPCs (Agent layer foundation)** — click an entity → talk to it. Streaming AI dialogue, per-entity memory, scene-aware system prompts, hand-authored backstories for all seed-campaign NPCs.
+- 🎯 Next (Agent-first): multi-provider AI · DM Agent · Combat AI · off-screen world tick.
+- 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
+- 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 
 ---
 
