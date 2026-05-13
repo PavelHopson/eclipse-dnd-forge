@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-provider; provider story complete). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
+Last update: **2026-05-13** (Off-screen World Tick shipped — the "living world" loop now exists). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -83,6 +83,16 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 10 — Off-screen World Tick 🌍⏳
+*Shipped 2026-05-13. The "living world" loop — entities act between sessions even when no DM is at the table.*
+
+- [x] **`src/model/agents/WorldTickAgent.ts`** — `buildWorldTickSystemPrompt(ctx)` assembles a DM-side world-simulation prompt for ONE entity at a time. Output is a JSON object (`{action, consequence?}`) — no OpenAI-specific structured outputs, parsed manually so the same code runs on Ollama and Anthropic via `currentProvider()`. Forgiving parser (strips markdown fences, extracts first `{...}` block on fallback); malformed replies surface as `raw`-only events instead of crashing the batch.
+- [x] **`runWorldTick({onEventCommitted, tickId?})`** — orchestrator that iterates over every entity with a `goal` (NPCs / monsters / factions only — heroes excluded), runs ticks in parallel with concurrency cap 3, streams each event through the callback as it lands. Per-entity errors become `(tick failed: ...)` events rather than aborting the whole tick.
+- [x] **`src/store/useWorldEventStore.ts`** — Zustand event log with `localStorage` persistence (`eclipse_dnd_world_events_v1`). Hard cap of 200 events. Tracks `insertedIds` so the panel knows which events are already promoted into the session text. `currentTickId` filter so the UI shows only the latest batch by default.
+- [x] **`src/view/dnd/WorldTickPanel.tsx`** — wide chat-like panel: eligibility banner ("Will tick N entities"), "Advance the world" button (streams events as they arrive), per-event card with action + optional consequence + Insert button. "Insert all into session" bottom action consolidates the whole tick into a single `**Between sessions —** ...` block.
+- [x] **Cross-reference into chat history** — every off-screen action is also mirrored into the entity's chat history (assistant message, prepended by a one-time "(Off-screen tick: ...)" user marker). Future "Talk to that NPC" picks up what they did between sessions.
+- [x] **Toolbar wire-in** — global "⏳ Advance the world" button next to DM. Mutually exclusive with all other right-side panels.
+
 ### v0.2 slice 9 — Combat AI ⚔️
 *Shipped 2026-05-12. Third agent type on the same architecture — monsters as tactical advisors.*
 
@@ -127,7 +137,8 @@ Last update: **2026-05-12** (Anthropic + Fallback chain shipped on top of multi-
 ### Agent layer extensions (priority — same architecture, new agent types)
 
 - [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
-- [ ] **Off-screen world tick** *(design item — not bounded for one slice yet)* — periodic agent loop that advances NPC/faction goals between sessions, emits events the DM can choose to surface. Needs scheduling architecture, event log, persistent agent state.
+- [ ] **World tick — auto-scheduling** — current tick is manual-only. Add an optional cadence (every-N-minutes / on-launch / on-new-session) once we have a sense of how often DMs actually want it. Persistence already in place.
+- [ ] **World tick — surface in DM panel** — auto-fold recent tick events into the next DM prompt as `"Off-screen events since last turn: ..."` so the DM agent naturally references them in narration.
 
 ### Classic DM tools (parked under the Agent vector)
 

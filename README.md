@@ -87,7 +87,8 @@ Short version:
 - ✅ **v0.2 slice 7 — DM ↔ NPC cross-reference** — after every DM turn, any `**Name:**` quote in the narration is auto-mirrored into that NPC's chat history. Future "Talk to that NPC" picks up the DM-narrated context.
 - ✅ **v0.2 slice 8 — Insert-at-cursor** — all "Insert into session" buttons now drop into the current Slate cursor position (falls back to append at end when there's no selection).
 - ✅ **v0.2 slice 9 — Combat AI** — third agent type on the same architecture. When a monster entity is selected, a "Suggest tactic" button proposes a one-sentence tactical action grounded in the battlefield and the creature's goal. Insert directly into the session text.
-- 🎯 Next (Agent-first): (design items) cross-provider structured outputs · off-screen world tick.
+- ✅ **v0.2 slice 10 — Off-screen World Tick** — every NPC / monster / faction with a goal gets an off-screen action between sessions. Events are persisted, mirrored into entities' chat histories, and one-click-insertable into the session text. Works across all 3 providers.
+- 🎯 Next: world-tick auto-scheduling · DM-prompt awareness of recent tick events · (design item) cross-provider structured outputs.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 

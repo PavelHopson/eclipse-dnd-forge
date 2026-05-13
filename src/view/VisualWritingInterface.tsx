@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSpellBook } from 'react-icons/gi';
+import { GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSandsOfTime, GiSpellBook } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -18,6 +18,7 @@ import ActionTimeline from './actionTimeline/ActionTimeline';
 import DmAgentPanel from './dnd/DmAgentPanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
+import WorldTickPanel from './dnd/WorldTickPanel';
 import EntitiesEditor from './entityActionView/EntitiesEditor';
 import LocationsEditor from './locationView/LocationsEditor';
 
@@ -28,6 +29,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isNpcPanelOpen, setIsNpcPanelOpen] = useState(false);
   const [talkingToEntityId, setTalkingToEntityId] = useState<string | null>(null);
   const [isDmPanelOpen, setIsDmPanelOpen] = useState(false);
+  const [isWorldTickPanelOpen, setIsWorldTickPanelOpen] = useState(false);
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
   const selectedNodes = useModelStore(state => state.selectedNodes);
@@ -135,11 +137,30 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                       if (next) {
                         setIsNpcPanelOpen(false);
                         setTalkingToEntityId(null);
+                        setIsWorldTickPanelOpen(false);
                       }
                     }}
                     aria-label="Toggle DM panel"
                   >
                     <GiCrown />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Advance the world — every NPC / monster / faction acts off-screen" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isWorldTickPanelOpen ? '#7a1f1f' : undefined, color: isWorldTickPanelOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isWorldTickPanelOpen;
+                      setIsWorldTickPanelOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                        setIsDmPanelOpen(false);
+                      }
+                    }}
+                    aria-label="Toggle World Tick panel"
+                  >
+                    <GiSandsOfTime />
                   </Button>
                 </Tooltip>
                 {selectedTab === 'entities' && selectedEntityId && (
@@ -154,6 +175,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setTalkingToEntityId(selectedEntityId);
                           setIsNpcPanelOpen(false);
                           setIsDmPanelOpen(false);
+                          setIsWorldTickPanelOpen(false);
                         }
                       }}
                       aria-label="Talk to selected character"
@@ -173,6 +195,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         if (next) {
                           setTalkingToEntityId(null);
                           setIsDmPanelOpen(false);
+                          setIsWorldTickPanelOpen(false);
                         }
                       }}
                       aria-label="Toggle NPC generator"
@@ -213,6 +236,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isDmPanelOpen && !isReadOnly && (
               <DmAgentPanel onClose={() => setIsDmPanelOpen(false)} />
+            )}
+            {isWorldTickPanelOpen && !isReadOnly && (
+              <WorldTickPanel onClose={() => setIsWorldTickPanelOpen(false)} />
             )}
           </div>
           <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
