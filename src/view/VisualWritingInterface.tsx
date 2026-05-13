@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSandsOfTime, GiSpellBook } from 'react-icons/gi';
+import { GiBattleAxe, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSandsOfTime, GiSpellBook } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -19,6 +19,7 @@ import HistoryTree from './HistoryTree';
 import TextEditor from './TextEditor';
 import ActionTimeline from './actionTimeline/ActionTimeline';
 import DmAgentPanel from './dnd/DmAgentPanel';
+import EncounterGeneratorPanel from './dnd/EncounterGeneratorPanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
 import WorldTickPanel from './dnd/WorldTickPanel';
@@ -33,7 +34,17 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [talkingToEntityId, setTalkingToEntityId] = useState<string | null>(null);
   const [isDmPanelOpen, setIsDmPanelOpen] = useState(false);
   const [isWorldTickPanelOpen, setIsWorldTickPanelOpen] = useState(false);
+  const [encounterForLocationId, setEncounterForLocationId] = useState<string | null>(null);
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
+  const locationNodes = useModelStore(state => state.locationNodes);
+
+  // A location is "encounter-able" when exactly one location node is selected
+  // on the Realms tab.
+  const selectedLocationId = (() => {
+    if (selectedNodes.length !== 1) return null;
+    const id = selectedNodes[0];
+    return locationNodes.some((n) => n.id === id) ? id : null;
+  })();
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
   const selectedNodes = useModelStore(state => state.selectedNodes);
@@ -271,11 +282,34 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setTalkingToEntityId(null);
                           setIsDmPanelOpen(false);
                           setIsWorldTickPanelOpen(false);
+                          setEncounterForLocationId(null);
                         }
                       }}
                       aria-label="Toggle NPC generator"
                     >
                       <GiSpellBook />
+                    </Button>
+                  </Tooltip>
+                )}
+                {selectedTab === 'locations' && selectedLocationId && (
+                  <Tooltip content="Generate encounter at this location" closeDelay={0}>
+                    <Button
+                      style={{ fontSize: 18, background: encounterForLocationId === selectedLocationId ? '#7a1f1f' : undefined, color: encounterForLocationId === selectedLocationId ? 'white' : undefined }}
+                      isIconOnly
+                      onClick={() => {
+                        if (encounterForLocationId === selectedLocationId) {
+                          setEncounterForLocationId(null);
+                        } else {
+                          setEncounterForLocationId(selectedLocationId);
+                          setIsNpcPanelOpen(false);
+                          setIsDmPanelOpen(false);
+                          setIsWorldTickPanelOpen(false);
+                          setTalkingToEntityId(null);
+                        }
+                      }}
+                      aria-label="Toggle encounter generator"
+                    >
+                      <GiBattleAxe />
                     </Button>
                   </Tooltip>
                 )}
@@ -314,6 +348,16 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isWorldTickPanelOpen && !isReadOnly && (
               <WorldTickPanel onClose={() => setIsWorldTickPanelOpen(false)} />
+            )}
+            {encounterForLocationId && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
+              <EncounterGeneratorPanel
+                onClose={() => setEncounterForLocationId(null)}
+                locationId={encounterForLocationId}
+                canvasCenter={{
+                  x: visualPanelRef.current.clientWidth / 2,
+                  y: visualPanelRef.current.clientHeight / 2,
+                }}
+              />
             )}
           </div>
           <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>

@@ -83,6 +83,16 @@ Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 14 — Encounter Generator ⚔️🎲
+*Shipped 2026-05-13. Classic DM tool, now augmented by the Agent stack underneath.*
+
+- [x] **`src/model/prompts/generators/EncounterGenerator.ts`** — `EncounterGenerator` returns a structured payload: monster groups (each with combat role, count, full stat block, goal, knowledge) + an environmental twist + an XP-budget estimate. Uses the new cross-provider structured-output path so it runs on all three providers.
+- [x] **`calcXpBudget(level, size, difficulty)`** — DMG 2014 XP-budget table baked in. Surfaces in UI so the DM can sanity-check the model's output against the target.
+- [x] **`generateEncounterIntoScene`** — spawns each monster group as new `EntityNode`s (`kind: monster`, full stats, goal, knowledge) with multi-count groups getting `#N` suffixes. Re-runs the layout so they don't pile on existing entities.
+- [x] **`src/view/dnd/EncounterGeneratorPanel.tsx`** — toolbar panel keyed by selected location: party level / party size / difficulty / DM notes form, live XP-budget readout, result block with per-monster cards + twist callout + "Insert into session" button that drops an encounter-summary paragraph into Slate.
+- [x] **Wire-in** — on the Realms & Locations tab, when exactly one location node is selected, a battle-axe button appears in the global toolbar. Click → opens encounter generator anchored to that location. Mutually exclusive with all other right-side panels.
+- [x] **Combat AI pre-wired** — generated monsters carry goal + knowledge, so the existing `Suggest tactic` button on the Heroes & NPCs tab works on them out of the box.
+
 ### v0.2 slice 13 — Cross-provider structured outputs 🔌
 *Shipped 2026-05-13. Frees the entity / location extractors and NPC generator from hard-OpenAI dependency.*
 
