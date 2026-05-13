@@ -8,6 +8,7 @@ import { DM_AGENT_ID, runDmTurn } from "../../model/agents/DmAgent";
 import { extractNpcQuotes, mirrorDmQuotesToNpcHistories } from "../../model/agents/dmCrossReference";
 import { insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
+import { useWorldEventStore } from "../../store/useWorldEventStore";
 
 interface DmAgentPanelProps {
     onClose: () => void;
@@ -16,6 +17,10 @@ interface DmAgentPanelProps {
 export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
     const history = useAgentStore((s) => s.histories[DM_AGENT_ID] ?? []);
     const streaming = useAgentStore((s) => !!s.streaming[DM_AGENT_ID]);
+    // Reactive subscribe so the "N events pending" chip updates live as ticks land.
+    const pendingTickEvents = useWorldEventStore((s) =>
+        s.events.filter((e) => !!e.action && e.createdAt > s.lastDmAcknowledgedAt),
+    );
 
     const [input, setInput] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -187,6 +192,12 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                     );
                 })}
             </div>
+
+            {pendingTickEvents.length > 0 && !streaming && (
+                <div style={{ fontSize: 11, color: "#3a2a2a", background: "#fff1c8", padding: 6, borderRadius: 6, lineHeight: 1.35, border: "1px solid #d4c5a0" }}>
+                    🌍 <strong>{pendingTickEvents.length}</strong> off-screen event{pendingTickEvents.length === 1 ? "" : "s"} waiting — the DM will weave {pendingTickEvents.length === 1 ? "it" : "them"} into the next narration.
+                </div>
+            )}
 
             {lastMirrored.length > 0 && !streaming && (
                 <div style={{ fontSize: 11, color: "#3a2a2a", background: "#e6f0d2", padding: 6, borderRadius: 6, lineHeight: 1.35 }}>

@@ -1,5 +1,7 @@
 import { Entity, Location, useModelStore } from "../Model";
 import { currentModel, currentProvider } from "../../store/useAiConfigStore";
+import { useWorldEventStore } from "../../store/useWorldEventStore";
+import { WorldTickEvent } from "./WorldTickAgent";
 import { AgentMessage } from "./NpcAgent";
 
 /** Special agent key used by `useAgentStore` for the global DM conversation. */
@@ -14,6 +16,9 @@ export interface DmAgentContext {
     locations: Location[];
     /** Conversation so far between the player and the DM. */
     history: AgentMessage[];
+    /** Off-screen world-tick events the DM has not yet acknowledged. Empty
+     *  when no ticks have run since the last DM turn. */
+    pendingOffScreenEvents: WorldTickEvent[];
 }
 
 function formatEntityLine(e: Entity): string {
@@ -38,7 +43,7 @@ function formatLocationLine(l: Location): string {
  *   - It describes consequences of player actions naturally — no dice talk.
  */
 export function buildDmSystemPrompt(ctx: DmAgentContext): string {
-    const { sceneText, entities, locations } = ctx;
+    const { sceneText, entities, locations, pendingOffScreenEvents } = ctx;
 
     const entityBlock = entities.length > 0
         ? entities.map(formatEntityLine).join("\n")
@@ -48,7 +53,13 @@ export function buildDmSystemPrompt(ctx: DmAgentContext): string {
         ? locations.map(formatLocationLine).join("\n")
         : "- (no named locations yet — improvise as needed)";
 
-    return [
+    const offScreenBlock = pendingOffScreenEvents.length > 0
+        ? pendingOffScreenEvents
+            .map((e) => `- **${e.entityName}** — ${e.action}${e.consequence ? ` (${e.consequence})` : ""}`)
+            .join("\n")
+        : null;
+
+    const sections: string[] = [
         `You are the Dungeon Master of a Dungeons & Dragons 5th Edition campaign.`,
         `You are speaking directly to the players around a table. Your job is to narrate the world, voice NPCs, drive the plot, and react to player actions naturally.`,
         ``,
@@ -60,6 +71,19 @@ export function buildDmSystemPrompt(ctx: DmAgentContext): string {
         ``,
         `KNOWN LOCATIONS:`,
         locationBlock,
+    ];
+
+    if (offScreenBlock) {
+        sections.push(
+            ``,
+            `OFF-SCREEN EVENTS SINCE YOUR LAST NARRATION (the world has been moving while the party rested):`,
+            offScreenBlock,
+            ``,
+            `When you narrate next, weave AT LEAST ONE of these events in naturally — as background atmosphere, an overheard rumour, a sighting, a fresh track, or NPC dialogue. Do NOT list them as bullet points to the players. The party should encounter them through fiction.`,
+        );
+    }
+
+    sections.push(
         ``,
         `HOW YOU NARRATE:`,
         `- 2-3 short paragraphs per beat. Vivid sensory detail — what the players SEE, HEAR, SMELL. Concrete, not abstract.`,
@@ -75,7 +99,9 @@ export function buildDmSystemPrompt(ctx: DmAgentContext): string {
         `- Match the tone of the scene (medieval fantasy). No modern slang, brand names, or technology unless it fits.`,
         `- Stay grounded in the CURRENT SESSION TEXT and the listed CHARACTERS / LOCATIONS. Do not invent canon-breaking facts. New details are fine if they extend, not contradict, what is written.`,
         `- If a player asks something purely meta ("what stats does X have?"), gently steer back into the fiction.`,
-    ].join("\n");
+    );
+
+    return sections.join("\n");
 }
 
 export function buildDmMessages(
@@ -106,11 +132,20 @@ export async function runDmTurn(
     const entities = state.entityNodes.map((n) => n.data as Entity);
     const locations = state.locationNodes.map((n) => n.data as Location);
 
+    // Pull off-screen events the DM has not seen yet, so the system prompt
+    // can weave them into the next narration. Cap at the 20 most recent so
+    // a long-idle campaign doesn't blow the context window.
+    const pendingOffScreenEvents = useWorldEventStore
+        .getState()
+        .getEventsForDm()
+        .slice(-20);
+
     const ctx: DmAgentContext = {
         sceneText: state.text,
         entities,
         locations,
         history: priorHistory,
+        pendingOffScreenEvents,
     };
 
     const messages = buildDmMessages(ctx, newPlayerMessage);
@@ -120,6 +155,11 @@ export async function runDmTurn(
         temperature: 0.85,
         onPartial,
     });
+
+    // Bump the acknowledgement watermark so the same events are not re-fed on
+    // the next DM turn. We only acknowledge on success — if the stream throws,
+    // the caller catches and the events are still pending for the retry.
+    useWorldEventStore.getState().markDmAcknowledged();
 
     return text;
 }

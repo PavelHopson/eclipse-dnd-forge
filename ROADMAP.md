@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-13** (Off-screen World Tick shipped — the "living world" loop now exists). Branch: `main`. Remote: archived/read-only — pushes blocked, commits stay local.
+Last update: **2026-05-13** (DM ↔ Tick awareness + auto-scheduling — the living-world loop is now closed). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -83,6 +83,14 @@ Last update: **2026-05-13** (Off-screen World Tick shipped — the "living world
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 11 — DM ↔ World Tick awareness 🔗
+*Shipped 2026-05-13. Closes the loop: ticks happen → DM narration naturally references them.*
+
+- [x] **`useWorldEventStore` watermark** — new `lastDmAcknowledgedAt` field (persisted to localStorage). New action `markDmAcknowledged()` bumps it; new selector `getEventsForDm()` returns only events with an `action` and `createdAt > lastDmAcknowledgedAt`.
+- [x] **`buildDmSystemPrompt` extended** — adds an "OFF-SCREEN EVENTS SINCE YOUR LAST NARRATION" section when there are pending events. Strict instruction: weave AT LEAST ONE in naturally (rumour / sighting / dialogue / track), do NOT list them to the players.
+- [x] **`runDmTurn`** — pulls up to 20 most-recent pending events into the context, calls `markDmAcknowledged()` only on successful stream so a thrown stream still leaves events pending for the retry.
+- [x] **DmAgentPanel indicator** — live "🌍 N off-screen events waiting — the DM will weave them in" chip subscribed reactively to the store, so the chip updates in real time as ticks land.
+
 ### v0.2 slice 10 — Off-screen World Tick 🌍⏳
 *Shipped 2026-05-13. The "living world" loop — entities act between sessions even when no DM is at the table.*
 
@@ -137,8 +145,6 @@ Last update: **2026-05-13** (Off-screen World Tick shipped — the "living world
 ### Agent layer extensions (priority — same architecture, new agent types)
 
 - [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
-- [ ] **World tick — auto-scheduling** — current tick is manual-only. Add an optional cadence (every-N-minutes / on-launch / on-new-session) once we have a sense of how often DMs actually want it. Persistence already in place.
-- [ ] **World tick — surface in DM panel** — auto-fold recent tick events into the next DM prompt as `"Off-screen events since last turn: ..."` so the DM agent naturally references them in narration.
 
 ### Classic DM tools (parked under the Agent vector)
 
