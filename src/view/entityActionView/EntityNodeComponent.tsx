@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { Slider } from '@nextui-org/react';
 import '@xyflow/react/dist/style.css';
 import { Entity, EntityKind, EntityNode, useModelStore } from '../../model/Model';
+import { ChangeHpPrompt } from '../../model/prompts/textEditors/ChangeHpPrompt';
 import { ChangePropertyPrompt } from '../../model/prompts/textEditors/ChangePropertyPrompt';
 import { RemoveEntityPrompt } from '../../model/prompts/textEditors/RemoveEntityPrompt';
 
@@ -150,8 +151,34 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
         </div>
       </div>
 
-      {!isReadOnly && isSelected && <div style={{position: 'absolute', zIndex: 99999, border: '1px solid #e5e7eb', width: '100%', top: '100%', left: 0, background: 'white', padding: 10, borderRadius: 5, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px'}}>
+      {!isReadOnly && isSelected && <div style={{position: 'absolute', zIndex: 99999, border: '1px solid #e5e7eb', width: '100%', top: '100%', left: 0, background: 'white', padding: 10, borderRadius: 5, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px', display: 'flex', flexDirection: 'column', gap: 6}}>
         {propertySliders}
+        {typeof props.data.hp === 'number' && props.data.hp > 0 && (
+          <div className="nodrag nopan" style={{ display: 'flex', flexDirection: 'column' }}>
+            <Slider
+              size="sm"
+              label={`HP`}
+              className="max-w-md"
+              step={1}
+              color="danger"
+              minValue={0}
+              maxValue={Math.max(props.data.hp, 50)}
+              defaultValue={props.data.hp}
+              onChangeEnd={(newValue) => {
+                const previousHp = props.data.hp ?? 0;
+                const newHp = newValue as number;
+                if (newHp === previousHp) return;
+                // Update the entity stat in the model first so the visual badge / dialogue reflect the change.
+                const nodes = useModelStore.getState().entityNodes.map((n) =>
+                  n.id === props.id ? { ...n, data: { ...n.data, hp: newHp } } : n,
+                );
+                useModelStore.getState().setEntityNodes(nodes);
+                // Then ask the AI to rewrite the scene around the HP shift.
+                new ChangeHpPrompt(props.data, previousHp, newHp).execute();
+              }}
+            />
+          </div>
+        )}
       </div>}
     </div>
   </>

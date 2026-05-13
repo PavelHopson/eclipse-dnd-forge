@@ -1,8 +1,10 @@
+import { Slider } from '@nextui-org/react';
 import { NodeProps, useKeyPress } from '@xyflow/react';
 import { useEffect } from 'react';
 
 import '@xyflow/react/dist/style.css';
 import { Location, LocationNode, useModelStore } from '../../model/Model';
+import { ChangeDangerPrompt } from '../../model/prompts/textEditors/ChangeDangerPrompt';
 import { useViewModelStore } from '../../model/ViewModel';
 
 
@@ -23,6 +25,8 @@ export function CreateLocatioNode(location: Location, index: number): LocationNo
 export default function LocationNodeComponent(props: NodeProps<LocationNode>) {
   const deletePressed = useKeyPress(["Delete", "Backspace"]);
   const getFilteredLocationNodes = useModelStore(state => state.getFilteredLocationNodes);
+  const isSelected = useModelStore(state => state.selectedNodes.includes(props.id));
+  const isReadOnly = useModelStore(state => state.isReadOnly);
 
   const hoveredLocation = useViewModelStore(state => state.hoveredLocation);
 
@@ -79,6 +83,44 @@ export default function LocationNodeComponent(props: NodeProps<LocationNode>) {
           </span>
         )}
       </div>
+      {!isReadOnly && isSelected && (
+        <div
+          className="nodrag nopan"
+          style={{
+            position: 'absolute',
+            zIndex: 99999,
+            border: '1px solid #e5e7eb',
+            width: 220,
+            top: '100%',
+            left: '50%',
+            transform: 'translate(-50%, 8px)',
+            background: 'white',
+            padding: 10,
+            borderRadius: 8,
+            boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px',
+          }}
+        >
+          <Slider
+            size="sm"
+            label="Danger"
+            step={1}
+            color="danger"
+            minValue={1}
+            maxValue={10}
+            defaultValue={typeof danger === 'number' && danger > 0 ? danger : 5}
+            onChangeEnd={(newValue) => {
+              const previous = typeof danger === 'number' ? danger : 5;
+              const next = newValue as number;
+              if (next === previous) return;
+              const nodes = useModelStore.getState().locationNodes.map((n) =>
+                n.id === props.id ? { ...n, data: { ...n.data, danger: next } } : n,
+              );
+              useModelStore.getState().setLocationNodes(nodes);
+              new ChangeDangerPrompt(props.data, previous, next).execute();
+            }}
+          />
+        </div>
+      )}
     </div>
   </>
 }

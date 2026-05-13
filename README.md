@@ -90,7 +90,11 @@ Short version:
 - ✅ **v0.2 slice 10 — Off-screen World Tick** — every NPC / monster / faction with a goal gets an off-screen action between sessions. Events are persisted, mirrored into entities' chat histories, and one-click-insertable into the session text. Works across all 3 providers.
 - ✅ **v0.2 slice 11 — DM ↔ Tick awareness** — pending tick events are automatically folded into the next DM system prompt with a strict "weave at least one in" instruction. Watermark prevents repeats.
 - ✅ **v0.2 slice 12 — Auto-scheduling** — optional cadence selector inside the Tick panel: off / 5min / 15min / 1h / 4h. In-tab scheduler fires ticks while the app is open; persists last-tick timestamp so reload picks up correctly.
-- 🎯 Next: classic DM tools now meaningful on top of the Agent stack — Encounter Generator (will pair with Combat AI) · Initiative tracker · inline dice roller · (design item) cross-provider structured outputs.
+- ✅ **v0.2 slice 13 — Cross-provider structured outputs** — `generateStructured` on `AiProvider`. OpenAI (response_format) · Anthropic (tool-use) · Ollama (format=json + system-prompt schema). Frees the entity / location extractors and NPC generator from hard-OpenAI dependency.
+- ✅ **v0.2 slice 14 — Encounter Generator** — pick a location → AI builds a CR-balanced monster squad (with combat-role, goal, knowledge) + an environmental twist + an XP-budget self-estimate. Spawned monsters are immediately Combat-AI-aware.
+- ✅ **v0.2 slice 15 — Initiative tracker** — ordered combat-order panel with round counter, inline HP edit, auto-roll-from-entity (d20 + DEX mod). Pure state + persistence, no AI.
+- ✅ **v0.2 slice 16 — Dice roller** — toolbar popup with quick d4-d100 + custom expressions + a "scan & roll all `/roll …` in session" button that rewrites the session text in place.
+- ✅ **v0.2 slice 17 — D&D-aware text editors** — sliders on `Entity.hp` and `Location.danger` directly trigger scene rewrites (`ChangeHpPrompt`, `ChangeDangerPrompt`) that mechanic-aware-narrate the change.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 

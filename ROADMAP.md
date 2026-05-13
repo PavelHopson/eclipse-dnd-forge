@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no longer hard-OpenAI). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
+Last update: **2026-05-13** (D&D-aware text editors — HP / danger sliders that rewrite the scene mechanically). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -82,6 +82,15 @@ Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no
 - [x] **`NpcAgent` and `DmAgent`** — both rewired through `currentProvider().streamChat(...)`. No more direct `openai` references in the conversational path.
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
+
+### v0.2 slice 17 — D&D-aware text editors ⚙️
+*Shipped 2026-05-13. Slider on a stat rewrites the session text mechanically.*
+
+- [x] **`ChangeHpPrompt`** — new TextEditPrompt subclass. Maps HP delta to a severity ladder (glancing → wounded → unconscious; healed → fully healed). Asks the model to rewrite the session text reflecting that condition, without ever mentioning numbers / AC / dice / game mechanics.
+- [x] **`ChangeDangerPrompt`** — same pattern for `Location.danger`. 1-3 = peaceful, 4-6 = uneasy, 7-9 = actively dangerous, 10 = deadly. Rewrites only the atmospheric / sensory description of the named location; explicitly forbidden from inventing new plot events / NPCs / combat.
+- [x] **HP slider on `EntityNodeComponent`** — appears below the existing property sliders when the entity has an `hp` value > 0 and is selected. Slider range = 0 ... max(currentHp, 50). Drag-end updates the entity stat in the model AND fires `ChangeHpPrompt` to rewrite the scene.
+- [x] **Danger slider on `LocationNodeComponent`** — pop-up sub-panel below the location node when selected (the round shape can't host an inline slider). Slider range 1-10. Drag-end updates the location stat AND fires `ChangeDangerPrompt`.
+- [x] **No new TextEditPrompt machinery** — both new classes plug into the existing `execute() → TextPrompt → finalize` pipeline, so undo/redo, visual-refresher staleness, and the suggestion-mode diff all work for free.
 
 ### v0.2 slice 16 — Dice roller 🎲
 *Shipped 2026-05-13. Pure utility — no AI calls.*
@@ -193,13 +202,10 @@ Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no
 ### Agent layer extensions (priority — same architecture, new agent types)
 
 
-### Classic DM tools (parked under the Agent vector)
+### Classic DM tools
 
-- [ ] **Encounter Generator** — pick a location → CR-balanced monster squad → drop into the graph. Will benefit from Combat AI once that ships.
-- [ ] **Inline dice roller** — `/roll d20+5` inside the Slate editor, inline result chip
-- [ ] **Initiative tracker** — ordered list of entities with init scores, current-turn marker
 - [ ] **Session / Encounter as first-class layer** — reframe `ActionEdge` as scene beats inside a `Session` container
-- [ ] **D&D-aware text editors** — `ChangeAbilityScorePrompt`, `ChangeHpPrompt`, `ChangeDangerPrompt` (slider on a stat rewrites the scene mechanically)
+- [ ] **`ChangeAbilityScorePrompt`** — sister to ChangeHpPrompt / ChangeDangerPrompt for ability-score sliders (STR/DEX/CON/INT/WIS/CHA). Less obvious narrative payoff than HP — slider drag on STR doesn't have a clean condition mapping — so parked until we have a use-case
 
 ---
 
