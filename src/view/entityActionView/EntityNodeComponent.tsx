@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { Slider } from '@nextui-org/react';
 import '@xyflow/react/dist/style.css';
 import { Entity, EntityKind, EntityNode, useModelStore } from '../../model/Model';
+import { ABILITY_LABELS, AbilityKey, ChangeAbilityScorePrompt } from '../../model/prompts/textEditors/ChangeAbilityScorePrompt';
 import { ChangeHpPrompt } from '../../model/prompts/textEditors/ChangeHpPrompt';
 import { ChangePropertyPrompt } from '../../model/prompts/textEditors/ChangePropertyPrompt';
 import { RemoveEntityPrompt } from '../../model/prompts/textEditors/RemoveEntityPrompt';
@@ -178,6 +179,46 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
               }}
             />
           </div>
+        )}
+        {props.data.abilities && (
+          <details className="nodrag nopan" style={{ fontSize: 11, color: '#3a2a2a' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, marginBottom: 4 }}>
+              Abilities (drag → rewrites scene if tier changes)
+            </summary>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {(Object.keys(ABILITY_LABELS) as AbilityKey[]).map((key) => {
+                const value = props.data.abilities?.[key];
+                if (typeof value !== 'number') return null;
+                return (
+                  <Slider
+                    key={`ability-${key}`}
+                    size="sm"
+                    label={ABILITY_LABELS[key]}
+                    className="max-w-md"
+                    step={1}
+                    color="primary"
+                    minValue={3}
+                    maxValue={20}
+                    defaultValue={value}
+                    onChangeEnd={(newValue) => {
+                      const previous = props.data.abilities?.[key] ?? value;
+                      const next = newValue as number;
+                      if (next === previous) return;
+                      const nodes = useModelStore.getState().entityNodes.map((n) =>
+                        n.id === props.id
+                          ? { ...n, data: { ...n.data, abilities: { ...(n.data.abilities || {}), [key]: next } } }
+                          : n,
+                      );
+                      useModelStore.getState().setEntityNodes(nodes);
+                      // ChangeAbilityScorePrompt skips itself when both values land in the same
+                      // tier (high/mid/low), so cosmetic 14→15 changes don't burn a rewrite.
+                      new ChangeAbilityScorePrompt(props.data, key, previous, next).execute();
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </details>
         )}
       </div>}
     </div>

@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-13** (D&D-aware text editors — HP / danger sliders that rewrite the scene mechanically). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
+Last update: **2026-05-13** (Sessions layer + ability-score rewrites — the v0.2 Next list is empty). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -82,6 +82,13 @@ Last update: **2026-05-13** (D&D-aware text editors — HP / danger sliders that
 - [x] **`NpcAgent` and `DmAgent`** — both rewired through `currentProvider().streamChat(...)`. No more direct `openai` references in the conversational path.
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
+
+### v0.2 slice 19 — Ability-score rewrites 🎯
+*Shipped 2026-05-13. Closes the v0.2 "D&D-aware editor" trio (HP / danger / ability).*
+
+- [x] **`ChangeAbilityScorePrompt`** — sister to ChangeHpPrompt / ChangeDangerPrompt. Each of the 6 abilities (STR/DEX/CON/INT/WIS/CHA) has a high/mid/low narrative mapping focused on what an OUTSIDE observer would notice (e.g. STR-high = "carries heavy gear without effort, shoves doors open one-handed").
+- [x] **Tier-aware skip** — the prompt skips itself (`canBeExecuted = false`) when both old and new values land in the same tier (low ≤8, mid 9-15, high ≥16). Cosmetic 14 → 15 slider drags don't burn an API call.
+- [x] **Six sliders inside a collapsible `<details>`** on selected entity nodes — only rendered when the entity has an `abilities` block. STR/DEX/CON/INT/WIS/CHA each 3-20 range. Drag-end updates the entity stat AND fires the rewrite prompt.
 
 ### v0.2 slice 18 — Sessions as first-class layer 📖
 *Shipped 2026-05-13. Campaign chapters with AI-generated recaps that loop back into DM context.*

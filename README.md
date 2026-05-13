@@ -95,6 +95,8 @@ Short version:
 - ✅ **v0.2 slice 15 — Initiative tracker** — ordered combat-order panel with round counter, inline HP edit, auto-roll-from-entity (d20 + DEX mod). Pure state + persistence, no AI.
 - ✅ **v0.2 slice 16 — Dice roller** — toolbar popup with quick d4-d100 + custom expressions + a "scan & roll all `/roll …` in session" button that rewrites the session text in place.
 - ✅ **v0.2 slice 17 — D&D-aware text editors** — sliders on `Entity.hp` and `Location.danger` directly trigger scene rewrites (`ChangeHpPrompt`, `ChangeDangerPrompt`) that mechanic-aware-narrate the change.
+- ✅ **v0.2 slice 18 — Sessions as first-class layer** — campaign chapters with AI-generated recaps. Up to 3 most-recent recaps fold into the DM agent's system prompt as "PREVIOUSLY ON THIS CAMPAIGN". Entities / locations / world events persist across sessions.
+- ✅ **v0.2 slice 19 — Ability-score rewrites** — `ChangeAbilityScorePrompt` for the 6 5e abilities. Tier-aware (low/mid/high) skip avoids burning API calls on cosmetic slider drags. Collapsible 6-slider block on selected entity nodes.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 
