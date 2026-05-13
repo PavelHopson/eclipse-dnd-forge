@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiBattleAxe, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
+import { GiBattleAxe, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -18,6 +18,7 @@ import { useStudyStore } from '../study/StudyModel';
 import HistoryTree from './HistoryTree';
 import TextEditor from './TextEditor';
 import ActionTimeline from './actionTimeline/ActionTimeline';
+import DiceRollerPanel from './dnd/DiceRollerPanel';
 import DmAgentPanel from './dnd/DmAgentPanel';
 import EncounterGeneratorPanel from './dnd/EncounterGeneratorPanel';
 import InitiativePanel from './dnd/InitiativePanel';
@@ -37,6 +38,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isWorldTickPanelOpen, setIsWorldTickPanelOpen] = useState(false);
   const [encounterForLocationId, setEncounterForLocationId] = useState<string | null>(null);
   const [isInitiativePanelOpen, setIsInitiativePanelOpen] = useState(false);
+  const [isDicePanelOpen, setIsDicePanelOpen] = useState(false);
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
 
@@ -266,11 +268,33 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsDmPanelOpen(false);
                         setIsWorldTickPanelOpen(false);
                         setEncounterForLocationId(null);
+                        setIsDicePanelOpen(false);
                       }
                     }}
                     aria-label="Toggle initiative tracker"
                   >
                     <GiSwordman />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Dice roller — d20, d6, custom expressions, /roll scanner" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isDicePanelOpen ? '#7a1f1f' : undefined, color: isDicePanelOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isDicePanelOpen;
+                      setIsDicePanelOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                        setIsDmPanelOpen(false);
+                        setIsWorldTickPanelOpen(false);
+                        setIsInitiativePanelOpen(false);
+                        setEncounterForLocationId(null);
+                      }
+                    }}
+                    aria-label="Toggle dice roller"
+                  >
+                    <GiDiceTwentyFacesTwenty />
                   </Button>
                 </Tooltip>
                 {selectedTab === 'entities' && selectedEntityId && (
@@ -375,6 +399,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isInitiativePanelOpen && !isReadOnly && (
               <InitiativePanel onClose={() => setIsInitiativePanelOpen(false)} />
+            )}
+            {isDicePanelOpen && !isReadOnly && (
+              <DiceRollerPanel onClose={() => setIsDicePanelOpen(false)} />
             )}
             {encounterForLocationId && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
               <EncounterGeneratorPanel

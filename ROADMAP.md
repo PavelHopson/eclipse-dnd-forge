@@ -83,6 +83,14 @@ Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 16 — Dice roller 🎲
+*Shipped 2026-05-13. Pure utility — no AI calls.*
+
+- [x] **`src/model/dice.ts`** — `parseDiceExpression(raw)` + `rollDice(expr)` + `formatRoll(result)`. Supports `dX`, `NdX`, `NdX±M` with sanity bounds (1-100 dice, 2-1000 sides). Throws on invalid expressions.
+- [x] **`src/view/dnd/DiceRollerPanel.tsx`** — quick-roll buttons for d4/d6/d8/d10/d12/d20/d100, custom-expression input (Enter to roll), 30-entry history with one-click insert into session text.
+- [x] **`Scan & roll all /roll … in session` button** — regex-finds every `/roll <expr>` token in the canonical session text, rolls each, and replaces the token with the formatted result. Operates via `setTextState` so undo/redo work.
+- [x] **Toolbar wire-in** — global `🎲` button next to Initiative. Mutually exclusive with all other right-side panels.
+
 ### v0.2 slice 15 — Initiative tracker 🗡️
 *Shipped 2026-05-13. Pure-state, no AI — but pulls live data from the world graph.*
 
