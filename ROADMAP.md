@@ -83,6 +83,13 @@ Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 15 — Initiative tracker 🗡️
+*Shipped 2026-05-13. Pure-state, no AI — but pulls live data from the world graph.*
+
+- [x] **`src/store/useInitiativeStore.ts`** — Zustand store with localStorage persistence (`eclipse_dnd_initiative_v1`): ordered `InitiativeEntry[]` (id, name, initiative, optional entityId / hp / notes), `activeIndex`, `round`, `active` flag. Actions: `addEntry`, `removeEntry`, `updateEntry`, `startCombat` (sorts desc by initiative, sets round=1), `nextTurn` (advances index, wraps + increments round), `endCombat`, `clearAll`.
+- [x] **`src/view/dnd/InitiativePanel.tsx`** — toolbar panel: chip-row of entities not yet in the tracker (one click → auto-rolls d20 + DEX-mod from the entity's ability scores, appends to list); custom-row form (Name + Init); ordered list with active-turn highlight, inline HP editor, remove buttons; bottom controls — Start combat / Next turn / End combat / Clear.
+- [x] **Toolbar wire-in** — global `🗡️` button next to World Tick. Mutually exclusive with all other right-side panels.
+
 ### v0.2 slice 14 — Encounter Generator ⚔️🎲
 *Shipped 2026-05-13. Classic DM tool, now augmented by the Agent stack underneath.*
 

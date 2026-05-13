@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiBattleAxe, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSandsOfTime, GiSpellBook } from 'react-icons/gi';
+import { GiBattleAxe, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -20,6 +20,7 @@ import TextEditor from './TextEditor';
 import ActionTimeline from './actionTimeline/ActionTimeline';
 import DmAgentPanel from './dnd/DmAgentPanel';
 import EncounterGeneratorPanel from './dnd/EncounterGeneratorPanel';
+import InitiativePanel from './dnd/InitiativePanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
 import WorldTickPanel from './dnd/WorldTickPanel';
@@ -35,6 +36,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isDmPanelOpen, setIsDmPanelOpen] = useState(false);
   const [isWorldTickPanelOpen, setIsWorldTickPanelOpen] = useState(false);
   const [encounterForLocationId, setEncounterForLocationId] = useState<string | null>(null);
+  const [isInitiativePanelOpen, setIsInitiativePanelOpen] = useState(false);
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
 
@@ -242,11 +244,33 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsNpcPanelOpen(false);
                         setTalkingToEntityId(null);
                         setIsDmPanelOpen(false);
+                        setIsInitiativePanelOpen(false);
+                        setEncounterForLocationId(null);
                       }
                     }}
                     aria-label="Toggle World Tick panel"
                   >
                     <GiSandsOfTime />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Initiative tracker — combat order, HP, round counter" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isInitiativePanelOpen ? '#7a1f1f' : undefined, color: isInitiativePanelOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isInitiativePanelOpen;
+                      setIsInitiativePanelOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                        setIsDmPanelOpen(false);
+                        setIsWorldTickPanelOpen(false);
+                        setEncounterForLocationId(null);
+                      }
+                    }}
+                    aria-label="Toggle initiative tracker"
+                  >
+                    <GiSwordman />
                   </Button>
                 </Tooltip>
                 {selectedTab === 'entities' && selectedEntityId && (
@@ -348,6 +372,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isWorldTickPanelOpen && !isReadOnly && (
               <WorldTickPanel onClose={() => setIsWorldTickPanelOpen(false)} />
+            )}
+            {isInitiativePanelOpen && !isReadOnly && (
+              <InitiativePanel onClose={() => setIsInitiativePanelOpen(false)} />
             )}
             {encounterForLocationId && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
               <EncounterGeneratorPanel
