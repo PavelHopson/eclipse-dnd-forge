@@ -15,11 +15,11 @@ export const WORLD_TICK_INTERVAL_MS: Record<WorldTickInterval, number> = {
 };
 
 export const WORLD_TICK_INTERVAL_LABELS: Record<WorldTickInterval, string> = {
-    off: "Manual only",
-    "5min": "Every 5 minutes",
-    "15min": "Every 15 minutes",
-    "1h": "Every hour",
-    "4h": "Every 4 hours",
+    off: "Только вручную",
+    "5min": "Каждые 5 минут",
+    "15min": "Каждые 15 минут",
+    "1h": "Каждый час",
+    "4h": "Каждые 4 часа",
 };
 
 interface PersistedShape {

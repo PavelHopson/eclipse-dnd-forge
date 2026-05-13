@@ -77,7 +77,7 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
             // re-fire after this manual tick.
             useWorldEventStore.getState().markAutoTicked();
         } catch (e: any) {
-            setError(typeof e?.message === "string" ? e.message : "World tick failed.");
+            setError(typeof e?.message === "string" ? e.message : "Тик мира не удался.");
         } finally {
             useWorldEventStore.getState().setRunning(false);
         }
@@ -111,7 +111,7 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
 
         // Use the standalone helper so the block lands as a single paragraph
         // with all events grouped — easier to scan once promoted.
-        const header = "**Between sessions —** the world moved on:";
+        const header = "**Между сессиями —** мир продолжал жить:";
         const finalBlock = `${header}\n\n${block}`;
 
         if (document.activeElement && (document.activeElement as HTMLElement).closest('[contenteditable="true"]')) {
@@ -150,11 +150,11 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>World Tick</span>
                         <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>
-                            Advance every NPC / monster / faction with a goal by one off-screen action
+                            Каждый NPC / монстр / фракция с целью совершает одно действие за кулисами
                         </span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close World Tick panel">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть панель World Tick">
                     <IoClose />
                 </Button>
             </div>
@@ -164,8 +164,8 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                 <GiHourglass style={{ fontSize: 18, color: "#7a1f1f" }} />
                 <span style={{ fontSize: 12, color: "#3a2a2a", flex: 1 }}>
                     {eligibleEntities.length === 0
-                        ? "No entities with a goal yet — give NPCs / monsters / factions a goal first (generator does this automatically; seed campaigns are pre-filled)."
-                        : <>Will tick <strong>{eligibleEntities.length}</strong> {eligibleEntities.length === 1 ? "entity" : "entities"} (NPCs, monsters, factions with a goal).</>}
+                        ? "Пока нет сущностей с целью — задайте NPC / монстру / фракции цель (генератор делает это автоматически, seed-кампании уже заполнены)."
+                        : <>Будет тикнуто <strong>{eligibleEntities.length}</strong> сущност{eligibleEntities.length === 1 ? "ь" : "ей"} (NPC, монстры, фракции с целью).</>}
                 </span>
                 <Button
                     size="sm"
@@ -175,19 +175,19 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                     onClick={startTick}
                     style={{ background: "#7a1f1f", color: "white" }}
                 >
-                    {running ? "Ticking…" : "Advance the world"}
+                    {running ? "Идёт тик…" : "Продвинуть мир"}
                 </Button>
             </div>
 
             {/* Auto-tick scheduling */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3a2a2a" }}>
-                <span style={{ whiteSpace: "nowrap" }}>Auto-advance:</span>
+                <span style={{ whiteSpace: "nowrap" }}>Авто-тик:</span>
                 <Select
                     size="sm"
                     variant="faded"
                     selectedKeys={[autoTickInterval]}
                     onChange={(e) => setAutoTickInterval(e.target.value as WorldTickInterval)}
-                    aria-label="World tick interval"
+                    aria-label="Интервал тика мира"
                     style={{ minWidth: 180 }}
                     classNames={{ trigger: "!min-h-[32px] h-[32px]" }}
                 >
@@ -200,8 +200,8 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                 {autoTickInterval !== "off" && (
                     <span style={{ fontSize: 11, color: "#6b5c4c", fontStyle: "italic" }}>
                         {lastAutoTickAt > 0
-                            ? `Last tick: ${new Date(lastAutoTickAt).toLocaleTimeString()}`
-                            : "Will tick on next interval."}
+                            ? `Последний тик: ${new Date(lastAutoTickAt).toLocaleTimeString()}`
+                            : "Сработает на следующем интервале."}
                     </span>
                 )}
             </div>
@@ -231,9 +231,9 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                 {currentTickEvents.length === 0 && !running && (
                     <div style={{ color: "#9a8a7a", fontStyle: "italic", textAlign: "center", padding: 24, fontSize: 12 }}>
                         <GiSandsOfTime style={{ fontSize: 32, opacity: 0.4 }} />
-                        <div style={{ marginTop: 6 }}>Click <strong>Advance the world</strong> to simulate what every NPC, monster and faction did off-screen.</div>
+                        <div style={{ marginTop: 6 }}>Нажмите <strong>Продвинуть мир</strong>, чтобы симулировать что NPC, монстры и фракции делают за кулисами.</div>
                         <div style={{ marginTop: 4, opacity: 0.7 }}>
-                            Each event is also mirrored into that entity's chat history.
+                            Каждое событие также зеркалится в чат-историю сущности.
                         </div>
                     </div>
                 )}
@@ -257,7 +257,7 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                         >
                             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
                                 <span style={{ fontWeight: 700 }}>{e.entityName}</span>
-                                {inserted && <span style={{ fontSize: 9, opacity: 0.7 }}>✓ inserted</span>}
+                                {inserted && <span style={{ fontSize: 9, opacity: 0.7 }}>✓ вставлено</span>}
                             </div>
                             {e.action && (
                                 <div>{e.action}</div>
@@ -267,13 +267,13 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                             )}
                             {hasParseFail && (
                                 <div style={{ fontSize: 11, color: "#7a1f1f" }}>
-                                    Could not parse JSON output. Raw reply:
+                                    Не удалось распарсить JSON. Сырой ответ:
                                     <pre style={{ margin: "4px 0 0", whiteSpace: "pre-wrap", fontSize: 11, background: "#fffbf0", padding: 4, borderRadius: 4 }}>{e.raw}</pre>
                                 </div>
                             )}
                             {e.action && !inserted && (
                                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                    <Tooltip content="Insert this event into the session text at the cursor (or append if no cursor)" closeDelay={0}>
+                                    <Tooltip content="Вставить событие в текст сессии в позицию курсора" closeDelay={0}>
                                         <Button
                                             size="sm"
                                             variant="flat"
@@ -281,7 +281,7 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                                             onClick={() => insertEvent(e, true)}
                                             style={{ height: 22, minHeight: 22, fontSize: 10, background: "#fffbf0", border: "1px solid #d4c5a0" }}
                                         >
-                                            Insert
+                                            Вставить
                                         </Button>
                                     </Tooltip>
                                 </div>
@@ -293,7 +293,7 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
 
             {/* Bottom actions */}
             <div style={{ display: "flex", gap: 6 }}>
-                <Tooltip content="Promote every uninserted event into a single session-text block" closeDelay={0}>
+                <Tooltip content="Вставить все не-вставленные события одним блоком в текст сессии" closeDelay={0}>
                     <Button
                         size="sm"
                         variant="flat"
@@ -302,18 +302,18 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                         isDisabled={running || currentTickEvents.filter((e) => e.action && !isInsertedFn(e.id)).length === 0}
                         style={{ fontSize: 11 }}
                     >
-                        Insert all into session
+                        Вставить все в сессию
                     </Button>
                 </Tooltip>
                 <div style={{ flex: 1 }} />
-                <Tooltip content="Clear the event log (the entities' chat-history mirrors stay)" closeDelay={0}>
+                <Tooltip content="Очистить журнал событий (зеркала в чат-историях сохраняются)" closeDelay={0}>
                     <Button
                         size="sm"
                         isIconOnly
                         variant="light"
                         onClick={clear}
                         isDisabled={running || events.length === 0}
-                        aria-label="Clear event log"
+                        aria-label="Очистить журнал событий"
                     >
                         <GiBroom />
                     </Button>

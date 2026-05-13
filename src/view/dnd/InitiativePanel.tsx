@@ -89,20 +89,20 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <GiSwordman style={{ fontSize: 24, color: "#7a1f1f" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Initiative</span>
+                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Инициатива</span>
                         <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>
-                            {active ? `Combat — Round ${round}` : "Combat not yet started"}
+                            {active ? `Бой — Раунд ${round}` : "Бой ещё не начат"}
                         </span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close initiative panel">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть панель инициативы">
                     <IoClose />
                 </Button>
             </div>
 
             {availableEntities.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <span style={{ fontSize: 11, color: "#6b5c4c" }}>Add from world graph (auto-rolls d20 + DEX mod):</span>
+                    <span style={{ fontSize: 11, color: "#6b5c4c" }}>Добавить из графа мира (авто-бросок d20 + мод. ЛОВ):</span>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                         {availableEntities.slice(0, 16).map((n) => {
                             const e = n.data as Entity;
@@ -131,8 +131,8 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
                 <Input
                     size="sm"
                     variant="faded"
-                    label="Name"
-                    placeholder="e.g. Wandering bard"
+                    label="Имя"
+                    placeholder="напр. Странствующий бард"
                     value={newName}
                     onValueChange={setNewName}
                     style={{ flex: 2 }}
@@ -140,13 +140,13 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
                 <Input
                     size="sm"
                     variant="faded"
-                    label="Init"
+                    label="Иниц."
                     type="number"
                     value={newInit}
                     onValueChange={setNewInit}
                     style={{ width: 70 }}
                 />
-                <Button size="sm" isIconOnly variant="bordered" onClick={addCustom} aria-label="Add">
+                <Button size="sm" isIconOnly variant="bordered" onClick={addCustom} aria-label="Добавить">
                     <IoAdd />
                 </Button>
             </div>
@@ -154,7 +154,7 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
             <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 320, overflowY: "auto" }}>
                 {entries.length === 0 && (
                     <div style={{ color: "#9a8a7a", fontStyle: "italic", textAlign: "center", padding: 16, fontSize: 12 }}>
-                        Add entities and start combat to track turns.
+                        Добавьте сущности и начните бой для отслеживания ходов.
                     </div>
                 )}
                 {entries.map((e, idx) => {
@@ -199,14 +199,14 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
                                     startContent={<span style={{ fontSize: 9 }}>HP</span>}
                                 />
                             )}
-                            <Tooltip content="Remove from tracker" closeDelay={0}>
+                            <Tooltip content="Удалить из трекера" closeDelay={0}>
                                 <Button
                                     size="sm"
                                     isIconOnly
                                     variant="light"
                                     onClick={() => useInitiativeStore.getState().removeEntry(e.id)}
                                     style={{ minWidth: 22, height: 22, color: isActive ? "#fdf6e3" : "#7a1f1f" }}
-                                    aria-label="Remove"
+                                    aria-label="Удалить"
                                 >
                                     <IoTrash style={{ fontSize: 12 }} />
                                 </Button>
@@ -226,7 +226,7 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
                         isDisabled={entries.length === 0}
                         style={{ background: "#7a1f1f" }}
                     >
-                        Start combat
+                        Начать бой
                     </Button>
                 ) : (
                     <>
@@ -236,26 +236,26 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
                             onClick={() => useInitiativeStore.getState().nextTurn()}
                             style={{ background: "#7a1f1f" }}
                         >
-                            Next turn →
+                            Следующий ход →
                         </Button>
                         <Button
                             size="sm"
                             variant="bordered"
                             onClick={() => useInitiativeStore.getState().endCombat()}
                         >
-                            End combat
+                            Завершить бой
                         </Button>
                     </>
                 )}
                 <div style={{ flex: 1 }} />
-                <Tooltip content="Clear tracker" closeDelay={0}>
+                <Tooltip content="Очистить трекер" closeDelay={0}>
                     <Button
                         size="sm"
                         isIconOnly
                         variant="light"
                         onClick={() => useInitiativeStore.getState().clearAll()}
                         isDisabled={entries.length === 0}
-                        aria-label="Clear all"
+                        aria-label="Очистить трекер"
                     >
                         <GiBroom />
                     </Button>

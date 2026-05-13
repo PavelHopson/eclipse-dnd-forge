@@ -13,10 +13,10 @@ interface EncounterGeneratorPanelProps {
 }
 
 const DIFFICULTY_OPTIONS: { key: EncounterDifficulty; label: string }[] = [
-    { key: "easy", label: "Easy" },
-    { key: "medium", label: "Medium" },
-    { key: "hard", label: "Hard" },
-    { key: "deadly", label: "Deadly" },
+    { key: "easy", label: "Лёгкий" },
+    { key: "medium", label: "Средний" },
+    { key: "hard", label: "Тяжёлый" },
+    { key: "deadly", label: "Смертельный" },
 ];
 
 export default function EncounterGeneratorPanel({ onClose, locationId, canvasCenter }: EncounterGeneratorPanelProps) {
@@ -53,7 +53,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
             const { encounter } = await generateEncounterIntoScene(criteria, canvasCenter);
             setResult(encounter);
         } catch (e: any) {
-            setError(typeof e?.message === "string" ? e.message : "Encounter generation failed.");
+            setError(typeof e?.message === "string" ? e.message : "Не удалось сгенерировать энкаунтер.");
         } finally {
             setIsGenerating(false);
         }
@@ -64,7 +64,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
         const monsterLines = result.monsters
             .map((m) => `- ${m.count}× **${m.name}** (${m.role}, ${m.combatRole}) — HP ${m.hp}, AC ${m.ac}, CR ${m.cr}`)
             .join("\n");
-        const block = `**Encounter at ${location.name}** (${difficulty}, est. XP ${result.xpBudgetEstimate} vs budget ${budget}):\n\n${monsterLines}\n\n*Twist:* ${result.twist}`;
+        const block = `**Энкаунтер в локации ${location.name}** (${difficulty}, оценка XP ${result.xpBudgetEstimate} против бюджета ${budget}):\n\n${monsterLines}\n\n*Изюминка:* ${result.twist}`;
         insertTextAtCursor(block);
     };
 
@@ -92,11 +92,11 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <GiBattleAxe style={{ fontSize: 22, color: "#7a1f1f" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Generate Encounter</span>
-                        <span style={{ fontSize: 11, color: "#6b5c4c", lineHeight: 1.1 }}>at <strong>{location.name}</strong></span>
+                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Генератор энкаунтера</span>
+                        <span style={{ fontSize: 11, color: "#6b5c4c", lineHeight: 1.1 }}>в <strong>{location.name}</strong></span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close encounter generator">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть генератор энкаунтеров">
                     <IoClose />
                 </Button>
             </div>
@@ -107,7 +107,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                         <Input
                             size="sm"
                             variant="faded"
-                            label="Party level"
+                            label="Уровень партии"
                             type="number"
                             value={partyLevel}
                             onValueChange={setPartyLevel}
@@ -117,7 +117,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                         <Input
                             size="sm"
                             variant="faded"
-                            label="Party size"
+                            label="Размер партии"
                             type="number"
                             value={partySize}
                             onValueChange={setPartySize}
@@ -128,7 +128,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                     <Select
                         size="sm"
                         variant="faded"
-                        label="Difficulty"
+                        label="Сложность"
                         selectedKeys={[difficulty]}
                         onChange={(e) => setDifficulty(e.target.value as EncounterDifficulty)}
                         isDisabled={isGenerating}
@@ -142,15 +142,15 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                     <Textarea
                         size="sm"
                         variant="faded"
-                        label="DM notes (optional)"
-                        placeholder="Specific monster type, theme, environmental constraint…"
+                        label="Заметки DM (опционально)"
+                        placeholder="Конкретный тип монстра, тематика, окружающие ограничения…"
                         value={notes}
                         onValueChange={setNotes}
                         minRows={2}
                         isDisabled={isGenerating}
                     />
                     <div style={{ fontSize: 11, color: "#6b5c4c", padding: "4px 8px", background: "#f0e4c8", borderRadius: 4 }}>
-                        Target XP budget: <strong>{budget}</strong> ({size} × level-{lvl} characters, {difficulty})
+                        Целевой XP бюджет: <strong>{budget}</strong> ({size} × уровень {lvl}, {difficulty})
                     </div>
 
                     {error && (
@@ -167,7 +167,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                         startContent={!isGenerating ? <GiSpellBook /> : null}
                         style={{ background: "#7a1f1f" }}
                     >
-                        {isGenerating ? "Forging encounter…" : "Generate encounter"}
+                        {isGenerating ? "Куём энкаунтер…" : "Сгенерировать энкаунтер"}
                     </Button>
                 </>
             )}
@@ -175,7 +175,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
             {result && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{ fontSize: 12, color: "#3a2a2a" }}>
-                        Spawned <strong>{result.monsters.reduce((s, m) => s + Math.max(1, Math.round(m.count)), 0)}</strong> creature(s) across <strong>{result.monsters.length}</strong> group(s). Estimated XP {result.xpBudgetEstimate} vs target budget {budget}.
+                        Создано <strong>{result.monsters.reduce((s, m) => s + Math.max(1, Math.round(m.count)), 0)}</strong> существ в <strong>{result.monsters.length}</strong> групп(ах). Оценка XP {result.xpBudgetEstimate} против целевого бюджета {budget}.
                     </div>
                     <div style={{ background: "#fffefb", border: "1px solid #e8dcc0", borderRadius: 6, padding: 8, display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflowY: "auto" }}>
                         {result.monsters.map((m, i) => (
@@ -192,20 +192,20 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
                         ))}
                     </div>
                     <div style={{ fontSize: 12, color: "#3a2a2a", background: "#f0e4c8", padding: 8, borderRadius: 6, lineHeight: 1.4 }}>
-                        <span style={{ fontWeight: 700, marginRight: 4 }}>Twist:</span>
+                        <span style={{ fontWeight: 700, marginRight: 4 }}>Изюминка:</span>
                         {result.twist}
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
-                        <Tooltip content="Insert the encounter block into the session text at the cursor" closeDelay={0}>
+                        <Tooltip content="Вставить блок энкаунтера в текст сессии в позицию курсора" closeDelay={0}>
                             <Button size="sm" variant="bordered" startContent={<GiScrollQuill />} onClick={insertEncounter}>
-                                Insert into session
+                                Вставить в сессию
                             </Button>
                         </Tooltip>
                         <Button size="sm" variant="light" onClick={() => { setResult(null); setError(null); }}>
-                            Forge another
+                            Создать ещё
                         </Button>
                         <Button size="sm" color="primary" onClick={onClose} style={{ background: "#7a1f1f" }}>
-                            Done
+                            Готово
                         </Button>
                     </div>
                 </div>

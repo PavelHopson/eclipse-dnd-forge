@@ -213,13 +213,13 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             {selectedTab === "entities" && <ReactFlowProvider><EntitiesEditor /></ReactFlowProvider>}
             {selectedTab === "locations" && <ReactFlowProvider><LocationsEditor /></ReactFlowProvider>}
             <Tabs keyboardActivation='manual' onSelectionChange={setSelectedTabLogged as any} selectedKey={selectedTab} color='primary' variant='bordered' style={{ position: 'absolute', left: '50%', top: 10, transform: 'translate(-50%, 0)' }} classNames={{ tabList: 'bg-white', }}>
-              <Tab key={"entities"} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><GiCrossedSwords style={{ marginRight: 4, fontSize: 20 }} /> Heroes &amp; NPCs</span>} />
-              <Tab key={'locations'} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><GiCastle style={{ marginRight: 4, fontSize: 20 }} /> Realms &amp; Locations</span>} />
+              <Tab key={"entities"} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><GiCrossedSwords style={{ marginRight: 4, fontSize: 20 }} /> Герои и NPC</span>} />
+              <Tab key={'locations'} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><GiCastle style={{ marginRight: 4, fontSize: 20 }} /> Мир и локации</span>} />
             </Tabs>            
 
             {!isReadOnly && (
               <div style={{ position: 'absolute', right: 10, top: 10, display: 'flex', gap: 6 }}>
-                <Tooltip content="Run scene with the AI Dungeon Master" closeDelay={0}>
+                <Tooltip content="Запустить сцену с AI Мастером Подземелий" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isDmPanelOpen ? '#7a1f1f' : undefined, color: isDmPanelOpen ? 'white' : undefined }}
                     isIconOnly
@@ -237,7 +237,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     <GiCrown />
                   </Button>
                 </Tooltip>
-                <Tooltip content="Advance the world — every NPC / monster / faction acts off-screen" closeDelay={0}>
+                <Tooltip content="Продвинуть мир — каждый NPC / монстр / фракция совершит действие за кулисами" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isWorldTickPanelOpen ? '#7a1f1f' : undefined, color: isWorldTickPanelOpen ? 'white' : undefined }}
                     isIconOnly
@@ -257,7 +257,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     <GiSandsOfTime />
                   </Button>
                 </Tooltip>
-                <Tooltip content="Initiative tracker — combat order, HP, round counter" closeDelay={0}>
+                <Tooltip content="Трекер инициативы — порядок боя, HP, счётчик раундов" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isInitiativePanelOpen ? '#7a1f1f' : undefined, color: isInitiativePanelOpen ? 'white' : undefined }}
                     isIconOnly
@@ -278,7 +278,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     <GiSwordman />
                   </Button>
                 </Tooltip>
-                <Tooltip content="Dice roller — d20, d6, custom expressions, /roll scanner" closeDelay={0}>
+                <Tooltip content="Кубики — d20, d6, произвольные выражения, сканер /roll" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isDicePanelOpen ? '#7a1f1f' : undefined, color: isDicePanelOpen ? 'white' : undefined }}
                     isIconOnly
@@ -300,7 +300,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     <GiDiceTwentyFacesTwenty />
                   </Button>
                 </Tooltip>
-                <Tooltip content="Sessions — archive chapters, AI-generated recaps fed back into the DM agent" closeDelay={0}>
+                <Tooltip content="Сессии — архив глав, AI-recap'ы возвращаются в DM-агента как контекст" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isSessionsPanelOpen ? '#7a1f1f' : undefined, color: isSessionsPanelOpen ? 'white' : undefined }}
                     isIconOnly
@@ -323,7 +323,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                   </Button>
                 </Tooltip>
                 {selectedTab === 'entities' && selectedEntityId && (
-                  <Tooltip content="Talk to this character (AI agent)" closeDelay={0}>
+                  <Tooltip content="Поговорить с этим персонажем (AI-агент)" closeDelay={0}>
                     <Button
                       style={{ fontSize: 18, background: talkingToEntityId === selectedEntityId ? '#7a1f1f' : undefined, color: talkingToEntityId === selectedEntityId ? 'white' : undefined }}
                       isIconOnly
@@ -344,7 +344,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                   </Tooltip>
                 )}
                 {selectedTab === 'entities' && (
-                  <Tooltip content="Generate NPC" closeDelay={0}>
+                  <Tooltip content="Сгенерировать NPC" closeDelay={0}>
                     <Button
                       style={{ fontSize: 18, background: isNpcPanelOpen ? '#7a1f1f' : undefined, color: isNpcPanelOpen ? 'white' : undefined }}
                       isIconOnly
@@ -365,7 +365,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                   </Tooltip>
                 )}
                 {selectedTab === 'locations' && selectedLocationId && (
-                  <Tooltip content="Generate encounter at this location" closeDelay={0}>
+                  <Tooltip content="Сгенерировать энкаунтер в этой локации" closeDelay={0}>
                     <Button
                       style={{ fontSize: 18, background: encounterForLocationId === selectedLocationId ? '#7a1f1f' : undefined, color: encounterForLocationId === selectedLocationId ? 'white' : undefined }}
                       isIconOnly
@@ -386,7 +386,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     </Button>
                   </Tooltip>
                 )}
-                <Tooltip content="Clear canvas" closeDelay={0}>
+                <Tooltip content="Очистить холст" closeDelay={0}>
                   <Button style={{ fontSize: 18 }} isIconOnly onClick={() => {
                     LayoutUtils.stopAllSimulations();
                     useModelStore.getState().setActionEdges([]);
@@ -444,7 +444,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
           </div>
           <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
           {!isReadOnly && <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'absolute', left: 0, top: '50%', transform: 'translate(-50%, -50%)', fontSize: 22 }}>
-            <Tooltip content="Refresh from text" closeDelay={0}>
+            <Tooltip content="Обновить граф из текста" closeDelay={0}>
               <Button style={{ fontSize: 22 }} color={isStale ? "primary": "default"} isLoading={isExtracting} isIconOnly radius={'full'}
                 onClick={() => {
 
@@ -479,7 +479,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
               </Button>
             </Tooltip>
 
-            <Tooltip placement='bottom' content="Write from visual" closeDelay={0}>
+            <Tooltip placement='bottom' content="Переписать текст из визуала" closeDelay={0}>
               <Button style={{ fontSize: 22 }} isLoading={isExtracting} isIconOnly radius={'full'}
                 onClick={() => {
                   new RewriteFromVisual().execute();

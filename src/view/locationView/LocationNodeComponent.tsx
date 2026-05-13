@@ -79,7 +79,7 @@ export default function LocationNodeComponent(props: NodeProps<LocationNode>) {
               marginTop: 2,
             }}
           >
-            DANGER {danger}/10
+ОПАСНОСТЬ {danger}/10
           </span>
         )}
       </div>
@@ -102,7 +102,7 @@ export default function LocationNodeComponent(props: NodeProps<LocationNode>) {
         >
           <Slider
             size="sm"
-            label="Danger"
+            label="Опасность"
             step={1}
             color="danger"
             minValue={1}

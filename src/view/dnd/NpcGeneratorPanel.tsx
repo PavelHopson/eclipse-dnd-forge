@@ -12,10 +12,10 @@ interface NpcGeneratorPanelProps {
 }
 
 const HOSTILITY_OPTIONS: { key: NonNullable<NpcCriteria["hostility"]>; label: string }[] = [
-    { key: "any", label: "Any (DM's choice)" },
-    { key: "friendly", label: "Friendly" },
-    { key: "neutral", label: "Neutral" },
-    { key: "hostile", label: "Hostile" },
+    { key: "any", label: "Любая (на усмотрение DM)" },
+    { key: "friendly", label: "Дружелюбный" },
+    { key: "neutral", label: "Нейтральный" },
+    { key: "hostile", label: "Враждебный" },
 ];
 
 export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocation }: NpcGeneratorPanelProps) {
@@ -50,7 +50,7 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
             );
             setResult(npc);
         } catch (e: any) {
-            const message = typeof e?.message === "string" ? e.message : "Generation failed. Check OpenAI key and try again.";
+            const message = typeof e?.message === "string" ? e.message : "Не удалось сгенерировать NPC. Проверьте API-ключ и попробуйте снова.";
             setError(message);
         } finally {
             setIsGenerating(false);
@@ -79,14 +79,14 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <GiSpellBook style={{ fontSize: 20, color: "#7a1f1f" }} />
-                    <span style={{ fontWeight: 800, color: "#2a1a1a" }}>Generate NPC</span>
+                    <span style={{ fontWeight: 800, color: "#2a1a1a" }}>Генератор NPC</span>
                 </div>
                 <Button
                     size="sm"
                     variant="light"
                     isIconOnly
                     onClick={onClose}
-                    aria-label="Close NPC generator"
+                    aria-label="Закрыть генератор NPC"
                 >
                     <IoClose />
                 </Button>
@@ -97,8 +97,8 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                     <Input
                         size="sm"
                         variant="faded"
-                        label="Race / creature"
-                        placeholder="Half-orc, kobold, fey..."
+                        label="Раса / существо"
+                        placeholder="Полуорк, кобольд, фея..."
                         value={race}
                         onValueChange={setRace}
                         isDisabled={isGenerating}
@@ -106,8 +106,8 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                     <Input
                         size="sm"
                         variant="faded"
-                        label="Role / occupation"
-                        placeholder="Innkeeper, bandit captain, sage..."
+                        label="Роль / занятие"
+                        placeholder="Трактирщик, капитан бандитов, мудрец..."
                         value={occupation}
                         onValueChange={setOccupation}
                         isDisabled={isGenerating}
@@ -116,7 +116,7 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                         <Input
                             size="sm"
                             variant="faded"
-                            label="Party level"
+                            label="Уровень партии"
                             type="number"
                             value={partyLevel}
                             onValueChange={setPartyLevel}
@@ -126,7 +126,7 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                         <Select
                             size="sm"
                             variant="faded"
-                            label="Hostility"
+                            label="Враждебность"
                             selectedKeys={[hostility]}
                             onChange={(e) => setHostility(e.target.value as NonNullable<NpcCriteria["hostility"]>)}
                             isDisabled={isGenerating}
@@ -141,8 +141,8 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                     <Input
                         size="sm"
                         variant="faded"
-                        label="Location"
-                        placeholder="Stonehill Inn, Cragmaw Hideout..."
+                        label="Локация"
+                        placeholder="Таверна, логово гоблинов..."
                         value={location}
                         onValueChange={setLocation}
                         isDisabled={isGenerating}
@@ -150,8 +150,8 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                     <Textarea
                         size="sm"
                         variant="faded"
-                        label="DM notes (optional)"
-                        placeholder="Plot ties, secrets, anything the AI should respect"
+                        label="Заметки DM (опционально)"
+                        placeholder="Сюжетные связи, секреты, что AI должен учесть"
                         value={notes}
                         onValueChange={setNotes}
                         minRows={2}
@@ -172,7 +172,7 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                         startContent={!isGenerating ? <GiSpellBook /> : null}
                         style={{ background: "#7a1f1f" }}
                     >
-                        {isGenerating ? "Forging…" : "Generate NPC"}
+                        {isGenerating ? "Кузню…" : "Сгенерировать NPC"}
                     </Button>
                 </>
             )}
@@ -198,10 +198,10 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                         <StatChip label="CHA" value={result.abilities.cha} />
                     </div>
                     <div style={{ fontSize: 12, color: "#3a2a2a", background: "#f0e4c8", padding: 8, borderRadius: 6, lineHeight: 1.4 }}>
-                        <span style={{ fontWeight: 700, marginRight: 4 }}>Hook:</span>
+                        <span style={{ fontWeight: 700, marginRight: 4 }}>Зацепка:</span>
                         {result.hook}
                         <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                            <Tooltip content="Insert this hook at the editor cursor (or append at the end if no cursor)" closeDelay={0}>
+                            <Tooltip content="Вставить зацепку в позицию курсора (или в конец, если курсора нет)" closeDelay={0}>
                                 <Button
                                     size="sm"
                                     variant="flat"
@@ -215,17 +215,17 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                                         border: "1px solid #d4c5a0",
                                     }}
                                 >
-                                    Insert hook into session
+                                    Вставить зацепку
                                 </Button>
                             </Tooltip>
                         </div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                         <Button size="sm" variant="bordered" onClick={() => { setResult(null); setError(null); }}>
-                            Forge another
+                            Создать ещё
                         </Button>
                         <Button size="sm" color="primary" onClick={onClose} style={{ background: "#7a1f1f" }}>
-                            Done
+                            Готово
                         </Button>
                     </div>
                 </div>

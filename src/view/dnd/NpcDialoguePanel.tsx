@@ -15,10 +15,10 @@ interface NpcDialoguePanelProps {
 }
 
 const KIND_STYLE: Record<EntityKind, { label: string; bg: string; fg: string }> = {
-    hero: { label: "Hero", bg: "#1e3a8a", fg: "#dbeafe" },
+    hero: { label: "Герой", bg: "#1e3a8a", fg: "#dbeafe" },
     npc: { label: "NPC", bg: "#854d0e", fg: "#fef3c7" },
-    monster: { label: "Monster", bg: "#7f1d1d", fg: "#fecaca" },
-    faction: { label: "Faction", bg: "#3f3f46", fg: "#e4e4e7" },
+    monster: { label: "Монстр", bg: "#7f1d1d", fg: "#fecaca" },
+    faction: { label: "Фракция", bg: "#3f3f46", fg: "#e4e4e7" },
     unknown: { label: "—", bg: "#e5e7eb", fg: "#374151" },
 };
 
@@ -69,10 +69,10 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
         } catch (e: any) {
             const message = typeof e?.message === "string"
                 ? e.message
-                : "Conversation failed. Check OpenAI key and try again.";
+                : "Не удалось получить ответ. Проверьте API-ключ и попробуйте снова.";
             setError(message);
             // Replace the empty assistant bubble with an in-character apology so the log stays coherent.
-            useAgentStore.getState().updateAssistantStream(entityId, `*pauses, looking troubled.* I... lost my words for a moment. (${message})`);
+            useAgentStore.getState().updateAssistantStream(entityId, `*замолкает, выглядит растерянно.* Я... потерял мысль на мгновение. (${message})`);
         } finally {
             useAgentStore.getState().setStreaming(entityId, false);
         }
@@ -93,7 +93,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
         try {
             await suggestCombatTactic(entityId, (partial) => setTactic(partial));
         } catch (e: any) {
-            const message = typeof e?.message === "string" ? e.message : "Tactic suggestion failed.";
+            const message = typeof e?.message === "string" ? e.message : "Не удалось получить тактическое предложение.";
             setError(message);
         } finally {
             setTacticStreaming(false);
@@ -160,15 +160,15 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
             {/* DM-only context hint — collapsed by default, expanded on demand */}
             {(entity.goal || entity.secret) && (
                 <details style={{ fontSize: 11, color: "#5a4a3a", background: "#f0e4c8", padding: "6px 8px", borderRadius: 6 }}>
-                    <summary style={{ cursor: "pointer", fontWeight: 700 }}>DM-only context</summary>
+                    <summary style={{ cursor: "pointer", fontWeight: 700 }}>Контекст (видит только мастер)</summary>
                     {entity.goal && (
                         <div style={{ marginTop: 4 }}>
-                            <span style={{ fontWeight: 700 }}>Goal:</span> {entity.goal}
+                            <span style={{ fontWeight: 700 }}>Цель:</span> {entity.goal}
                         </div>
                     )}
                     {entity.secret && (
                         <div style={{ marginTop: 4 }}>
-                            <span style={{ fontWeight: 700 }}>Secret:</span> {entity.secret}
+                            <span style={{ fontWeight: 700 }}>Секрет:</span> {entity.secret}
                         </div>
                     )}
                 </details>
@@ -194,7 +194,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                 {history.length === 0 && !streaming && (
                     <div style={{ color: "#9a8a7a", fontStyle: "italic", textAlign: "center", padding: 16, fontSize: 12 }}>
                         <GiChatBubble style={{ fontSize: 24, opacity: 0.5 }} />
-                        <div style={{ marginTop: 6 }}>Say something to {entity.name}.</div>
+                        <div style={{ marginTop: 6 }}>Скажите что-нибудь {entity.name}.</div>
                     </div>
                 )}
                 {history.map((m, idx) => {
@@ -223,7 +223,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                                 : (isAssistant && streaming ? "…" : "")}
                             {isAssistant && m.content && (
                                 <div style={{ marginTop: 4, display: "flex", justifyContent: "flex-end" }}>
-                                    <Tooltip content={`Quote ${entity.name} at the editor cursor (or append at the end if no cursor)`} closeDelay={0}>
+                                    <Tooltip content={`Вставить реплику ${entity.name} в позицию курсора (или в конец, если курсора нет)`} closeDelay={0}>
                                         <Button
                                             size="sm"
                                             variant="flat"
@@ -237,7 +237,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                                                 border: "1px solid #d4c5a0",
                                             }}
                                         >
-                                            Insert as quote
+                                            Вставить как реплику
                                         </Button>
                                     </Tooltip>
                                 </div>
@@ -251,7 +251,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 6, border: "1px dashed #b09060", borderRadius: 6, background: "#fff5e0" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: "#7a1f1f", display: "flex", alignItems: "center", gap: 4 }}>
-                            <GiCrossedSwords /> Combat AI
+                            <GiCrossedSwords /> Боевой AI
                         </span>
                         <Button
                             size="sm"
@@ -261,7 +261,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                             onClick={suggestTactic}
                             style={{ height: 22, minHeight: 22, fontSize: 10, background: "#7a1f1f", color: "white" }}
                         >
-                            {tacticStreaming ? "Thinking…" : "Suggest tactic"}
+                            {tacticStreaming ? "Думаю…" : "Предложить тактику"}
                         </Button>
                     </div>
                     {tactic && (
@@ -270,7 +270,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                                 {tactic}
                             </div>
                             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                <Tooltip content="Insert this proposed action into the session text at the cursor" closeDelay={0}>
+                                <Tooltip content="Вставить предложенное действие в текст сессии в позицию курсора" closeDelay={0}>
                                     <Button
                                         size="sm"
                                         variant="flat"
@@ -278,7 +278,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                                         onClick={() => insertTextAtCursor(tactic)}
                                         style={{ height: 22, minHeight: 22, fontSize: 10, background: "#fffbf0", border: "1px solid #d4c5a0" }}
                                     >
-                                        Insert tactic
+                                        Вставить тактику
                                     </Button>
                                 </Tooltip>
                             </div>
@@ -298,7 +298,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                 <Textarea
                     size="sm"
                     variant="faded"
-                    placeholder={`Speak to ${entity.name}…`}
+                    placeholder={`Поговорите с ${entity.name}…`}
                     value={input}
                     onValueChange={setInput}
                     minRows={1}
@@ -319,7 +319,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                     onClick={send}
                     isDisabled={streaming || input.trim().length === 0}
                     style={{ background: "#7a1f1f", color: "white", height: 36 }}
-                    aria-label="Send"
+                    aria-label="Отправить"
                 >
                     <IoSend />
                 </Button>
@@ -330,8 +330,8 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                     onClick={clear}
                     isDisabled={streaming || history.length === 0}
                     style={{ height: 36 }}
-                    aria-label="Clear conversation"
-                    title="Clear conversation"
+                    aria-label="Очистить диалог"
+                    title="Очистить диалог"
                 >
                     <GiBroom />
                 </Button>

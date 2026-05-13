@@ -19,8 +19,8 @@ export type CampaignTemplate = {
 export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     {
         id: "phandalin-opener",
-        title: "Phandalin — Lost Mine Opener",
-        subtitle: "Goblin ambush on the Triboar Trail. Low level, classic 5e onboarding.",
+        title: "Фандалин — Lost Mine Opener",
+        subtitle: "Засада гоблинов на Триборской тропе. Низкий уровень, классическое 5e-онбординг приключение.",
         emoji: "🗡️",
         text: `Session 1 — The Stonefang Pass
 
@@ -90,8 +90,8 @@ At first light the party rode north. Two miles up the trail they found a dead ho
     },
     {
         id: "strahd-arrival",
-        title: "Barovia — Mists of Strahd",
-        subtitle: "Gothic horror. Party drawn through the mists into Strahd's domain.",
+        title: "Баровия — Туманы Страда",
+        subtitle: "Готический ужас. Партию затягивает через туманы во владения Страда.",
         emoji: "🦇",
         text: `Session 1 — Through the Mists
 
@@ -156,8 +156,8 @@ Father Donavich opened the door of the church only a crack. "You should not have
     },
     {
         id: "starfall-cinder",
-        title: "Cinder Hollow — Falling Star",
-        subtitle: "Sandbox open-world starter. A meteor crashes near a frontier town.",
+        title: "Синдер-Холлоу — Упавшая звезда",
+        subtitle: "Sandbox-стартер с открытым миром. Метеор падает рядом с фронтирным городком.",
         emoji: "☄️",
         text: `Session 1 — The Falling Star
 
@@ -242,8 +242,8 @@ Sheriff Doral Vance has posted a fifty-gold bounty for any party willing to esco
     },
     {
         id: "blank-campaign",
-        title: "Blank Campaign",
-        subtitle: "Empty world. Type, paste session notes, or sketch the visual graph by hand.",
+        title: "Пустая кампания",
+        subtitle: "Чистый мир. Пишите свой текст, вставляйте заметки сессий или рисуйте граф вручную.",
         emoji: "📜",
         text: ``,
         seed: {

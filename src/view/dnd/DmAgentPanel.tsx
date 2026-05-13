@@ -66,11 +66,11 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
         } catch (e: any) {
             const message = typeof e?.message === "string"
                 ? e.message
-                : "DM turn failed. Check OpenAI key and try again.";
+                : "Не удалось получить ход DM. Проверьте API-ключ и попробуйте снова.";
             setError(message);
             useAgentStore.getState().updateAssistantStream(
                 DM_AGENT_ID,
-                `*The narrator's voice falters for a moment.* (${message})`,
+                `*Голос рассказчика на мгновение запинается.* (${message})`,
             );
         } finally {
             useAgentStore.getState().setStreaming(DM_AGENT_ID, false);
@@ -108,11 +108,11 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <GiCrown style={{ fontSize: 28, color: "#7a1f1f" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Dungeon Master</span>
-                        <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>AI narrator / referee for the current campaign</span>
+                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Мастер Подземелий</span>
+                        <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>AI-рассказчик / арбитр текущей кампании</span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close DM panel">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть панель DM">
                     <IoClose />
                 </Button>
             </div>
@@ -137,9 +137,9 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                 {history.length === 0 && !streaming && (
                     <div style={{ color: "#9a8a7a", fontStyle: "italic", textAlign: "center", padding: 24, fontSize: 12 }}>
                         <GiCrown style={{ fontSize: 32, opacity: 0.4 }} />
-                        <div style={{ marginTop: 6 }}>Tell the DM what your character is doing — or simply ask it to set the scene.</div>
+                        <div style={{ marginTop: 6 }}>Расскажите DM что делает ваш персонаж — или попросите задать сцену.</div>
                         <div style={{ marginTop: 4, opacity: 0.7 }}>
-                            <em>"Set the opening scene."</em> · <em>"Я осматриваю общий зал таверны."</em> · <em>"What do we see when we ride into Phandalin?"</em>
+                            <em>«Опиши открывающую сцену.»</em> · <em>«Я осматриваю общий зал таверны.»</em> · <em>«Что мы видим, въезжая в Фандалин?»</em>
                         </div>
                     </div>
                 )}
@@ -169,7 +169,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                                 : (isAssistant && streaming ? "…" : "")}
                             {isAssistant && m.content && (
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                                    <Tooltip content="Insert this narration at the editor cursor (or append at the end if no cursor)" closeDelay={0}>
+                                    <Tooltip content="Вставить нарратив в позицию курсора (или в конец, если курсора нет)" closeDelay={0}>
                                         <Button
                                             size="sm"
                                             variant="flat"
@@ -183,7 +183,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                                                 border: "1px solid #d4c5a0",
                                             }}
                                         >
-                                            Insert into session
+                                            Вставить в сессию
                                         </Button>
                                     </Tooltip>
                                 </div>
@@ -195,15 +195,15 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
 
             {pendingTickEvents.length > 0 && !streaming && (
                 <div style={{ fontSize: 11, color: "#3a2a2a", background: "#fff1c8", padding: 6, borderRadius: 6, lineHeight: 1.35, border: "1px solid #d4c5a0" }}>
-                    🌍 <strong>{pendingTickEvents.length}</strong> off-screen event{pendingTickEvents.length === 1 ? "" : "s"} waiting — the DM will weave {pendingTickEvents.length === 1 ? "it" : "them"} into the next narration.
+                    🌍 <strong>{pendingTickEvents.length}</strong> событий за кулисами ждёт — DM вплетёт их в следующий нарратив.
                 </div>
             )}
 
             {lastMirrored.length > 0 && !streaming && (
                 <div style={{ fontSize: 11, color: "#3a2a2a", background: "#e6f0d2", padding: 6, borderRadius: 6, lineHeight: 1.35 }}>
-                    🪶 Mirrored DM-narrated lines into the chat history of:{" "}
+                    🪶 Реплики DM зеркалятся в чат-историю:{" "}
                     <strong>{lastMirrored.join(", ")}</strong>.{" "}
-                    Click those entity nodes to continue the conversation.
+                    Кликните по этим нодам, чтобы продолжить разговор.
                 </div>
             )}
 
@@ -218,7 +218,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                 <Textarea
                     size="sm"
                     variant="faded"
-                    placeholder="Describe what your party does — or ask the DM to set the next scene…"
+                    placeholder="Опишите что делает партия — или попросите DM задать следующую сцену…"
                     value={input}
                     onValueChange={setInput}
                     minRows={1}
@@ -239,11 +239,11 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                     onClick={send}
                     isDisabled={streaming || input.trim().length === 0}
                     style={{ background: "#7a1f1f", color: "white", height: 36 }}
-                    aria-label="Send to DM"
+                    aria-label="Отправить DM"
                 >
                     <IoSend />
                 </Button>
-                <Tooltip content="Clear DM conversation" closeDelay={0}>
+                <Tooltip content="Очистить разговор с DM" closeDelay={0}>
                     <Button
                         size="sm"
                         isIconOnly
@@ -251,7 +251,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                         onClick={clear}
                         isDisabled={streaming || history.length === 0}
                         style={{ height: 36 }}
-                        aria-label="Clear DM conversation"
+                        aria-label="Очистить разговор с DM"
                     >
                         <GiBroom />
                     </Button>

@@ -77,13 +77,13 @@ export default function Launcher() {
             </span>
           </div>
           <span style={{ fontSize: 13, color: '#5a4a3a', marginTop: 4, marginLeft: 44 }}>
-            AI campaign manager · visual world graph · session timeline · DM operating system
+            AI-менеджер кампаний · визуальный граф мира · таймлайн сессий · операционная система мастера
           </span>
         </CardHeader>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ fontWeight: 800, fontSize: 14, color: '#2a1a1a' }}>AI provider</span>
+            <span style={{ fontWeight: 800, fontSize: 14, color: '#2a1a1a' }}>AI-провайдер</span>
             <Tabs
               size="sm"
               selectedKey={providerId}
@@ -92,24 +92,24 @@ export default function Launcher() {
               variant="bordered"
               classNames={{ tabList: 'bg-white' }}
             >
-              <Tab key="openai" title="OpenAI (cloud)" />
-              <Tab key="ollama" title="Ollama (self-hosted)" />
-              <Tab key="anthropic" title="Anthropic Claude (cloud)" />
+              <Tab key="openai" title="OpenAI (облако)" />
+              <Tab key="ollama" title="Ollama (локально)" />
+              <Tab key="anthropic" title="Anthropic Claude (облако)" />
             </Tabs>
 
             {providerId === "openai" && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
-                  Paste an OpenAI API key — used for NPC dialogue, DM narration, entity extraction and NPC generation. Get one at{' '}
+                  Вставьте API-ключ OpenAI — используется для диалогов с NPC, нарратива DM, извлечения сущностей и генерации NPC. Получить ключ можно на{' '}
                   <a href="https://platform.openai.com/account/api-keys" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>
                     platform.openai.com
                   </a>
-                  . The key stays in your browser.
+                  . Ключ хранится только в браузере.
                 </p>
                 <Input
                   size="sm"
                   variant="faded"
-                  label="OpenAI API key"
+                  label="API-ключ OpenAI"
                   placeholder="sk-..."
                   type="password"
                   onChange={(e) => {
@@ -120,7 +120,7 @@ export default function Launcher() {
                 <Input
                   size="sm"
                   variant="faded"
-                  label="OpenAI model"
+                  label="Модель OpenAI"
                   value={openaiModel}
                   onValueChange={setOpenaiModel}
                 />
@@ -130,8 +130,8 @@ export default function Launcher() {
             {providerId === "ollama" && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
-                  Talks to a local <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — used for NPC dialogue, DM narration, world tick, and (via <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>format: "json"</code>) entity extraction + NPC generation. Quality of structured outputs depends on the model — instruction-tuned models (llama 3.x, qwen) do well.
-                  Start Ollama with <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="*"</code> so the browser can reach it.
+                  Общается с локальным <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — для диалогов NPC, нарратива DM, world tick и (через <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>format: "json"</code>) извлечения сущностей + генерации NPC. Качество структурированного вывода зависит от модели — instruction-tuned модели (llama 3.x, qwen) справляются хорошо.
+                  Запускайте Ollama с <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="*"</code>, чтобы браузер мог достучаться.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <Input
@@ -145,20 +145,20 @@ export default function Launcher() {
                   <Input
                     size="sm"
                     variant="faded"
-                    label="Model"
+                    label="Модель"
                     value={ollamaModel}
                     onValueChange={setOllamaModel}
                     style={{ flex: 1 }}
                   />
                 </div>
                 <p style={{ fontSize: 11, color: '#7a6a5a', margin: 0 }}>
-                  Optional: paste an OpenAI key below to enable the fallback chain (if Ollama daemon is down, requests route to OpenAI).
+                  Опционально: вставьте ключ OpenAI ниже, чтобы включить fallback chain (если Ollama daemon упадёт, запросы пойдут на OpenAI).
                 </p>
                 <Input
                   size="sm"
                   variant="faded"
-                  label="OpenAI API key (optional, used by fallback chain)"
-                  placeholder="sk-... — optional"
+                  label="API-ключ OpenAI (опционально, для fallback chain)"
+                  placeholder="sk-... — опционально"
                   type="password"
                   onChange={(e) => {
                     setAccessKey(e.target.value);
@@ -171,13 +171,13 @@ export default function Launcher() {
             {providerId === "anthropic" && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
-                  Paste an Anthropic API key — used for NPC dialogue and DM narration through Claude. Browser-direct calls use Anthropic's <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>anthropic-dangerous-direct-browser-access</code> opt-in (local prototype only — route through a backend before any hosted release). Get a key at{' '}
+                  Вставьте API-ключ Anthropic — для диалогов NPC и нарратива DM через Claude. Прямые из браузера запросы используют opt-in заголовок Anthropic <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>anthropic-dangerous-direct-browser-access</code> (только для локального прототипа — перед публичным размещением маршрутизировать через бэкенд). Ключ можно получить на{' '}
                   <a href="https://console.anthropic.com/" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>console.anthropic.com</a>.
                 </p>
                 <Input
                   size="sm"
                   variant="faded"
-                  label="Anthropic API key"
+                  label="API-ключ Anthropic"
                   placeholder="sk-ant-..."
                   type="password"
                   value={anthropicApiKey}
@@ -186,18 +186,18 @@ export default function Launcher() {
                 <Input
                   size="sm"
                   variant="faded"
-                  label="Claude model"
+                  label="Модель Claude"
                   value={anthropicModel}
                   onValueChange={setAnthropicModel}
                 />
                 <p style={{ fontSize: 11, color: '#7a6a5a', margin: 0 }}>
-                  Optional: paste an OpenAI key below to enable the fallback chain (if Claude is rate-limited, requests route to OpenAI). Entity extraction + NPC generation work on Claude natively via tool-use.
+                  Опционально: вставьте ключ OpenAI ниже, чтобы включить fallback chain (если Claude встретит rate-limit, запросы пойдут на OpenAI). Извлечение сущностей и генерация NPC на Claude работают нативно через tool-use.
                 </p>
                 <Input
                   size="sm"
                   variant="faded"
-                  label="OpenAI API key (optional, used by fallback chain)"
-                  placeholder="sk-... — optional"
+                  label="API-ключ OpenAI (опционально, для fallback chain)"
+                  placeholder="sk-... — опционально"
                   type="password"
                   onChange={(e) => {
                     setAccessKey(e.target.value);
@@ -214,17 +214,17 @@ export default function Launcher() {
               onValueChange={setUseFallback}
             >
               <span style={{ fontSize: 12, color: '#3a2a2a' }}>
-                <strong>Enable fallback chain</strong> — if the active provider errors out (rate-limited, daemon down, expired key), automatically retry on the next configured provider. Order: active first, then the rest with valid config.
+                <strong>Включить fallback chain</strong> — если активный провайдер упадёт (rate-limit, daemon недоступен, ключ просрочен), запросы автоматически уйдут на следующий настроенный. Порядок: активный, затем остальные с валидной конфигурацией.
               </span>
             </Checkbox>
           </div>
         </CardBody>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
-          <span style={{ fontWeight: 800, fontSize: 16, color: '#2a1a1a' }}>Start a campaign</span>
+          <span style={{ fontWeight: 800, fontSize: 16, color: '#2a1a1a' }}>Запустить кампанию</span>
           <p style={{ fontSize: 12, color: '#5a4a3a', marginTop: 2, marginBottom: 14 }}>
-            Each template seeds heroes, NPCs, monsters, and locations. You can keep editing the session text on the left and
-            click the refresh arrow to update the visual graph from the AI.
+            Каждый шаблон засевает героев, NPC, монстров и локации. Можно править текст сессии слева и
+            кликать стрелку «refresh», чтобы обновить визуальный граф через AI.
           </p>
           <div
             style={{
@@ -269,10 +269,10 @@ export default function Launcher() {
                 <span style={{ fontSize: 12, color: '#5a4a3a', lineHeight: 1.4 }}>{template.subtitle}</span>
                 <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 999, background: '#f0e4c8', color: '#5a4a3a' }}>
-                    {template.seed.entities.length} entities
+                    Сущностей: {template.seed.entities.length}
                   </span>
                   <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 999, background: '#f0e4c8', color: '#5a4a3a' }}>
-                    {template.seed.locations.length} locations
+                    Локаций: {template.seed.locations.length}
                   </span>
                 </div>
               </button>
@@ -283,7 +283,7 @@ export default function Launcher() {
         <Divider />
         <CardBody style={{ padding: '12px 24px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 11, color: '#7a6a5a' }}>
-            Forked from VisualStoryWriting (MIT). Engine: React 18 · @xyflow/react · Slate · OpenAI · Ollama.
+            Форк VisualStoryWriting (MIT). Стек: React 19 · @xyflow/react · Slate · OpenAI · Anthropic · Ollama.
           </span>
           <Button
             size="sm"
@@ -293,7 +293,7 @@ export default function Launcher() {
               window.location.reload();
             }}
           >
-            Reset
+            Сбросить
           </Button>
         </CardBody>
       </Card>

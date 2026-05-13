@@ -2,7 +2,9 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-13** (Sessions layer + ability-score rewrites — the v0.2 Next list is empty). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
+Last update: **2026-05-13** (RU-локализация UI — критичные поверхности готовы, доделываем завтра). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
+
+> ⏸ **Status — partial RU localization shipped, 2026-05-13 night.** Резюме что готово и что осталось — в Open follow-ups внизу. Резюм точки на завтра: остатки UI + переведённые `README.md` / `ROADMAP.md`.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -221,6 +223,14 @@ Last update: **2026-05-13** (Sessions layer + ability-score rewrites — the v0.
 
 ### Open follow-ups
 
+- [ ] **RU-локализация — финиш** *(в работе, 2026-05-13)* — критичные UI-поверхности готовы (Launcher, tabs, 6 из 8 панелей, EntityNode kind-бейджи, LocationNode danger-бейдж и slider). Осталось:
+      - `DiceRollerPanel` — все строки (заголовок, кнопки, "Scan & roll all", history empty state)
+      - `SessionsPanel` — все строки (заголовок, End-session форма, recap-actions)
+      - `EncounterGeneratorPanel` — `XP estimate vs target budget` строка
+      - 2-3 оставшихся error fallback'а в агентах (`SessionRecapAgent`)
+      - `README.md` — финальный перевод (топ + middle уже RU, остался "Стек" + "Безопасность ключей" + "Вдохновение")
+      - `ROADMAP.md` — целевой перевод (сейчас весь EN)
+      - Slice descriptions в README — переводить или оставить как есть (это техническая часть для devs, можно оставить EN)
 - [ ] **ActionEdge → SceneBeat** — historical Action timeline is still narrative-only; a Session-aware scene-beat type would link timeline edges to the new Session model so the timeline can show chapter dividers
 - [ ] **Auto-end session at heuristic boundaries** — surface a non-blocking suggestion "you've written 2000+ words since last archived session, archive now?"
 

@@ -10,10 +10,10 @@ import { ChangePropertyPrompt } from '../../model/prompts/textEditors/ChangeProp
 import { RemoveEntityPrompt } from '../../model/prompts/textEditors/RemoveEntityPrompt';
 
 const KIND_STYLE: Record<EntityKind, { label: string; bg: string; fg: string }> = {
-  hero: { label: 'Hero', bg: '#1e3a8a', fg: '#dbeafe' },
+  hero: { label: 'Герой', bg: '#1e3a8a', fg: '#dbeafe' },
   npc: { label: 'NPC', bg: '#854d0e', fg: '#fef3c7' },
-  monster: { label: 'Monster', bg: '#7f1d1d', fg: '#fecaca' },
-  faction: { label: 'Faction', bg: '#3f3f46', fg: '#e4e4e7' },
+  monster: { label: 'Монстр', bg: '#7f1d1d', fg: '#fecaca' },
+  faction: { label: 'Фракция', bg: '#3f3f46', fg: '#e4e4e7' },
   unknown: { label: '—', bg: '#e5e7eb', fg: '#374151' },
 };
 
@@ -158,7 +158,7 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
           <div className="nodrag nopan" style={{ display: 'flex', flexDirection: 'column' }}>
             <Slider
               size="sm"
-              label={`HP`}
+              label={`Здоровье`}
               className="max-w-md"
               step={1}
               color="danger"
@@ -183,7 +183,7 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
         {props.data.abilities && (
           <details className="nodrag nopan" style={{ fontSize: 11, color: '#3a2a2a' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 700, marginBottom: 4 }}>
-              Abilities (drag → rewrites scene if tier changes)
+              Характеристики (drag → AI перепишет сцену, если меняется тир)
             </summary>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {(Object.keys(ABILITY_LABELS) as AbilityKey[]).map((key) => {
