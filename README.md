@@ -88,7 +88,9 @@ Short version:
 - ✅ **v0.2 slice 8 — Insert-at-cursor** — all "Insert into session" buttons now drop into the current Slate cursor position (falls back to append at end when there's no selection).
 - ✅ **v0.2 slice 9 — Combat AI** — third agent type on the same architecture. When a monster entity is selected, a "Suggest tactic" button proposes a one-sentence tactical action grounded in the battlefield and the creature's goal. Insert directly into the session text.
 - ✅ **v0.2 slice 10 — Off-screen World Tick** — every NPC / monster / faction with a goal gets an off-screen action between sessions. Events are persisted, mirrored into entities' chat histories, and one-click-insertable into the session text. Works across all 3 providers.
-- 🎯 Next: world-tick auto-scheduling · DM-prompt awareness of recent tick events · (design item) cross-provider structured outputs.
+- ✅ **v0.2 slice 11 — DM ↔ Tick awareness** — pending tick events are automatically folded into the next DM system prompt with a strict "weave at least one in" instruction. Watermark prevents repeats.
+- ✅ **v0.2 slice 12 — Auto-scheduling** — optional cadence selector inside the Tick panel: off / 5min / 15min / 1h / 4h. In-tab scheduler fires ticks while the app is open; persists last-tick timestamp so reload picks up correctly.
+- 🎯 Next: classic DM tools now meaningful on top of the Agent stack — Encounter Generator (will pair with Combat AI) · Initiative tracker · inline dice roller · (design item) cross-provider structured outputs.
 - 🛠 Parked DM tools: Encounter Generator · dice roller · initiative tracker · D&D-aware text editors.
 - 🏰 Backlog: dungeon/world-map generation, temporal world states, asset pipeline, multiplayer, full autonomous AI DM mode, cinematic NPC briefings.
 

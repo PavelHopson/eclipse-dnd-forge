@@ -11,6 +11,9 @@ import { RewriteFromVisual } from '../model/prompts/textEditors/RewriteFromVisua
 import { EntitiesExtractor } from '../model/prompts/textExtractors/EntitiesExtractor';
 import { LocationExtractor } from '../model/prompts/textExtractors/LocationsExtractor';
 import { VisualRefresher } from '../model/prompts/textExtractors/VisualRefresher';
+import { runWorldTick } from '../model/agents/WorldTickAgent';
+import { useAgentStore } from '../store/useAgentStore';
+import { WORLD_TICK_INTERVAL_MS, useWorldEventStore } from '../store/useWorldEventStore';
 import { useStudyStore } from '../study/StudyModel';
 import HistoryTree from './HistoryTree';
 import TextEditor from './TextEditor';
@@ -30,6 +33,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [talkingToEntityId, setTalkingToEntityId] = useState<string | null>(null);
   const [isDmPanelOpen, setIsDmPanelOpen] = useState(false);
   const [isWorldTickPanelOpen, setIsWorldTickPanelOpen] = useState(false);
+  const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
   const selectedNodes = useModelStore(state => state.selectedNodes);
@@ -49,6 +53,77 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
       setTalkingToEntityId(selectedEntityId);
     }
   }, [selectedEntityId, talkingToEntityId]);
+
+  // World-tick auto-scheduler. Polls every 30s and fires a tick when the
+  // configured interval has elapsed since the last (manual or auto) tick.
+  // Lives at the in-app level — closing the tab pauses the scheduler;
+  // there is no background service worker.
+  useEffect(() => {
+    if (autoTickInterval === "off" || isReadOnly) return;
+
+    const intervalMs = WORLD_TICK_INTERVAL_MS[autoTickInterval];
+    let cancelled = false;
+
+    async function tryFire() {
+      if (cancelled) return;
+      const store = useWorldEventStore.getState();
+      if (store.running) return; // a manual tick is in flight
+      if (Date.now() - store.lastAutoTickAt < intervalMs) return;
+
+      // Find candidates the same way runWorldTick does — if zero, skip silently.
+      const candidates = useModelStore.getState().entityNodes.filter((n) => {
+        const d = n.data as any;
+        return (d.kind === 'npc' || d.kind === 'monster' || d.kind === 'faction')
+          && typeof d.goal === 'string' && d.goal.length > 0;
+      });
+      if (candidates.length === 0) return;
+
+      const tickId = `auto-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      store.setRunning(true, tickId);
+      try {
+        await runWorldTick({
+          tickId,
+          onEventCommitted: (event) => {
+            useWorldEventStore.getState().appendEvent(event);
+            if (event.action) {
+              const agentStore = useAgentStore.getState();
+              const existing = agentStore.getHistory(event.entityId);
+              const hasMarker = existing.some(
+                (m) => m.role === 'user' && m.content.startsWith('(Off-screen tick:'),
+              );
+              if (!hasMarker) {
+                agentStore.appendUserMessage(
+                  event.entityId,
+                  '(Off-screen tick: the following lines describe what you did between sessions.)',
+                );
+              }
+              const combined = event.consequence
+                ? `${event.action} (${event.consequence})`
+                : event.action;
+              agentStore.appendAssistantMessage(event.entityId, combined);
+            }
+          },
+        });
+        useWorldEventStore.getState().markAutoTicked();
+      } catch (e) {
+        console.warn('[auto world-tick] failed:', e);
+      } finally {
+        useWorldEventStore.getState().setRunning(false);
+      }
+    }
+
+    // Poll cadence: 30s is fine — auto-tick semantics are "approximately every N",
+    // not "to the second".
+    const handle = window.setInterval(() => { void tryFire(); }, 30 * 1000);
+    // Also fire once immediately on mount / interval-change so a 4h reload
+    // does not have to wait 30s before the first check.
+    void tryFire();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(handle);
+    };
+  }, [autoTickInterval, isReadOnly]);
 
   const visualPanelRef = React.createRef<HTMLDivElement>();
 

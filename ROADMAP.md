@@ -83,6 +83,15 @@ Last update: **2026-05-13** (DM ↔ Tick awareness + auto-scheduling — the liv
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 12 — World Tick auto-scheduling ⏱️
+*Shipped 2026-05-13. World can now advance on its own while the app is open.*
+
+- [x] **`WorldTickInterval` enum + lookup tables** in `useWorldEventStore`: `off | 5min | 15min | 1h | 4h`, with label and millisecond maps. Default is `off` (preserves earlier manual-only behaviour).
+- [x] **Two new persisted fields**: `autoTickInterval` and `lastAutoTickAt`. Both flow through the same `eclipse_dnd_world_events_v1` storage key.
+- [x] **`setAutoTickInterval()` + `markAutoTicked()`** store actions. Manual ticks now also call `markAutoTicked()` so the auto-scheduler does not immediately re-fire after a click.
+- [x] **Settings row inside `WorldTickPanel`** — Select with all five cadences + a "Last tick: HH:MM:SS" caption when auto is enabled.
+- [x] **Auto-scheduler effect in `VisualWritingInterface`** — runs only when `autoTickInterval !== "off"` and the model is not read-only. Polls every 30s, fires a tick when `Date.now() - lastAutoTickAt >= intervalMs`. Skips silently when no eligible entities or when a manual tick is already in flight. Mirrors each event into the corresponding NPC's chat history with the same `(Off-screen tick: ...)` framing the manual path uses. In-tab only — closing the tab pauses the scheduler.
+
 ### v0.2 slice 11 — DM ↔ World Tick awareness 🔗
 *Shipped 2026-05-13. Closes the loop: ticks happen → DM narration naturally references them.*
 

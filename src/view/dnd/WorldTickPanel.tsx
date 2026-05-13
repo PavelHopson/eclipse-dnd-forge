@@ -1,4 +1,4 @@
-import { Button, Tooltip } from "@nextui-org/react";
+import { Button, Select, SelectItem, Tooltip } from "@nextui-org/react";
 import { useState } from "react";
 import { GiBroom, GiHourglass, GiScrollQuill, GiSandsOfTime } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
@@ -6,7 +6,7 @@ import { useModelStore } from "../../model/Model";
 import { WorldTickEvent, runWorldTick } from "../../model/agents/WorldTickAgent";
 import { appendNpcQuoteToSession, appendParagraphToSession, insertNpcQuoteAtCursor, insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
-import { useWorldEventStore } from "../../store/useWorldEventStore";
+import { WORLD_TICK_INTERVAL_LABELS, WorldTickInterval, useWorldEventStore } from "../../store/useWorldEventStore";
 
 interface WorldTickPanelProps {
     onClose: () => void;
@@ -17,6 +17,9 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
     const running = useWorldEventStore((s) => s.running);
     const currentTickId = useWorldEventStore((s) => s.currentTickId);
     const isInsertedFn = useWorldEventStore((s) => s.isInserted);
+    const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
+    const setAutoTickInterval = useWorldEventStore((s) => s.setAutoTickInterval);
+    const lastAutoTickAt = useWorldEventStore((s) => s.lastAutoTickAt);
 
     const entityNodes = useModelStore((s) => s.entityNodes);
 
@@ -70,6 +73,9 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                     }
                 },
             });
+            // Stamp lastAutoTickAt so the auto-scheduler doesn't immediately
+            // re-fire after this manual tick.
+            useWorldEventStore.getState().markAutoTicked();
         } catch (e: any) {
             setError(typeof e?.message === "string" ? e.message : "World tick failed.");
         } finally {
@@ -171,6 +177,33 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
                 >
                     {running ? "Ticking…" : "Advance the world"}
                 </Button>
+            </div>
+
+            {/* Auto-tick scheduling */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#3a2a2a" }}>
+                <span style={{ whiteSpace: "nowrap" }}>Auto-advance:</span>
+                <Select
+                    size="sm"
+                    variant="faded"
+                    selectedKeys={[autoTickInterval]}
+                    onChange={(e) => setAutoTickInterval(e.target.value as WorldTickInterval)}
+                    aria-label="World tick interval"
+                    style={{ minWidth: 180 }}
+                    classNames={{ trigger: "!min-h-[32px] h-[32px]" }}
+                >
+                    {(Object.keys(WORLD_TICK_INTERVAL_LABELS) as WorldTickInterval[]).map((key) => (
+                        <SelectItem key={key} value={key} textValue={WORLD_TICK_INTERVAL_LABELS[key]}>
+                            {WORLD_TICK_INTERVAL_LABELS[key]}
+                        </SelectItem>
+                    ))}
+                </Select>
+                {autoTickInterval !== "off" && (
+                    <span style={{ fontSize: 11, color: "#6b5c4c", fontStyle: "italic" }}>
+                        {lastAutoTickAt > 0
+                            ? `Last tick: ${new Date(lastAutoTickAt).toLocaleTimeString()}`
+                            : "Will tick on next interval."}
+                    </span>
+                )}
             </div>
 
             {error && (
