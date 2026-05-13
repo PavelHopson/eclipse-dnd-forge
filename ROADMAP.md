@@ -83,6 +83,16 @@ Last update: **2026-05-13** (D&D-aware text editors — HP / danger sliders that
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 18 — Sessions as first-class layer 📖
+*Shipped 2026-05-13. Campaign chapters with AI-generated recaps that loop back into DM context.*
+
+- [x] **`CampaignSession` model + `useSessionStore`** — `{id, name, startedAt, endedAt, text, recap?}`, persisted in `eclipse_dnd_sessions_v1`. Hard cap 100 sessions. Auto-increments `nextSessionNumber` for default-name seeding.
+- [x] **`SessionRecapAgent.generateSessionRecap()`** — plain-text streaming call through `currentProvider()`. 2-4 past-tense sentences, names NPCs by name, no game mechanic talk, matches the campaign's language. Works on all three providers.
+- [x] **`SessionsPanel`** — end-current-session form (auto-seeded name, skip-recap option), error fallback that archives the session even when recap generation fails, list of archived sessions with regenerate-recap and remove actions.
+- [x] **DM agent context extension** — `DmAgentContext.recentSessions: CampaignSession[]`. Up to 3 most-recent archived sessions are folded into the system prompt as a "PREVIOUSLY ON THIS CAMPAIGN" block. DM is told to treat recaps as canon.
+- [x] **Entities / locations / world events persist across sessions** — sessions are chapters in the same campaign world, not separate worlds. Ending a session only archives the text, the rest of the model stays put.
+- [x] **Toolbar wire-in** — `📖` button next to Dice. Mutually exclusive with all other right-side panels.
+
 ### v0.2 slice 17 — D&D-aware text editors ⚙️
 *Shipped 2026-05-13. Slider on a stat rewrites the session text mechanically.*
 
@@ -202,10 +212,10 @@ Last update: **2026-05-13** (D&D-aware text editors — HP / danger sliders that
 ### Agent layer extensions (priority — same architecture, new agent types)
 
 
-### Classic DM tools
+### Open follow-ups
 
-- [ ] **Session / Encounter as first-class layer** — reframe `ActionEdge` as scene beats inside a `Session` container
-- [ ] **`ChangeAbilityScorePrompt`** — sister to ChangeHpPrompt / ChangeDangerPrompt for ability-score sliders (STR/DEX/CON/INT/WIS/CHA). Less obvious narrative payoff than HP — slider drag on STR doesn't have a clean condition mapping — so parked until we have a use-case
+- [ ] **ActionEdge → SceneBeat** — historical Action timeline is still narrative-only; a Session-aware scene-beat type would link timeline edges to the new Session model so the timeline can show chapter dividers
+- [ ] **Auto-end session at heuristic boundaries** — surface a non-blocking suggestion "you've written 2000+ words since last archived session, archive now?"
 
 ---
 

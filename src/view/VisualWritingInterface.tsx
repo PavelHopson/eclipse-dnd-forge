@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiBattleAxe, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
+import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -24,6 +24,7 @@ import EncounterGeneratorPanel from './dnd/EncounterGeneratorPanel';
 import InitiativePanel from './dnd/InitiativePanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
+import SessionsPanel from './dnd/SessionsPanel';
 import WorldTickPanel from './dnd/WorldTickPanel';
 import EntitiesEditor from './entityActionView/EntitiesEditor';
 import LocationsEditor from './locationView/LocationsEditor';
@@ -39,6 +40,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [encounterForLocationId, setEncounterForLocationId] = useState<string | null>(null);
   const [isInitiativePanelOpen, setIsInitiativePanelOpen] = useState(false);
   const [isDicePanelOpen, setIsDicePanelOpen] = useState(false);
+  const [isSessionsPanelOpen, setIsSessionsPanelOpen] = useState(false);
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
 
@@ -290,11 +292,34 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsWorldTickPanelOpen(false);
                         setIsInitiativePanelOpen(false);
                         setEncounterForLocationId(null);
+                        setIsSessionsPanelOpen(false);
                       }
                     }}
                     aria-label="Toggle dice roller"
                   >
                     <GiDiceTwentyFacesTwenty />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Sessions — archive chapters, AI-generated recaps fed back into the DM agent" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isSessionsPanelOpen ? '#7a1f1f' : undefined, color: isSessionsPanelOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isSessionsPanelOpen;
+                      setIsSessionsPanelOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                        setIsDmPanelOpen(false);
+                        setIsWorldTickPanelOpen(false);
+                        setIsInitiativePanelOpen(false);
+                        setIsDicePanelOpen(false);
+                        setEncounterForLocationId(null);
+                      }
+                    }}
+                    aria-label="Toggle sessions panel"
+                  >
+                    <GiBookmarklet />
                   </Button>
                 </Tooltip>
                 {selectedTab === 'entities' && selectedEntityId && (
@@ -402,6 +427,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isDicePanelOpen && !isReadOnly && (
               <DiceRollerPanel onClose={() => setIsDicePanelOpen(false)} />
+            )}
+            {isSessionsPanelOpen && !isReadOnly && (
+              <SessionsPanel onClose={() => setIsSessionsPanelOpen(false)} />
             )}
             {encounterForLocationId && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
               <EncounterGeneratorPanel

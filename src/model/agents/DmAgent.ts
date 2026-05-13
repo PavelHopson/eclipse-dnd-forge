@@ -1,6 +1,7 @@
 import { Entity, Location, useModelStore } from "../Model";
 import { currentModel, currentProvider } from "../../store/useAiConfigStore";
 import { useWorldEventStore } from "../../store/useWorldEventStore";
+import { CampaignSession, useSessionStore } from "../../store/useSessionStore";
 import { WorldTickEvent } from "./WorldTickAgent";
 import { AgentMessage } from "./NpcAgent";
 
@@ -19,6 +20,9 @@ export interface DmAgentContext {
     /** Off-screen world-tick events the DM has not yet acknowledged. Empty
      *  when no ticks have run since the last DM turn. */
     pendingOffScreenEvents: WorldTickEvent[];
+    /** Most-recent archived sessions, oldest-first. Used to fold a
+     *  "PREVIOUSLY ON THIS CAMPAIGN" block into the system prompt. */
+    recentSessions: CampaignSession[];
 }
 
 function formatEntityLine(e: Entity): string {
@@ -43,7 +47,7 @@ function formatLocationLine(l: Location): string {
  *   - It describes consequences of player actions naturally — no dice talk.
  */
 export function buildDmSystemPrompt(ctx: DmAgentContext): string {
-    const { sceneText, entities, locations, pendingOffScreenEvents } = ctx;
+    const { sceneText, entities, locations, pendingOffScreenEvents, recentSessions } = ctx;
 
     const entityBlock = entities.length > 0
         ? entities.map(formatEntityLine).join("\n")
@@ -62,16 +66,28 @@ export function buildDmSystemPrompt(ctx: DmAgentContext): string {
     const sections: string[] = [
         `You are the Dungeon Master of a Dungeons & Dragons 5th Edition campaign.`,
         `You are speaking directly to the players around a table. Your job is to narrate the world, voice NPCs, drive the plot, and react to player actions naturally.`,
+    ];
+
+    const recapsWithText = recentSessions.filter((s) => s.recap && s.recap.trim().length > 0);
+    if (recapsWithText.length > 0) {
+        sections.push(
+            ``,
+            `PREVIOUSLY ON THIS CAMPAIGN (recaps of the most recent past sessions, oldest first — treat as canon):`,
+            recapsWithText.map((s) => `- **${s.name}** — ${s.recap}`).join("\n"),
+        );
+    }
+
+    sections.push(
         ``,
-        `CURRENT SESSION TEXT (this is canonical — everything that has been written down so far):`,
-        sceneText.trim() || "(the campaign is just beginning — set the opening scene)",
+        `CURRENT SESSION TEXT (this is canonical — everything that has been written down so far in this session):`,
+        sceneText.trim() || "(this session is just beginning — set the opening scene, referencing the recaps above where they make sense)",
         ``,
         `CHARACTERS IN PLAY:`,
         entityBlock,
         ``,
         `KNOWN LOCATIONS:`,
         locationBlock,
-    ];
+    );
 
     if (offScreenBlock) {
         sections.push(
@@ -140,12 +156,16 @@ export async function runDmTurn(
         .getEventsForDm()
         .slice(-20);
 
+    // Surface up to the last 3 archived sessions as "PREVIOUSLY" context.
+    const recentSessions = useSessionStore.getState().getRecentSessions(3);
+
     const ctx: DmAgentContext = {
         sceneText: state.text,
         entities,
         locations,
         history: priorHistory,
         pendingOffScreenEvents,
+        recentSessions,
     };
 
     const messages = buildDmMessages(ctx, newPlayerMessage);
