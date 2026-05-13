@@ -31,10 +31,38 @@ export interface AiStreamResult {
 /** User-facing provider choices. The fallback wrapper has its own internal id. */
 export type AiProviderId = "openai" | "ollama" | "anthropic";
 
+/**
+ * Spec for a structured-output call. Caller passes a zod schema; the provider
+ * is responsible for getting the model to emit JSON that satisfies it, by
+ * whatever native mechanism the API supports (OpenAI response_format,
+ * Anthropic tool-use, Ollama format=json + prompt-engineering).
+ */
+export interface StructuredOutputSpec<T> {
+    /** Zod schema for the expected payload. Used both to coerce the provider
+     *  request and to validate the final reply. */
+    schema: import("zod").ZodType<T>;
+    /** Short identifier for the output shape — surfaces in Anthropic tool name. */
+    schemaName: string;
+}
+
+export interface StructuredOutputOptions {
+    model?: string;
+    temperature?: number;
+    signal?: AbortSignal;
+}
+
 export interface AiProvider {
     /** Stable identifier — one of `AiProviderId` for real providers, or `"fallback"` for the chain wrapper. */
     readonly id: AiProviderId | "fallback";
     readonly displayName: string;
     /** Stream a chat completion. Each delta is also forwarded through `options.onPartial`. */
     streamChat(messages: AiMessage[], options?: AiStreamOptions): Promise<AiStreamResult>;
+    /** Return JSON conforming to `spec.schema`. Each provider implements this
+     *  with its native structured-output mechanism. Throws on validation
+     *  failure so the caller can decide whether to retry or fall back. */
+    generateStructured<T>(
+        messages: AiMessage[],
+        spec: StructuredOutputSpec<T>,
+        options?: StructuredOutputOptions,
+    ): Promise<T>;
 }

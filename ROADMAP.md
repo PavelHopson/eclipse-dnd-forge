@@ -2,7 +2,7 @@
 
 > Single source of truth. README links here. Update on every shipped slice.
 
-Last update: **2026-05-13** (DM ↔ Tick awareness + auto-scheduling — the living-world loop is now closed). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
+Last update: **2026-05-13** (cross-provider structured outputs — JSONPrompt no longer hard-OpenAI). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
 
 > 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
 
@@ -83,6 +83,20 @@ Last update: **2026-05-13** (DM ↔ Tick awareness + auto-scheduling — the liv
 - [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
 - [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
 
+### v0.2 slice 13 — Cross-provider structured outputs 🔌
+*Shipped 2026-05-13. Frees the entity / location extractors and NPC generator from hard-OpenAI dependency.*
+
+- [x] **`AiProvider.generateStructured<T>(messages, spec, options)`** — new method on the provider interface. Returns a typed value validated against the supplied zod schema. Throws on validation failure so the FallbackProvider can move to the next provider.
+- [x] **`src/model/ai/zodToJsonSchema.ts`** — minimal in-house converter for the zod shapes Eclipse DnD Forge actually uses (object / array / string / number / boolean / enum / optional). ~40 LOC. Throws on unsupported shapes so we fail loudly rather than ship malformed schemas.
+- [x] **`OpenAIProvider.generateStructured`** — uses `zodResponseFormat` (existing OpenAI helper) on `chat.completions.create`. Same guarantees as the legacy JSONPrompt code path.
+- [x] **`AnthropicProvider.generateStructured`** — uses tool-use. Declares a single tool with `input_schema` derived from the zod schema, forces `tool_choice: { type: "tool" }`, extracts payload from the resulting `tool_use` content block.
+- [x] **`OllamaProvider.generateStructured`** — uses `format: "json"` + injects the JSON Schema into the system prompt. Parses + validates with zod; throws on mismatch.
+- [x] **`FallbackProvider.generateStructured`** — same chain semantics as `streamChat`. Tries providers in order, aggregates errors, throws if all fail.
+- [x] **`JSONPrompt` refactor** — branches by active config:
+      - OpenAI + no fallback → keep the existing streaming path (preserves partial-parse UI for entity / location extractors)
+      - Anything else (Ollama / Anthropic / fallback) → use `currentProvider().generateStructured`. No streaming, but one synthetic partial fires through `onPartialResponse` so existing consumers (layout-on-each-entity callback) still see one update.
+- [x] **Launcher copy updated** — removed the "structured outputs are OpenAI-specific" disclaimer that's no longer accurate. Optional OpenAI key on Ollama / Anthropic tabs reframed as "fallback chain enabler".
+
 ### v0.2 slice 12 — World Tick auto-scheduling ⏱️
 *Shipped 2026-05-13. World can now advance on its own while the app is open.*
 
@@ -153,7 +167,6 @@ Last update: **2026-05-13** (DM ↔ Tick awareness + auto-scheduling — the liv
 
 ### Agent layer extensions (priority — same architecture, new agent types)
 
-- [ ] **Cross-provider structured outputs** *(design item — not bounded for one slice yet)* — wrap JSON-mode for Ollama / tool-use for Anthropic so the entity extractors and NPC generator can also run off-OpenAI. Needs schema-translation layer across very different APIs.
 
 ### Classic DM tools (parked under the Agent vector)
 

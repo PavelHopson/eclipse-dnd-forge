@@ -1,4 +1,5 @@
-import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult } from "./types";
+import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
+import { zodToJsonSchema } from "./zodToJsonSchema";
 
 const DEFAULT_BASE_URL = "http://localhost:11434";
 const DEFAULT_MODEL = "llama3.2";
@@ -96,5 +97,65 @@ export class OllamaProvider implements AiProvider {
         }
 
         return { text };
+    }
+
+    /**
+     * Ollama structured output via `format: "json"` plus a system-prompt
+     * description of the expected schema. Ollama's JSON mode guarantees
+     * parseable JSON but not schema compliance — we validate with zod and
+     * throw on mismatch so the caller (or FallbackProvider) can retry.
+     */
+    async generateStructured<T>(
+        messages: AiMessage[],
+        spec: StructuredOutputSpec<T>,
+        options: StructuredOutputOptions = {},
+    ): Promise<T> {
+        const url = `${this.baseUrl.replace(/\/+$/, "")}/api/chat`;
+        const jsonSchema = zodToJsonSchema(spec.schema as any);
+
+        // Augment the last system message (or prepend one) with the schema.
+        const schemaInstruction = `Reply with a SINGLE JSON object that conforms to this JSON Schema. No prose, no markdown fences:\n${JSON.stringify(jsonSchema)}`;
+        const augmented: AiMessage[] = [...messages];
+        const lastSystemIdx = [...augmented].reverse().findIndex((m) => m.role === "system");
+        if (lastSystemIdx >= 0) {
+            const idx = augmented.length - 1 - lastSystemIdx;
+            augmented[idx] = { ...augmented[idx], content: `${augmented[idx].content}\n\n${schemaInstruction}` };
+        } else {
+            augmented.unshift({ role: "system", content: schemaInstruction });
+        }
+
+        const body = {
+            model: options.model || this.defaultModel,
+            messages: augmented.map((m) => ({ role: m.role, content: m.content })),
+            stream: false,
+            format: "json",
+            options: { temperature: options.temperature ?? 0 },
+        };
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            signal: options.signal,
+        });
+
+        if (!response.ok) {
+            const errText = await response.text().catch(() => "");
+            throw new Error(`Ollama HTTP ${response.status}: ${errText || response.statusText}`);
+        }
+        const data: any = await response.json();
+        const content: string = data?.message?.content ?? "";
+        if (!content) {
+            throw new Error("Ollama structured output: empty content");
+        }
+
+        let parsed: any;
+        try {
+            parsed = JSON.parse(content);
+        } catch (e: any) {
+            throw new Error(`Ollama structured output: invalid JSON (${e?.message ?? e}). Raw: ${content.slice(0, 200)}`);
+        }
+
+        return spec.schema.parse(parsed);
     }
 }

@@ -1,4 +1,4 @@
-import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult } from "./types";
+import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
 
 /**
  * Chains multiple providers. Tries each in order; on error, moves to the next.
@@ -42,5 +42,23 @@ export class FallbackProvider implements AiProvider {
         }
 
         throw new Error(`All AI providers failed. ${errors.join(" | ")}`);
+    }
+
+    async generateStructured<T>(
+        messages: AiMessage[],
+        spec: StructuredOutputSpec<T>,
+        options: StructuredOutputOptions = {},
+    ): Promise<T> {
+        const errors: string[] = [];
+        for (const provider of this.providers) {
+            try {
+                return await provider.generateStructured(messages, spec, options);
+            } catch (e: any) {
+                const msg = `${provider.id}: ${e?.message ?? e}`;
+                errors.push(msg);
+                console.warn(`[FallbackProvider/structured] ${msg}`);
+            }
+        }
+        throw new Error(`All AI providers failed (structured output). ${errors.join(" | ")}`);
     }
 }

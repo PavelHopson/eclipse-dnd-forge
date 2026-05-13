@@ -130,7 +130,7 @@ export default function Launcher() {
             {providerId === "ollama" && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
-                  Talks to a local <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — used for NPC dialogue and DM narration. Entity extraction and NPC generation still need an OpenAI key (they rely on structured outputs).
+                  Talks to a local <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — used for NPC dialogue, DM narration, world tick, and (via <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>format: "json"</code>) entity extraction + NPC generation. Quality of structured outputs depends on the model — instruction-tuned models (llama 3.x, qwen) do well.
                   Start Ollama with <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="*"</code> so the browser can reach it.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -152,13 +152,13 @@ export default function Launcher() {
                   />
                 </div>
                 <p style={{ fontSize: 11, color: '#7a6a5a', margin: 0 }}>
-                  Optional but still useful: paste an OpenAI key below to also enable extraction / NPC generation. Without it, only the visual graph and seed-campaign starter NPCs are available — Living-NPC and DM chat will still work through Ollama.
+                  Optional: paste an OpenAI key below to enable the fallback chain (if Ollama daemon is down, requests route to OpenAI).
                 </p>
                 <Input
                   size="sm"
                   variant="faded"
-                  label="OpenAI API key (optional, for structured-output paths)"
-                  placeholder="sk-... — optional with Ollama"
+                  label="OpenAI API key (optional, used by fallback chain)"
+                  placeholder="sk-... — optional"
                   type="password"
                   onChange={(e) => {
                     setAccessKey(e.target.value);
@@ -191,13 +191,13 @@ export default function Launcher() {
                   onValueChange={setAnthropicModel}
                 />
                 <p style={{ fontSize: 11, color: '#7a6a5a', margin: 0 }}>
-                  Entity extraction and NPC generation still need an OpenAI key (structured outputs are OpenAI-specific). Paste one below if you want those features too.
+                  Optional: paste an OpenAI key below to enable the fallback chain (if Claude is rate-limited, requests route to OpenAI). Entity extraction + NPC generation work on Claude natively via tool-use.
                 </p>
                 <Input
                   size="sm"
                   variant="faded"
-                  label="OpenAI API key (optional, for structured-output paths)"
-                  placeholder="sk-... — optional with Claude"
+                  label="OpenAI API key (optional, used by fallback chain)"
+                  placeholder="sk-... — optional"
                   type="password"
                   onChange={(e) => {
                     setAccessKey(e.target.value);

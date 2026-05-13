@@ -1,9 +1,9 @@
 import { zodResponseFormat } from 'openai/helpers/zod';
-import { ChatCompletionChunk } from "openai/resources/index.mjs";
 import { Allow, parse } from "partial-json";
 import { ZodObject, z } from "zod";
 import { useStudyStore } from "../../../study/StudyModel";
 import { openai } from "../../Model";
+import { useAiConfigStore } from "../../../store/useAiConfigStore";
 import { BasePrompt, ExecutablePrompt, PromptResult } from "./BasePrompt";
 
 
@@ -65,43 +65,82 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
       return this.schema.parse(this.addMissingFields(partialResponse, this.schema)); // Should add the missing fields
     } catch (e) {
       // Do nothing if we could not parse the partial response
-      /*if (e instanceof z.ZodError) {
-        console.log(e.issues);
-      }
-      console.error("Partial parse error for ", response, e);*/
     }
     return null;
   }
 
+  /**
+   * Fast-path: OpenAI streaming with response_format. Yields partial parses
+   * through `onPartialResponse` so UI (entity / location extractors) can
+   * render rows as they arrive. Used when the active provider is OpenAI
+   * and the user has not opted into the fallback chain.
+   */
+  private async executeOpenAIStreaming(): Promise<PromptResult<T>> {
+    useStudyStore.getState().logEvent("PROMPT_TO_EXECUTE", { prompt: this.prompt.prompt });
+    const stream = await openai.chat.completions.create({
+      model: this.prompt.model || "gpt-4o-2024-08-06",
+      messages: [{ role: 'user', content: this.prompt.prompt }],
+      stream: true,
+      temperature: 0,
+      response_format: zodResponseFormat(this.schema, "response"),
+    });
 
+    let response = '';
+    for await (const chunk of stream) {
+      response += chunk.choices[0]?.delta?.content || '';
+      if (this.onPartialResponse) {
+        const partialResult = this.partialParse(response);
+        if (partialResult) {
+          this.onPartialResponse({ result: partialResult });
+        }
+      }
+    }
+    useStudyStore.getState().logEvent("PROMPT_EXECUTED", { prompt: this.prompt.prompt, response: response });
+    this.onPartialResponse = null;
+    return { result: JSON.parse(response) as T };
+  }
+
+  /**
+   * Provider-agnostic path. Routes through `currentProvider().generateStructured`,
+   * which uses each provider's native structured-output mechanism (OpenAI
+   * response_format, Anthropic tool-use, Ollama format=json + post-validation).
+   * No partial streaming — the UI gets a single result at the end.
+   *
+   * Used when the active provider is Ollama, Anthropic, or the fallback chain.
+   */
+  private async executeViaProvider(): Promise<PromptResult<T>> {
+    useStudyStore.getState().logEvent("PROMPT_TO_EXECUTE", { prompt: this.prompt.prompt });
+    const cfg = useAiConfigStore.getState();
+    const provider = cfg.getProvider();
+
+    const model = this.prompt.model
+      || (cfg.providerId === "ollama" ? cfg.ollamaModel
+        : cfg.providerId === "anthropic" ? cfg.anthropicModel
+        : cfg.openaiModel);
+
+    const result = await provider.generateStructured(
+      [{ role: "user", content: this.prompt.prompt }],
+      { schema: this.schema, schemaName: "response" },
+      { model, temperature: 0 },
+    );
+    useStudyStore.getState().logEvent("PROMPT_EXECUTED", { prompt: this.prompt.prompt, response: JSON.stringify(result) });
+    // Fire one synthetic "partial" so existing consumers that rely on the
+    // callback (e.g. layout-on-each-entity) still get one update before the resolve.
+    if (this.onPartialResponse) {
+      this.onPartialResponse({ result });
+    }
+    this.onPartialResponse = null;
+    return { result };
+  }
 
   execute(): Promise<PromptResult<T>> {
-    return new Promise<PromptResult<T>>((resolve, reject) => {
-      (async () => {
-        useStudyStore.getState().logEvent("PROMPT_TO_EXECUTE", { prompt: this.prompt.prompt });
-        const stream = await openai.chat.completions.create({
-          model: this.prompt.model || "gpt-4o-2024-08-06",
-          messages: [{ role: 'user', content: this.prompt.prompt }],
-          stream: true,
-          temperature: 0,
-          response_format: zodResponseFormat(this.schema, "response"),
-        });
-
-        let response = '';
-
-        for await (const chunk of stream) {
-          response += chunk.choices[0]?.delta?.content || '';
-          if (this.onPartialResponse) {
-            const partialResult = this.partialParse(response);
-            if (partialResult) {
-              this.onPartialResponse({ result: partialResult });
-            }
-          }
-        }
-        useStudyStore.getState().logEvent("PROMPT_EXECUTED", { prompt: this.prompt.prompt, response: response });
-        this.onPartialResponse = null; // Reset the partial response callback     
-        resolve({ result: JSON.parse(response) as T }); // The parsing should now never fail thanks to the new API. So no need for trying to fix / retrying the request by feeding the error anymore
-      })();
-    });
+    const cfg = useAiConfigStore.getState();
+    // OpenAI-only path keeps streaming partial parses (visible UI improvement
+    // for entity / location extractors). Any other provider — or fallback
+    // chain — uses the provider-agnostic single-shot generateStructured.
+    if (cfg.providerId === "openai" && !cfg.useFallback) {
+      return this.executeOpenAIStreaming();
+    }
+    return this.executeViaProvider();
   }
 }

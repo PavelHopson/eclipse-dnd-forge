@@ -1,4 +1,5 @@
-import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult } from "./types";
+import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
+import { zodToJsonSchema } from "./zodToJsonSchema";
 
 const DEFAULT_MODEL = "claude-opus-4-7";
 const API_URL = "https://api.anthropic.com/v1/messages";
@@ -113,5 +114,74 @@ export class AnthropicProvider implements AiProvider {
         }
 
         return { text };
+    }
+
+    /**
+     * Anthropic structured output via tool-use: we declare a single tool whose
+     * input_schema is the JSON Schema for the expected payload, and force the
+     * model to call that tool. The tool's `input` is the payload.
+     */
+    async generateStructured<T>(
+        messages: AiMessage[],
+        spec: StructuredOutputSpec<T>,
+        options: StructuredOutputOptions = {},
+    ): Promise<T> {
+        if (!this.apiKey) {
+            throw new Error("Anthropic: API key is empty.");
+        }
+
+        const systemContent = messages
+            .filter((m) => m.role === "system")
+            .map((m) => m.content)
+            .join("\n\n");
+        const conversation = messages
+            .filter((m) => m.role !== "system")
+            .map((m) => ({ role: m.role, content: m.content }));
+
+        const toolName = spec.schemaName.replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 64) || "emit_payload";
+        const inputSchema = zodToJsonSchema(spec.schema as any);
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "x-api-key": this.apiKey,
+                "anthropic-version": ANTHROPIC_VERSION,
+                "anthropic-dangerous-direct-browser-access": "true",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                model: options.model || this.defaultModel,
+                max_tokens: 4096,
+                system: systemContent || undefined,
+                messages: conversation,
+                temperature: options.temperature ?? 0,
+                tools: [
+                    {
+                        name: toolName,
+                        description: `Emit the requested payload as JSON conforming to the schema.`,
+                        input_schema: inputSchema,
+                    },
+                ],
+                tool_choice: { type: "tool", name: toolName },
+            }),
+            signal: options.signal,
+        });
+
+        if (!response.ok) {
+            const errText = await response.text().catch(() => "");
+            throw new Error(`Anthropic HTTP ${response.status}: ${errText || response.statusText}`);
+        }
+        const data: any = await response.json();
+
+        // Find the tool_use block — Anthropic's messages API puts it in
+        // `content[]` alongside any text blocks.
+        const block = Array.isArray(data?.content)
+            ? data.content.find((c: any) => c?.type === "tool_use" && c?.name === toolName)
+            : null;
+        if (!block) {
+            throw new Error("Anthropic structured output: tool_use block not found in response");
+        }
+
+        return spec.schema.parse(block.input);
     }
 }
