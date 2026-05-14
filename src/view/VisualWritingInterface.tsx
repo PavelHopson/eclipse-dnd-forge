@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
+import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiMeeple, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -24,6 +24,7 @@ import EncounterGeneratorPanel from './dnd/EncounterGeneratorPanel';
 import InitiativePanel from './dnd/InitiativePanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
+import PlayModePanel from './dnd/PlayModePanel';
 import SessionsPanel from './dnd/SessionsPanel';
 import WorldTickPanel from './dnd/WorldTickPanel';
 import EntitiesEditor from './entityActionView/EntitiesEditor';
@@ -41,6 +42,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isInitiativePanelOpen, setIsInitiativePanelOpen] = useState(false);
   const [isDicePanelOpen, setIsDicePanelOpen] = useState(false);
   const [isSessionsPanelOpen, setIsSessionsPanelOpen] = useState(false);
+  const [isPlayModePanelOpen, setIsPlayModePanelOpen] = useState(false);
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
 
@@ -219,6 +221,29 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
 
             {!isReadOnly && (
               <div style={{ position: 'absolute', right: 10, top: 10, display: 'flex', gap: 6 }}>
+                <Tooltip content="Режим игры — автономный стол: Мастер и NPC ведут ход за вас" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isPlayModePanelOpen ? '#7a1f1f' : undefined, color: isPlayModePanelOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isPlayModePanelOpen;
+                      setIsPlayModePanelOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                        setIsDmPanelOpen(false);
+                        setIsWorldTickPanelOpen(false);
+                        setIsInitiativePanelOpen(false);
+                        setIsDicePanelOpen(false);
+                        setIsSessionsPanelOpen(false);
+                        setEncounterForLocationId(null);
+                      }
+                    }}
+                    aria-label="Переключить режим игры"
+                  >
+                    <GiMeeple />
+                  </Button>
+                </Tooltip>
                 <Tooltip content="Запустить сцену с AI Мастером Подземелий" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isDmPanelOpen ? '#7a1f1f' : undefined, color: isDmPanelOpen ? 'white' : undefined }}
@@ -230,6 +255,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsNpcPanelOpen(false);
                         setTalkingToEntityId(null);
                         setIsWorldTickPanelOpen(false);
+                        setIsPlayModePanelOpen(false);
                       }
                     }}
                     aria-label="Toggle DM panel"
@@ -250,6 +276,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsDmPanelOpen(false);
                         setIsInitiativePanelOpen(false);
                         setEncounterForLocationId(null);
+                        setIsPlayModePanelOpen(false);
                       }
                     }}
                     aria-label="Toggle World Tick panel"
@@ -271,6 +298,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsWorldTickPanelOpen(false);
                         setEncounterForLocationId(null);
                         setIsDicePanelOpen(false);
+                        setIsPlayModePanelOpen(false);
                       }
                     }}
                     aria-label="Переключить трекер инициативы"
@@ -293,6 +321,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsInitiativePanelOpen(false);
                         setEncounterForLocationId(null);
                         setIsSessionsPanelOpen(false);
+                        setIsPlayModePanelOpen(false);
                       }
                     }}
                     aria-label="Переключить панель кубиков"
@@ -315,6 +344,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsInitiativePanelOpen(false);
                         setIsDicePanelOpen(false);
                         setEncounterForLocationId(null);
+                        setIsPlayModePanelOpen(false);
                       }
                     }}
                     aria-label="Переключить панель сессий"
@@ -335,6 +365,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsNpcPanelOpen(false);
                           setIsDmPanelOpen(false);
                           setIsWorldTickPanelOpen(false);
+                          setIsPlayModePanelOpen(false);
                         }
                       }}
                       aria-label="Поговорить с выбранным персонажем"
@@ -356,6 +387,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsDmPanelOpen(false);
                           setIsWorldTickPanelOpen(false);
                           setEncounterForLocationId(null);
+                          setIsPlayModePanelOpen(false);
                         }
                       }}
                       aria-label="Toggle NPC generator"
@@ -378,6 +410,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsDmPanelOpen(false);
                           setIsWorldTickPanelOpen(false);
                           setTalkingToEntityId(null);
+                          setIsPlayModePanelOpen(false);
                         }
                       }}
                       aria-label="Переключить генератор энкаунтеров"
@@ -430,6 +463,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isSessionsPanelOpen && !isReadOnly && (
               <SessionsPanel onClose={() => setIsSessionsPanelOpen(false)} />
+            )}
+            {isPlayModePanelOpen && !isReadOnly && (
+              <PlayModePanel onClose={() => setIsPlayModePanelOpen(false)} />
             )}
             {encounterForLocationId && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
               <EncounterGeneratorPanel
