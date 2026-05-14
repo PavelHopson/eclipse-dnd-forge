@@ -152,7 +152,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
                         )}
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close dialogue">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть диалог">
                     <IoClose />
                 </Button>
             </div>

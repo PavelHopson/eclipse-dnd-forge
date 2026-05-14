@@ -273,7 +273,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsDicePanelOpen(false);
                       }
                     }}
-                    aria-label="Toggle initiative tracker"
+                    aria-label="Переключить трекер инициативы"
                   >
                     <GiSwordman />
                   </Button>
@@ -295,7 +295,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsSessionsPanelOpen(false);
                       }
                     }}
-                    aria-label="Toggle dice roller"
+                    aria-label="Переключить панель кубиков"
                   >
                     <GiDiceTwentyFacesTwenty />
                   </Button>
@@ -317,7 +317,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setEncounterForLocationId(null);
                       }
                     }}
-                    aria-label="Toggle sessions panel"
+                    aria-label="Переключить панель сессий"
                   >
                     <GiBookmarklet />
                   </Button>
@@ -337,7 +337,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsWorldTickPanelOpen(false);
                         }
                       }}
-                      aria-label="Talk to selected character"
+                      aria-label="Поговорить с выбранным персонажем"
                     >
                       <GiChatBubble />
                     </Button>
@@ -380,7 +380,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setTalkingToEntityId(null);
                         }
                       }}
-                      aria-label="Toggle encounter generator"
+                      aria-label="Переключить генератор энкаунтеров"
                     >
                       <GiBattleAxe />
                     </Button>

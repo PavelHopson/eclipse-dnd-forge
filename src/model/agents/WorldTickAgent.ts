@@ -193,7 +193,7 @@ export async function runWorldTick(options: {
                     entityId: node.id,
                     entityName: (node.data as Entity).name,
                     action: "",
-                    raw: `(tick failed: ${e?.message ?? "unknown error"})`,
+                    raw: `(тик не удался: ${e?.message ?? "неизвестная ошибка"})`,
                     createdAt: Date.now(),
                 };
                 events.push(failureEvent);

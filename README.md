@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Status:** ✅ v0.2 shipped — 19 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). 4 типа AI-агентов, 3 провайдера, persistent living-world loop, полный набор DM-инструментов.
+> **Статус:** ✅ v0.2 готова — 19 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). 4 типа AI-агентов, 3 провайдера, persistent living-world loop, полный набор DM-инструментов. Интерфейс полностью на русском.
 
 </div>
 
@@ -26,9 +26,9 @@ Eclipse DnD Forge — **операционная система мастера D
 
 ### Стратегический вектор
 
-> **Tabletop with AI agents**, not "DM helper tools".
+> **Настолка с ИИ-агентами**, а не «набор помощников для мастера».
 >
-> Encounter generator, dice roller и initiative tracker — второстепенные инструменты, висящие на agent-слое. Сначала строится `AiProvider` abstraction + agent runtime, всё остальное — частные случаи поверх.
+> Генератор энкаунтеров, кубики и трекер инициативы — второстепенные инструменты, висящие на agent-слое. Сначала строится `AiProvider`-абстракция + agent runtime, всё остальное — частные случаи поверх.
 
 ---
 
@@ -128,18 +128,18 @@ JSONPrompt────→ │  generateStructured()       │
 
 ## 🎬 Полный gameplay loop
 
-1. Открыть [demo](https://pavelhopson.github.io/eclipse-dnd-forge/) → выбрать провайдера → ввести key → стартануть **Phandalin**
-2. 👑 **DM** → "Set the opening scene" → стримит описание Stonehill Inn → `**Toblen:** "..."` авто-мирится в chat-историю Toblen
-3. 📜 **Insert at cursor** → нарратив встаёт в нужное место session text
-4. 💬 Кликнуть Toblen → **Talk** → диалог с памятью DM-сцены
-5. ⏳ Поставить **Auto-advance: 15min** → каждые 15 мин ticks → "🌍 N events waiting" в DM
-6. На Realms tab выбрать **Cragmaw Hideout** → 🪓 **Generate encounter** → 4 группы монстров с тактикой
-7. На Heroes tab выбрать монстра → ⚔️ **Suggest tactic** → "Klarg lunges at the cleric..." → Insert
-8. 🗡️ **Initiative tracker** → add party + Klarg → Start combat → Next turn
-9. 🎲 **Dice roller** → `2d6+3` → 11 → Insert as roll
-10. Drag HP Klarg 30→8 → AI rewrite: "Klarg качается, плюётся кровью..."
-11. Drag danger Phandalin 3→7 → AI rewrite: "Улицы непривычно пусты, тревога в воздухе..."
-12. 📖 **End session** → AI генерирует recap → следующий DM-turn знает "PREVIOUSLY ON..."
+1. Открыть [демо](https://pavelhopson.github.io/eclipse-dnd-forge/) → выбрать провайдера → ввести ключ → запустить **Фандалин**
+2. 👑 **DM** → «Опиши открывающую сцену» → стримит описание таверны → `**Toblen:** «...»` авто-зеркалится в чат-историю Toblen
+3. 📜 **Вставить в сессию** → нарратив встаёт в нужное место текста сессии
+4. 💬 Кликнуть Toblen → **Поговорить** → диалог с памятью DM-сцены
+5. ⏳ Поставить **Авто-тик: Каждые 15 минут** → каждые 15 мин тики → «🌍 N событий ждёт» в DM
+6. На вкладке «Мир и локации» выбрать **логово Cragmaw** → 🪓 **Сгенерировать энкаунтер** → 4 группы монстров с тактикой
+7. На вкладке «Герои и NPC» выбрать монстра → ⚔️ **Предложить тактику** → «Кларг бросается на жреца...» → Вставить
+8. 🗡️ **Трекер инициативы** → добавить партию + Кларга → Начать бой → Следующий ход
+9. 🎲 **Кубики** → `2d6+3` → 11 → Вставить как бросок
+10. Тянуть HP Кларга 30→8 → AI переписывает сцену: «Кларг качается, плюётся кровью...»
+11. Тянуть опасность Фандалина 3→7 → AI переписывает: «Улицы непривычно пусты, тревога в воздухе...»
+12. 📖 **Завершить сессию** → AI генерирует recap → следующий ход DM знает «Ранее в этой кампании...»
 
 ---
 
@@ -151,7 +151,7 @@ JSONPrompt────→ │  generateStructured()       │
 | Bundler | Vite 5 |
 | Граф | `@xyflow/react` + `d3-force` |
 | Текст | Slate (rich text), `react-markdown` |
-| State | Zustand (4 store: model, agent, world-events, sessions, initiative, ai-config) |
+| State | Zustand (6 store: model, agent, world-events, sessions, initiative, ai-config) |
 | AI | OpenAI / Anthropic / Ollama под единым `AiProvider` |
 | Validation | Zod 3.x + in-house `zodToJsonSchema` для cross-provider structured outputs |
 | Storage | localStorage (config, sessions, world events, initiative — всё persisted) |

@@ -276,7 +276,7 @@ export default function LocationsEditor() {
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
         {newLocationInputPosition && <div style={{ position: 'absolute', top: newLocationInputPosition.y, left: newLocationInputPosition.x, zIndex: 999, transform: 'translate(-50%, -50%)', background: 'white', padding: 10, borderRadius: 5, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px' }}>
-          <input ref={locationInputRef} autoFocus type="text" placeholder="Enter the location name" 
+          <input ref={locationInputRef} autoFocus type="text" placeholder="Введите название локации"
 
           onBlur={() => {
             setNewLocationInputPosition(null);
@@ -294,7 +294,7 @@ export default function LocationsEditor() {
               setNewLocationInputPosition(null);
             }
           }} /></div>}
-        {!isReadOnly && <span style={{position: 'absolute', bottom: 5, left: '50%', transform: 'translate(-50%, 0%)', pointerEvents: 'none', color: '#888'}}>Double click to create a new location</span>}
+        {!isReadOnly && <span style={{position: 'absolute', bottom: 5, left: '50%', transform: 'translate(-50%, 0%)', pointerEvents: 'none', color: '#888'}}>Двойной клик — создать новую локацию</span>}
       </div>
     </>
   )

@@ -96,7 +96,7 @@ export default function EntitiesEditor() {
             const targetNode = entityNodes.find(node => node.id === params.target);
 
             setInputField({
-              placeholder: "Enter the action name",
+              placeholder: "Введите название действия",
               x: currentMousePosition.x - divRef.current!.getBoundingClientRect().left,
               y: currentMousePosition.y - divRef.current!.getBoundingClientRect().top,
               onValidate: (text) => {
@@ -123,7 +123,7 @@ export default function EntitiesEditor() {
             if (!useModelStore.getState().isReadOnly && (event.target as HTMLElement).classList.contains("react-flow__pane") && divRef.current) {
               setInputField(
                 {
-                  placeholder: "Enter the entity name",
+                  placeholder: "Введите имя сущности",
                   x: event.clientX - divRef.current!.getBoundingClientRect().left, 
                   y: event.clientY - divRef.current!.getBoundingClientRect().top,
                   onValidate: (text) => {

@@ -41,7 +41,7 @@ export class FallbackProvider implements AiProvider {
             }
         }
 
-        throw new Error(`All AI providers failed. ${errors.join(" | ")}`);
+        throw new Error(`Все AI-провайдеры недоступны. ${errors.join(" | ")}`);
     }
 
     async generateStructured<T>(
@@ -59,6 +59,6 @@ export class FallbackProvider implements AiProvider {
                 console.warn(`[FallbackProvider/structured] ${msg}`);
             }
         }
-        throw new Error(`All AI providers failed (structured output). ${errors.join(" | ")}`);
+        throw new Error(`Все AI-провайдеры недоступны (структурированный вывод). ${errors.join(" | ")}`);
     }
 }

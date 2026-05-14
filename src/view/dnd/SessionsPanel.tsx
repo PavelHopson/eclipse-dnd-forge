@@ -12,9 +12,9 @@ interface SessionsPanelProps {
 
 function defaultSessionName(nextNumber: number, currentText: string): string {
     const firstWords = currentText.trim().split(/\s+/).slice(0, 5).join(" ");
-    if (firstWords.length === 0) return `Session ${nextNumber}`;
+    if (firstWords.length === 0) return `Сессия ${nextNumber}`;
     const clipped = firstWords.length > 40 ? firstWords.slice(0, 40) + "…" : firstWords;
-    return `Session ${nextNumber} — ${clipped}`;
+    return `Сессия ${nextNumber} — ${clipped}`;
 }
 
 export default function SessionsPanel({ onClose }: SessionsPanelProps) {
@@ -34,7 +34,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
     const endCurrent = async () => {
         if (isEnding) return;
         if (currentText.trim().length === 0) {
-            setError("Current session text is empty — nothing to archive.");
+            setError("Текст текущей сессии пуст — нечего архивировать.");
             return;
         }
         setError(null);
@@ -48,7 +48,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                 } catch (e: any) {
                     // Don't block archival on recap failure — store the session
                     // and surface a message so the user can retry later.
-                    setError(`Recap generation failed: ${e?.message ?? e}. Session was archived without a recap; you can regenerate from the list below.`);
+                    setError(`Не удалось сгенерировать recap: ${e?.message ?? e}. Сессия архивирована без recap'а — можно перегенерировать из списка ниже.`);
                 }
             }
 
@@ -76,7 +76,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
             const recap = await generateSessionRecap(target.text, target.name);
             useSessionStore.getState().updateRecap(sessionId, recap);
         } catch (e: any) {
-            setError(`Recap regeneration failed: ${e?.message ?? e}`);
+            setError(`Не удалось перегенерировать recap: ${e?.message ?? e}`);
         } finally {
             setRegeneratingFor(null);
         }
@@ -106,24 +106,24 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <GiBookmarklet style={{ fontSize: 24, color: "#7a1f1f" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Sessions</span>
+                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Сессии</span>
                         <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>
-                            Archive chapters · DM agent uses recaps as "Previously…" context
+                            Архив глав · DM-агент использует recap'ы как контекст «Ранее…»
                         </span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close sessions panel">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть панель сессий">
                     <IoClose />
                 </Button>
             </div>
 
             {/* End-current-session block */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 8, background: "#f0e4c8", borderRadius: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#2a1a1a" }}>End current session</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2a1a1a" }}>Завершить текущую сессию</span>
                 <Input
                     size="sm"
                     variant="faded"
-                    label="Session name"
+                    label="Название сессии"
                     placeholder={defaultSessionName(nextSessionNumber, currentText)}
                     value={sessionName}
                     onValueChange={setSessionName}
@@ -131,7 +131,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                 />
                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#3a2a2a" }}>
                     <input type="checkbox" checked={skipRecap} onChange={(e) => setSkipRecap(e.target.checked)} disabled={isEnding} />
-                    Skip recap generation (saves an API call; can regenerate later)
+                    Пропустить генерацию recap'а (экономит API-вызов; можно перегенерировать позже)
                 </label>
                 <Button
                     size="sm"
@@ -141,7 +141,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                     onClick={endCurrent}
                     style={{ background: "#7a1f1f" }}
                 >
-                    {isEnding ? "Archiving…" : "End session & start new"}
+                    {isEnding ? "Архивирую…" : "Завершить и начать новую"}
                 </Button>
             </div>
 
@@ -155,7 +155,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
             <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 360, overflowY: "auto" }}>
                 {sessions.length === 0 && (
                     <div style={{ color: "#9a8a7a", fontStyle: "italic", textAlign: "center", padding: 12, fontSize: 12 }}>
-                        No archived sessions yet. End the current session to start a chapter history.
+                        Пока нет архивированных сессий. Завершите текущую сессию, чтобы начать историю глав.
                     </div>
                 )}
                 {[...sessions].reverse().map((s) => (
@@ -185,11 +185,11 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                             )
                             : (
                                 <div style={{ fontSize: 11, color: "#9a8a7a", fontStyle: "italic" }}>
-                                    No recap. Click <em>Regenerate</em> to ask the AI for one.
+                                    Recap'а нет. Нажмите <em>Перегенерировать</em>, чтобы запросить его у AI.
                                 </div>
                             )}
                         <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-                            <Tooltip content="Regenerate recap from the archived session text" closeDelay={0}>
+                            <Tooltip content="Перегенерировать recap из архивного текста сессии" closeDelay={0}>
                                 <Button
                                     size="sm"
                                     variant="flat"
@@ -199,18 +199,18 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                                     isDisabled={regeneratingFor !== null}
                                     style={{ height: 22, minHeight: 22, fontSize: 10 }}
                                 >
-                                    Regenerate recap
+                                    Перегенерировать recap
                                 </Button>
                             </Tooltip>
                             <div style={{ flex: 1 }} />
-                            <Tooltip content="Remove this archived session" closeDelay={0}>
+                            <Tooltip content="Удалить эту архивную сессию" closeDelay={0}>
                                 <Button
                                     size="sm"
                                     isIconOnly
                                     variant="light"
                                     onClick={() => useSessionStore.getState().removeSession(s.id)}
                                     style={{ minWidth: 22, height: 22, color: "#7a1f1f" }}
-                                    aria-label="Remove session"
+                                    aria-label="Удалить сессию"
                                 >
                                     <IoTrash style={{ fontSize: 12 }} />
                                 </Button>
@@ -222,7 +222,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
 
             {sessions.length > 0 && (
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Tooltip content="Wipe the session history (does not touch the current session text or the world graph)" closeDelay={0}>
+                    <Tooltip content="Стереть историю сессий (не затрагивает текущий текст сессии и граф мира)" closeDelay={0}>
                         <Button
                             size="sm"
                             variant="light"
@@ -230,7 +230,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                             onClick={() => useSessionStore.getState().clearAll()}
                             style={{ fontSize: 11 }}
                         >
-                            Clear history
+                            Очистить историю
                         </Button>
                     </Tooltip>
                 </div>

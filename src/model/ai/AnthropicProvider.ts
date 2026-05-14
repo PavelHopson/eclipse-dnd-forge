@@ -32,7 +32,7 @@ export class AnthropicProvider implements AiProvider {
 
     async streamChat(messages: AiMessage[], options: AiStreamOptions = {}): Promise<AiStreamResult> {
         if (!this.apiKey) {
-            throw new Error("Anthropic: API key is empty. Paste it on the Launcher.");
+            throw new Error("Anthropic: API-ключ пуст. Вставьте его на стартовом экране.");
         }
 
         // Anthropic expects system prompt out-of-band, not as a message role.

@@ -1,273 +1,266 @@
-# Eclipse DnD Forge — Roadmap
+# Eclipse DnD Forge — Дорожная карта
 
-> Single source of truth. README links here. Update on every shipped slice.
+> Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Last update: **2026-05-13** (RU-локализация UI — критичные поверхности готовы, доделываем завтра). Branch: `main`. Remote: unarchived 2026-05-13, pushes working again.
+Последнее обновление: **2026-05-14** (RU-локализация завершена — UI, README, ROADMAP полностью на русском). Ветка: `main`. Remote: разархивирован 2026-05-13, push работает.
 
-> ⏸ **Status — partial RU localization shipped, 2026-05-13 night.** Резюме что готово и что осталось — в Open follow-ups внизу. Резюм точки на завтра: остатки UI + переведённые `README.md` / `ROADMAP.md`.
-
-> 🎯 **Strategic direction (set 2026-05-12):** Eclipse DnD Forge is not a DM helper tool — it is a **tabletop with AI agents**. Every entity on the visual graph is an addressable agent (NPC / monster / faction / hero / DM). The Agent layer is the core architecture; encounter generators, dice rollers, initiative trackers are second-class tools that hang off it. Past DM-tool roadmap items keep their place in **Backlog** but are no longer driving.
+> 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
 ---
 
-## ✅ Done
+## ✅ Сделано
 
-### v0.1 slice 1 — D&D rebrand of the entry point
-*Commits: `856a022`, `5977879`, `5a2902c`, `7bee46d`.*
+### v0.1 slice 1 — D&D-ребрендинг точки входа
+*Коммиты: `856a022`, `5977879`, `5a2902c`, `7bee46d`.*
 
-- [x] Project rebrand (README, CLAUDE.md, package name, license note)
-- [x] Roadmap expanded with R&D directions (GPT-5.5, compression profiles, asset pipeline, etc.)
-- [x] **Launcher** rewritten as a Campaign Launcher with four D&D starters:
-      Phandalin (Lost Mine opener) · Barovia (Mists of Strahd) · Cinder Hollow (sandbox starter) · Blank Campaign
-- [x] **Brand surface**: `index.html` title, favicon, Launcher header, fantasy color palette
-- [x] **Domain model** extended (additive, non-breaking):
+- [x] Ребрендинг проекта (README, CLAUDE.md, имя пакета, лицензионная заметка)
+- [x] Roadmap расширен R&D-направлениями (GPT-5.5, compression profiles, asset pipeline и т.д.)
+- [x] **Launcher** переписан как Campaign Launcher с четырьмя D&D-стартерами: Фандалин (Lost Mine opener) · Баровия (Mists of Strahd) · Синдер-Холлоу (sandbox starter) · Пустая кампания
+- [x] **Бренд-поверхность**: title в `index.html`, favicon, шапка Launcher, фэнтези-палитра
+- [x] **Доменная модель** расширена (аддитивно, без поломок):
       - `Entity.kind` (`hero | npc | monster | faction | unknown`), `role`, `abilities` (STR/DEX/CON/INT/WIS/CHA), `hp`, `ac`, `cr`
       - `Location.kind` (`dungeon | town | wild | plane | stronghold`), `biome`, `danger` (1-10)
-- [x] **Visual representation** of new fields:
-      - Entity nodes show a coloured kind badge + role label
-      - Location nodes show biome + a danger ring (green / amber / red by tier) + DANGER N/10 chip
-- [x] **AI extractor prompts rewritten** in D&D vocabulary:
-      - `EntitiesExtractor` classifies into hero/npc/monster/faction with structured-output enum
-      - `LocationExtractor` classifies into dungeon/town/wild/plane/stronghold with biome + danger
-      - `JSONPrompt.getDefaultValue` learned `ZodEnum` so partial streaming still renders mid-flight
-- [x] **Tabs** renamed: "Heroes & NPCs" / "Realms & Locations" with fantasy icons
-- [x] **HCI study routes** (`/study`, `/baseline`) hidden from Launcher (still wired in `App.tsx` for research replay; not surfaced as a product feature)
+- [x] **Визуальное представление** новых полей:
+      - Entity-ноды показывают цветной kind-бейдж + ярлык роли
+      - Location-ноды показывают biome + danger-кольцо (зелёное / янтарное / красное по тиру) + бейдж ОПАСНОСТЬ N/10
+- [x] **Extractor-промпты переписаны** в D&D-словарь:
+      - `EntitiesExtractor` классифицирует на hero/npc/monster/faction через structured-output enum
+      - `LocationExtractor` классифицирует на dungeon/town/wild/plane/stronghold с biome + danger
+      - `JSONPrompt.getDefaultValue` научился `ZodEnum`, чтобы partial-стриминг рендерился на лету
+- [x] **Вкладки** переименованы: «Герои и NPC» / «Мир и локации» с фэнтези-иконками
+- [x] **HCI study-роуты** (`/study`, `/baseline`) убраны из Launcher (остаются в `App.tsx` для исследовательских реплеев; не вынесены как продуктовая фича)
 
-**Verified by:** manual TypeScript review (npm install kept failing with `ECONNRESET` to npm registry in the session that shipped this).
+**Проверено:** ручной TypeScript-ревью (npm install падал с `ECONNRESET` к npm registry в той сессии).
 
-### v0.2 slice 1 — NPC Generator ✨
-*Shipped 2026-05-11.*
+### v0.2 slice 1 — Генератор NPC ✨
+*Отгружено 2026-05-11.*
 
-- [x] `NpcGenerator` prompt — structured JSON for a full 5e NPC (name, emoji, kind, role, 6 abilities, hp, ac, cr, DM hook). Anchored to party level + location + hostility + DM notes.
-- [x] `generateNpcIntoScene` — generates, hydrates an `Entity` with all D&D fields, adds to the graph, re-runs layout.
-- [x] UI: dedicated "Generate NPC" button on the Heroes & NPCs tab toolbar (only visible on that tab).
-- [x] Inline form panel — race / occupation / party level / location / hostility / DM notes.
-- [x] Result card: HP/AC/CR + 6 abilities as chips, DM hook block, "Forge another" + "Done".
-- [x] Existing "Clear canvas" trash button rewired into the same toolbar group with its own tooltip.
+- [x] Промпт `NpcGenerator` — структурированный JSON полного 5e NPC (имя, эмодзи, kind, role, 6 характеристик, hp, ac, cr, DM-зацепка). Привязан к уровню партии + локации + враждебности + заметкам DM.
+- [x] `generateNpcIntoScene` — генерирует, гидрирует `Entity` всеми D&D-полями, добавляет в граф, перезапускает layout.
+- [x] UI: кнопка «Сгенерировать NPC» в тулбаре вкладки «Герои и NPC».
+- [x] Inline-форма — раса / занятие / уровень партии / локация / враждебность / заметки DM.
+- [x] Карточка результата: HP/AC/CR + 6 характеристик как чипы, блок DM-зацепки, «Создать ещё» + «Готово».
+- [x] Кнопка «Очистить холст» (корзина) переехала в ту же группу тулбара со своим тултипом.
 
-### v0.2 slice 2 — Living NPCs (Agent layer foundation) 🧠
-*Shipped 2026-05-12. The strategic pivot: every entity becomes an addressable AI agent.*
+### v0.2 slice 2 — Living NPCs (фундамент Agent-слоя) 🧠
+*Отгружено 2026-05-12. Стратегический разворот: каждая сущность становится обращаемым ИИ-агентом.*
 
-- [x] **Domain extension** — `Entity.goal` (DM-visible motivation), `Entity.secret` (hidden), `Entity.knowledge[]` (concrete facts). All optional, additive.
-- [x] **`NpcGenerator` schema upgrade** — now also returns goal + secret + 3-5 knowledge bullets. Old generator path stays backwards-compatible.
-- [x] **Seed campaigns backfilled** — Phandalin / Barovia / Cinder Hollow NPCs (10+ characters) each have hand-authored goal / secret / knowledge so the first-click demo lands.
-- [x] **Agent layer (`src/model/agents/NpcAgent.ts`)** — `buildNpcSystemPrompt` assembles a full in-character system prompt (character card, knowledge, goal, secret, scene text, other present entities, RP rules). `runNpcDialogue` streams the reply via OpenAI chat-completions.
-- [x] **Agent state (`src/store/useAgentStore.ts`)** — Zustand store with per-entity chat history (`Record<entityId, AgentMessage[]>`), streaming flag, append / clear API. History persists across panel close & reopen within a session.
-- [x] **Dialogue UI (`src/view/dnd/NpcDialoguePanel.tsx`)** — chat panel keyed by entity id: avatar + name + role + kind badge, collapsible DM-only context (goal/secret), scrolling conversation log with streaming-aware rendering, send + clear, in-character error fallback.
-- [x] **Wire-in (`VisualWritingInterface.tsx`)** — when exactly one entity node is selected on the Heroes & NPCs canvas, a Talk-icon button appears next to Generate NPC. Click → opens dialogue panel for that entity; switching selection while the panel is open re-targets it; opening NPC Generator closes the dialogue and vice versa.
+- [x] **Расширение модели** — `Entity.goal` (DM-видимая мотивация), `Entity.secret` (скрытое), `Entity.knowledge[]` (конкретные факты). Всё опционально, аддитивно.
+- [x] **Апгрейд схемы `NpcGenerator`** — теперь также возвращает goal + secret + 3-5 пунктов knowledge. Старый путь генератора совместим.
+- [x] **Seed-кампании заполнены** — NPC Фандалина / Баровии / Синдер-Холлоу (10+ персонажей) получили рукописные goal / secret / knowledge, чтобы демо с первого клика срабатывало.
+- [x] **Agent-слой (`src/model/agents/NpcAgent.ts`)** — `buildNpcSystemPrompt` собирает полный in-character system prompt (карточка персонажа, knowledge, goal, secret, текст сцены, другие присутствующие сущности, RP-правила). `runNpcDialogue` стримит ответ через chat-completions.
+- [x] **Состояние агента (`src/store/useAgentStore.ts`)** — Zustand-стор с per-entity чат-историей (`Record<entityId, AgentMessage[]>`), флаг стриминга, append / clear API. История переживает закрытие/открытие панели в рамках сессии.
+- [x] **UI диалога (`src/view/dnd/NpcDialoguePanel.tsx`)** — чат-панель по id сущности: аватар + имя + роль + kind-бейдж, сворачиваемый DM-only контекст (goal/secret), скроллящийся лог разговора со стриминг-рендерингом, отправка + очистка, in-character error fallback.
+- [x] **Подключение (`VisualWritingInterface.tsx`)** — когда выбрана ровно одна entity-нода на вкладке «Герои и NPC», рядом с «Сгенерировать NPC» появляется кнопка «Поговорить». Клик → открывает панель диалога; смена выбора при открытой панели перетаргетит её; открытие генератора NPC закрывает диалог и наоборот.
 
-### v0.2 slice 3 — DM Agent 👑
-*Shipped 2026-05-12 (same session). The second agent type on the same architecture.*
+### v0.2 slice 3 — DM-агент 👑
+*Отгружено 2026-05-12 (та же сессия). Второй тип агента на той же архитектуре.*
 
-- [x] **`src/model/agents/DmAgent.ts`** — `buildDmSystemPrompt` assembles a narrator/referee system prompt: full scene text + every entity (kind + role) + every location (kind + biome + danger) + conversation history. Strict rules forbid game-mechanic mentions and enforce in-language replies.
-- [x] **`DM_AGENT_ID` constant** — special key reuses `useAgentStore` so DM conversation history lives in the same store as NPC histories (no duplicate state machinery).
-- [x] **`src/view/dnd/DmAgentPanel.tsx`** — wider chat panel (440px) with crown header, neutral background, multi-paragraph rendering. Empty-state shows example prompts in three languages.
-- [x] **Toolbar wire-in** — global "Run scene with AI DM" crown button visible on both Heroes and Locations tabs. DM panel is mutually exclusive with NPC dialogue and NPC generator panels.
+- [x] **`src/model/agents/DmAgent.ts`** — `buildDmSystemPrompt` собирает system prompt нарратора/арбитра: полный текст сцены + все сущности (kind + role) + все локации (kind + biome + danger) + история разговора. Строгие правила запрещают упоминание игровой механики и требуют отвечать на языке игрока.
+- [x] **Константа `DM_AGENT_ID`** — спец-ключ переиспользует `useAgentStore`, чтобы история DM лежала в том же сторе, что и истории NPC (без дублирования state-машинерии).
+- [x] **`src/view/dnd/DmAgentPanel.tsx`** — широкая чат-панель (440px) с короной в шапке, multi-paragraph рендеринг. Пустое состояние показывает примеры промптов на трёх языках.
+- [x] **Подключение в тулбар** — глобальная кнопка «Запустить сцену с AI DM» (корона), видна на обеих вкладках. DM-панель взаимоисключающа с панелями диалога NPC и генератора NPC.
 
-### v0.2 slice 4 — Hook → editor injection 📜
-*Shipped 2026-05-12 (same session). Ties the Agent layer back into the canonical session text.*
+### v0.2 slice 4 — Hook → инъекция в редактор 📜
+*Отгружено 2026-05-12 (та же сессия). Связывает Agent-слой обратно с каноническим текстом сессии.*
 
-- [x] **`src/model/agents/sessionInjector.ts`** — `appendParagraphToSession(text)` and `appendNpcQuoteToSession(speakerName, text)` append a new Slate paragraph to the session text via the existing `setTextState` path (so undo/redo + visual-refresh staleness work automatically). NPC quotes get a `**Name:**` bold prefix for natural reading once promoted.
-- [x] **"Insert into session" buttons** added on three surfaces:
-      - NPC dialogue replies — one button under each assistant message, formatted as quoted speech
-      - DM narration — one button under each DM beat, inserted as a plain paragraph
-      - NPC Generator hook block — one button on the result card, inserts the hook as a paragraph
-- [x] All three buttons share the same scroll-quill icon + parchment styling, making the "promote to canon" gesture consistent across the product.
+- [x] **`src/model/agents/sessionInjector.ts`** — `appendParagraphToSession(text)` и `appendNpcQuoteToSession(speakerName, text)` добавляют новый Slate-параграф в текст сессии через существующий путь `setTextState` (undo/redo + visual-refresh staleness работают автоматически). Реплики NPC получают `**Имя:**` bold-префикс для естественного чтения.
+- [x] Кнопки **«Вставить в сессию»** добавлены на трёх поверхностях:
+      - Реплики в диалоге NPC — кнопка под каждым ответом, в формате цитируемой речи
+      - Нарратив DM — кнопка под каждым битом DM, вставляется как обычный параграф
+      - Блок зацепки в генераторе NPC — кнопка на карточке результата
+- [x] Все три кнопки используют одну иконку scroll-quill + пергаментный стиль — жест «промоутировать в канон» единообразен по всему продукту.
 
 ### v0.2 slice 5 — Multi-provider AI 🔀
-*Shipped 2026-05-12. Cost-control and privacy/control story for the conversational paths.*
+*Отгружено 2026-05-12. Cost-control и privacy-история для разговорных путей.*
 
-- [x] **`src/model/ai/types.ts`** — provider-neutral `AiProvider` interface with `streamChat(messages, options) → AiStreamResult`. Options carry model, temperature, abort signal, and an `onPartial` chunk callback. Provider-neutral `AiMessage` shape.
-- [x] **`src/model/ai/OpenAIProvider.ts`** — wraps the existing `openai.chat.completions.create` streaming path. Default model: `gpt-4o-2024-08-06`.
-- [x] **`src/model/ai/OllamaProvider.ts`** — self-hosted Ollama HTTP client. Calls `POST /api/chat` with `stream: true`, parses NDJSON chunks, exposes errors cleanly. Default base URL: `http://localhost:11434`, default model: `llama3.2`. Includes user-facing setup notes (model pull + `OLLAMA_ORIGINS="*"` for CORS).
-- [x] **`src/store/useAiConfigStore.ts`** — Zustand store with localStorage persistence (`eclipse_dnd_ai_config_v1`). Holds provider id + per-provider config (base URL, model). Exposes `currentProvider()` and `currentModel()` accessors for non-React callers.
-- [x] **`NpcAgent` and `DmAgent`** — both rewired through `currentProvider().streamChat(...)`. No more direct `openai` references in the conversational path.
-- [x] **Launcher UI** — provider tab (OpenAI / Ollama) on the entry screen. OpenAI branch keeps the API-key field + model name. Ollama branch shows base URL + model + an optional OpenAI key (for structured-output paths that still require OpenAI: entity extractors, NPC generator). Campaign-start gating is provider-aware: Ollama doesn't require any key.
-- [x] Structured-output paths (`JSONPrompt`, entity & location extractors, NPC generator) intentionally **stay OpenAI-only** — they rely on `response_format` with a zod schema, an OpenAI feature with no clean equivalent on Ollama. Cross-provider structured outputs are deferred.
+- [x] **`src/model/ai/types.ts`** — провайдер-нейтральный интерфейс `AiProvider` с `streamChat(messages, options) → AiStreamResult`. Опции несут модель, температуру, abort-signal и `onPartial` чанк-callback. Провайдер-нейтральная форма `AiMessage`.
+- [x] **`src/model/ai/OpenAIProvider.ts`** — обёртка над существующим стриминг-путём `openai.chat.completions.create`. Модель по умолчанию: `gpt-4o-2024-08-06`.
+- [x] **`src/model/ai/OllamaProvider.ts`** — self-hosted HTTP-клиент Ollama. Зовёт `POST /api/chat` с `stream: true`, парсит NDJSON-чанки, отдаёт ошибки чисто. Base URL по умолчанию: `http://localhost:11434`, модель: `llama3.2`. Включает заметки для пользователя (pull модели + `OLLAMA_ORIGINS="*"` для CORS).
+- [x] **`src/store/useAiConfigStore.ts`** — Zustand-стор с localStorage-персистентностью. Держит id провайдера + per-provider конфиг. Экспортирует `currentProvider()` и `currentModel()` для не-React вызывающих.
+- [x] **`NpcAgent` и `DmAgent`** — оба переведены через `currentProvider().streamChat(...)`. Прямых ссылок на `openai` в разговорном пути больше нет.
+- [x] **Launcher UI** — вкладка провайдера (OpenAI / Ollama) на стартовом экране. Provider-aware гейтинг старта кампании: Ollama не требует ключа.
 
-### v0.2 slice 19 — Ability-score rewrites 🎯
-*Shipped 2026-05-13. Closes the v0.2 "D&D-aware editor" trio (HP / danger / ability).*
+### v0.2 slice 6 — Anthropic-провайдер + Fallback chain 🔀⛓️
+*Отгружено 2026-05-12. Провайдерная история завершена — три реальных провайдера + путь мягкой деградации.*
 
-- [x] **`ChangeAbilityScorePrompt`** — sister to ChangeHpPrompt / ChangeDangerPrompt. Each of the 6 abilities (STR/DEX/CON/INT/WIS/CHA) has a high/mid/low narrative mapping focused on what an OUTSIDE observer would notice (e.g. STR-high = "carries heavy gear without effort, shoves doors open one-handed").
-- [x] **Tier-aware skip** — the prompt skips itself (`canBeExecuted = false`) when both old and new values land in the same tier (low ≤8, mid 9-15, high ≥16). Cosmetic 14 → 15 slider drags don't burn an API call.
-- [x] **Six sliders inside a collapsible `<details>`** on selected entity nodes — only rendered when the entity has an `abilities` block. STR/DEX/CON/INT/WIS/CHA each 3-20 range. Drag-end updates the entity stat AND fires the rewrite prompt.
-
-### v0.2 slice 18 — Sessions as first-class layer 📖
-*Shipped 2026-05-13. Campaign chapters with AI-generated recaps that loop back into DM context.*
-
-- [x] **`CampaignSession` model + `useSessionStore`** — `{id, name, startedAt, endedAt, text, recap?}`, persisted in `eclipse_dnd_sessions_v1`. Hard cap 100 sessions. Auto-increments `nextSessionNumber` for default-name seeding.
-- [x] **`SessionRecapAgent.generateSessionRecap()`** — plain-text streaming call through `currentProvider()`. 2-4 past-tense sentences, names NPCs by name, no game mechanic talk, matches the campaign's language. Works on all three providers.
-- [x] **`SessionsPanel`** — end-current-session form (auto-seeded name, skip-recap option), error fallback that archives the session even when recap generation fails, list of archived sessions with regenerate-recap and remove actions.
-- [x] **DM agent context extension** — `DmAgentContext.recentSessions: CampaignSession[]`. Up to 3 most-recent archived sessions are folded into the system prompt as a "PREVIOUSLY ON THIS CAMPAIGN" block. DM is told to treat recaps as canon.
-- [x] **Entities / locations / world events persist across sessions** — sessions are chapters in the same campaign world, not separate worlds. Ending a session only archives the text, the rest of the model stays put.
-- [x] **Toolbar wire-in** — `📖` button next to Dice. Mutually exclusive with all other right-side panels.
-
-### v0.2 slice 17 — D&D-aware text editors ⚙️
-*Shipped 2026-05-13. Slider on a stat rewrites the session text mechanically.*
-
-- [x] **`ChangeHpPrompt`** — new TextEditPrompt subclass. Maps HP delta to a severity ladder (glancing → wounded → unconscious; healed → fully healed). Asks the model to rewrite the session text reflecting that condition, without ever mentioning numbers / AC / dice / game mechanics.
-- [x] **`ChangeDangerPrompt`** — same pattern for `Location.danger`. 1-3 = peaceful, 4-6 = uneasy, 7-9 = actively dangerous, 10 = deadly. Rewrites only the atmospheric / sensory description of the named location; explicitly forbidden from inventing new plot events / NPCs / combat.
-- [x] **HP slider on `EntityNodeComponent`** — appears below the existing property sliders when the entity has an `hp` value > 0 and is selected. Slider range = 0 ... max(currentHp, 50). Drag-end updates the entity stat in the model AND fires `ChangeHpPrompt` to rewrite the scene.
-- [x] **Danger slider on `LocationNodeComponent`** — pop-up sub-panel below the location node when selected (the round shape can't host an inline slider). Slider range 1-10. Drag-end updates the location stat AND fires `ChangeDangerPrompt`.
-- [x] **No new TextEditPrompt machinery** — both new classes plug into the existing `execute() → TextPrompt → finalize` pipeline, so undo/redo, visual-refresher staleness, and the suggestion-mode diff all work for free.
-
-### v0.2 slice 16 — Dice roller 🎲
-*Shipped 2026-05-13. Pure utility — no AI calls.*
-
-- [x] **`src/model/dice.ts`** — `parseDiceExpression(raw)` + `rollDice(expr)` + `formatRoll(result)`. Supports `dX`, `NdX`, `NdX±M` with sanity bounds (1-100 dice, 2-1000 sides). Throws on invalid expressions.
-- [x] **`src/view/dnd/DiceRollerPanel.tsx`** — quick-roll buttons for d4/d6/d8/d10/d12/d20/d100, custom-expression input (Enter to roll), 30-entry history with one-click insert into session text.
-- [x] **`Scan & roll all /roll … in session` button** — regex-finds every `/roll <expr>` token in the canonical session text, rolls each, and replaces the token with the formatted result. Operates via `setTextState` so undo/redo work.
-- [x] **Toolbar wire-in** — global `🎲` button next to Initiative. Mutually exclusive with all other right-side panels.
-
-### v0.2 slice 15 — Initiative tracker 🗡️
-*Shipped 2026-05-13. Pure-state, no AI — but pulls live data from the world graph.*
-
-- [x] **`src/store/useInitiativeStore.ts`** — Zustand store with localStorage persistence (`eclipse_dnd_initiative_v1`): ordered `InitiativeEntry[]` (id, name, initiative, optional entityId / hp / notes), `activeIndex`, `round`, `active` flag. Actions: `addEntry`, `removeEntry`, `updateEntry`, `startCombat` (sorts desc by initiative, sets round=1), `nextTurn` (advances index, wraps + increments round), `endCombat`, `clearAll`.
-- [x] **`src/view/dnd/InitiativePanel.tsx`** — toolbar panel: chip-row of entities not yet in the tracker (one click → auto-rolls d20 + DEX-mod from the entity's ability scores, appends to list); custom-row form (Name + Init); ordered list with active-turn highlight, inline HP editor, remove buttons; bottom controls — Start combat / Next turn / End combat / Clear.
-- [x] **Toolbar wire-in** — global `🗡️` button next to World Tick. Mutually exclusive with all other right-side panels.
-
-### v0.2 slice 14 — Encounter Generator ⚔️🎲
-*Shipped 2026-05-13. Classic DM tool, now augmented by the Agent stack underneath.*
-
-- [x] **`src/model/prompts/generators/EncounterGenerator.ts`** — `EncounterGenerator` returns a structured payload: monster groups (each with combat role, count, full stat block, goal, knowledge) + an environmental twist + an XP-budget estimate. Uses the new cross-provider structured-output path so it runs on all three providers.
-- [x] **`calcXpBudget(level, size, difficulty)`** — DMG 2014 XP-budget table baked in. Surfaces in UI so the DM can sanity-check the model's output against the target.
-- [x] **`generateEncounterIntoScene`** — spawns each monster group as new `EntityNode`s (`kind: monster`, full stats, goal, knowledge) with multi-count groups getting `#N` suffixes. Re-runs the layout so they don't pile on existing entities.
-- [x] **`src/view/dnd/EncounterGeneratorPanel.tsx`** — toolbar panel keyed by selected location: party level / party size / difficulty / DM notes form, live XP-budget readout, result block with per-monster cards + twist callout + "Insert into session" button that drops an encounter-summary paragraph into Slate.
-- [x] **Wire-in** — on the Realms & Locations tab, when exactly one location node is selected, a battle-axe button appears in the global toolbar. Click → opens encounter generator anchored to that location. Mutually exclusive with all other right-side panels.
-- [x] **Combat AI pre-wired** — generated monsters carry goal + knowledge, so the existing `Suggest tactic` button on the Heroes & NPCs tab works on them out of the box.
-
-### v0.2 slice 13 — Cross-provider structured outputs 🔌
-*Shipped 2026-05-13. Frees the entity / location extractors and NPC generator from hard-OpenAI dependency.*
-
-- [x] **`AiProvider.generateStructured<T>(messages, spec, options)`** — new method on the provider interface. Returns a typed value validated against the supplied zod schema. Throws on validation failure so the FallbackProvider can move to the next provider.
-- [x] **`src/model/ai/zodToJsonSchema.ts`** — minimal in-house converter for the zod shapes Eclipse DnD Forge actually uses (object / array / string / number / boolean / enum / optional). ~40 LOC. Throws on unsupported shapes so we fail loudly rather than ship malformed schemas.
-- [x] **`OpenAIProvider.generateStructured`** — uses `zodResponseFormat` (existing OpenAI helper) on `chat.completions.create`. Same guarantees as the legacy JSONPrompt code path.
-- [x] **`AnthropicProvider.generateStructured`** — uses tool-use. Declares a single tool with `input_schema` derived from the zod schema, forces `tool_choice: { type: "tool" }`, extracts payload from the resulting `tool_use` content block.
-- [x] **`OllamaProvider.generateStructured`** — uses `format: "json"` + injects the JSON Schema into the system prompt. Parses + validates with zod; throws on mismatch.
-- [x] **`FallbackProvider.generateStructured`** — same chain semantics as `streamChat`. Tries providers in order, aggregates errors, throws if all fail.
-- [x] **`JSONPrompt` refactor** — branches by active config:
-      - OpenAI + no fallback → keep the existing streaming path (preserves partial-parse UI for entity / location extractors)
-      - Anything else (Ollama / Anthropic / fallback) → use `currentProvider().generateStructured`. No streaming, but one synthetic partial fires through `onPartialResponse` so existing consumers (layout-on-each-entity callback) still see one update.
-- [x] **Launcher copy updated** — removed the "structured outputs are OpenAI-specific" disclaimer that's no longer accurate. Optional OpenAI key on Ollama / Anthropic tabs reframed as "fallback chain enabler".
-
-### v0.2 slice 12 — World Tick auto-scheduling ⏱️
-*Shipped 2026-05-13. World can now advance on its own while the app is open.*
-
-- [x] **`WorldTickInterval` enum + lookup tables** in `useWorldEventStore`: `off | 5min | 15min | 1h | 4h`, with label and millisecond maps. Default is `off` (preserves earlier manual-only behaviour).
-- [x] **Two new persisted fields**: `autoTickInterval` and `lastAutoTickAt`. Both flow through the same `eclipse_dnd_world_events_v1` storage key.
-- [x] **`setAutoTickInterval()` + `markAutoTicked()`** store actions. Manual ticks now also call `markAutoTicked()` so the auto-scheduler does not immediately re-fire after a click.
-- [x] **Settings row inside `WorldTickPanel`** — Select with all five cadences + a "Last tick: HH:MM:SS" caption when auto is enabled.
-- [x] **Auto-scheduler effect in `VisualWritingInterface`** — runs only when `autoTickInterval !== "off"` and the model is not read-only. Polls every 30s, fires a tick when `Date.now() - lastAutoTickAt >= intervalMs`. Skips silently when no eligible entities or when a manual tick is already in flight. Mirrors each event into the corresponding NPC's chat history with the same `(Off-screen tick: ...)` framing the manual path uses. In-tab only — closing the tab pauses the scheduler.
-
-### v0.2 slice 11 — DM ↔ World Tick awareness 🔗
-*Shipped 2026-05-13. Closes the loop: ticks happen → DM narration naturally references them.*
-
-- [x] **`useWorldEventStore` watermark** — new `lastDmAcknowledgedAt` field (persisted to localStorage). New action `markDmAcknowledged()` bumps it; new selector `getEventsForDm()` returns only events with an `action` and `createdAt > lastDmAcknowledgedAt`.
-- [x] **`buildDmSystemPrompt` extended** — adds an "OFF-SCREEN EVENTS SINCE YOUR LAST NARRATION" section when there are pending events. Strict instruction: weave AT LEAST ONE in naturally (rumour / sighting / dialogue / track), do NOT list them to the players.
-- [x] **`runDmTurn`** — pulls up to 20 most-recent pending events into the context, calls `markDmAcknowledged()` only on successful stream so a thrown stream still leaves events pending for the retry.
-- [x] **DmAgentPanel indicator** — live "🌍 N off-screen events waiting — the DM will weave them in" chip subscribed reactively to the store, so the chip updates in real time as ticks land.
-
-### v0.2 slice 10 — Off-screen World Tick 🌍⏳
-*Shipped 2026-05-13. The "living world" loop — entities act between sessions even when no DM is at the table.*
-
-- [x] **`src/model/agents/WorldTickAgent.ts`** — `buildWorldTickSystemPrompt(ctx)` assembles a DM-side world-simulation prompt for ONE entity at a time. Output is a JSON object (`{action, consequence?}`) — no OpenAI-specific structured outputs, parsed manually so the same code runs on Ollama and Anthropic via `currentProvider()`. Forgiving parser (strips markdown fences, extracts first `{...}` block on fallback); malformed replies surface as `raw`-only events instead of crashing the batch.
-- [x] **`runWorldTick({onEventCommitted, tickId?})`** — orchestrator that iterates over every entity with a `goal` (NPCs / monsters / factions only — heroes excluded), runs ticks in parallel with concurrency cap 3, streams each event through the callback as it lands. Per-entity errors become `(tick failed: ...)` events rather than aborting the whole tick.
-- [x] **`src/store/useWorldEventStore.ts`** — Zustand event log with `localStorage` persistence (`eclipse_dnd_world_events_v1`). Hard cap of 200 events. Tracks `insertedIds` so the panel knows which events are already promoted into the session text. `currentTickId` filter so the UI shows only the latest batch by default.
-- [x] **`src/view/dnd/WorldTickPanel.tsx`** — wide chat-like panel: eligibility banner ("Will tick N entities"), "Advance the world" button (streams events as they arrive), per-event card with action + optional consequence + Insert button. "Insert all into session" bottom action consolidates the whole tick into a single `**Between sessions —** ...` block.
-- [x] **Cross-reference into chat history** — every off-screen action is also mirrored into the entity's chat history (assistant message, prepended by a one-time "(Off-screen tick: ...)" user marker). Future "Talk to that NPC" picks up what they did between sessions.
-- [x] **Toolbar wire-in** — global "⏳ Advance the world" button next to DM. Mutually exclusive with all other right-side panels.
-
-### v0.2 slice 9 — Combat AI ⚔️
-*Shipped 2026-05-12. Third agent type on the same architecture — monsters as tactical advisors.*
-
-- [x] **`src/model/agents/CombatAgent.ts`** — `buildCombatSystemPrompt(ctx)` assembles a *DM-side combat advisor* prompt: full creature card (incl. goal), heroes / NPCs / other creatures present, battlefield narrative. Strict output rules: one sentence, present tense, no game-mechanic mentions, no dice asks, match player language.
-- [x] **`suggestCombatTactic(monsterEntityId, onPartial)`** — single-shot streaming call. System + one user line ("Propose this creature's next action."). Goes through the same `currentProvider()` pipeline — supports OpenAI / Ollama / Anthropic / Fallback chain transparently.
-- [x] **NpcDialoguePanel — "Combat AI" block** — visible only when the selected entity is `kind === "monster"`. Shows the proposed tactic in italic + an "Insert tactic" button that drops the sentence into the session text at the cursor.
-- [x] One-sentence proposals are deliberately decision-only: the DM still narrates the actual outcome (hit / miss / status), keeping the agent in advisory role rather than overstepping the table.
-
-### v0.2 slice 8 — Insert-at-cursor ✒️
-*Shipped 2026-05-12. Promotes Agent output into wherever the writer is currently editing.*
-
-- [x] **`insertTextAtCursor(text)` and `insertNpcQuoteAtCursor(speaker, text)`** added to `sessionInjector.ts`. Uses `Transforms.insertText(globalEditor, "\n\n" + text + "\n", { at: editor.selection })`. Falls back to `appendParagraphToSession` when there is no selection (e.g. editor not yet focused).
-- [x] **All three Insert buttons** (NPC dialogue replies, DM narration, NPC generator hook) switched from append-at-end to cursor-aware. Tooltips updated.
-- [x] **Slate normalisation respected** — the editor in this codebase merges multiple paragraphs into one with embedded `\n` separators (see `globalEditor.normalizeNode`), so inserting newlines + text is the right shape; we do not need to insert paragraph nodes manually.
+- [x] **`src/model/ai/AnthropicProvider.ts`** — Claude через `POST /v1/messages` со `stream: true`. Выносит system prompt отдельно (форма Anthropic API). Парсит SSE `data: {...}` строки, потребляет `content_block_delta` текст-дельты, отдаёт inline `error`-события. Прямые из браузера вызовы используют opt-in заголовок `anthropic-dangerous-direct-browser-access` (только локальный прототип).
+- [x] **`src/model/ai/FallbackProvider.ts`** — оборачивает упорядоченный список провайдеров. Пробует каждый по очереди; при ошибке логирует и идёт к следующему. Сбрасывает видимый partial в `""` между провайдерами, чтобы чат-пузырь не показывал сломанный фрагмент. Агрегирует ошибки и бросает, если все упали.
+- [x] **`useAiConfigStore` v2** — добавляет `anthropicApiKey`, `anthropicModel`, `useFallback`. Storage-ключ поднят до `eclipse_dnd_ai_config_v2`. `getProvider()` возвращает `FallbackProvider`, когда `useFallback` включён, с порядком цепочки `[primary, ...eligible others]`.
+- [x] **Launcher обновлён** — третья вкладка «Anthropic Claude (облако)» с полями ключа + модели. Под вкладками — чекбокс «Включить fallback chain» с объяснением.
+- [x] **`AiProviderId` расширен** до `"openai" | "ollama" | "anthropic"`, `AiProvider.id` принимает `AiProviderId | "fallback"`.
 
 ### v0.2 slice 7 — DM ↔ NPC cross-reference 🪶
-*Shipped 2026-05-12. Continuity between DM narration and per-NPC chat.*
+*Отгружено 2026-05-12. Непрерывность между нарративом DM и per-NPC чатом.*
 
-- [x] **`src/model/agents/dmCrossReference.ts`** — `extractNpcQuotes(dmText, entityNodes)` parses `**Name:** ...` lines from DM output (greedy on the speech body until the next blank line, the next `**Name:**`, or end). Filters to entities that exist in the current world graph (exact case-insensitive name match).
-- [x] **`mirrorDmQuotesToNpcHistories(quotes)`** — appends each quoted line as an `assistant` message in that NPC's chat history. Prepends a one-time `user` framing note (`"(DM narrated this scene; the following lines are what you said aloud during it.)"`) so the per-NPC chat preserves context coherence.
-- [x] **DmAgentPanel wired** — after each DM turn finishes, extract + mirror runs automatically. A small green "Mirrored DM-narrated lines into … " indicator confirms which entities received lines.
+- [x] **`src/model/agents/dmCrossReference.ts`** — `extractNpcQuotes(dmText, entityNodes)` парсит строки `**Имя:** ...` из вывода DM. Фильтрует на сущности, существующие в текущем графе мира (точное совпадение имени без учёта регистра).
+- [x] **`mirrorDmQuotesToNpcHistories(quotes)`** — добавляет каждую цитату как `assistant`-сообщение в чат-историю этого NPC. Перед первым зеркалированием добавляет одноразовую `user`-рамку для когерентности контекста.
+- [x] **DmAgentPanel подключён** — после завершения хода DM extract + mirror запускаются автоматически. Зелёный индикатор «Реплики DM зеркалятся в чат-историю: …» подтверждает, кто получил строки.
 
-### v0.2 slice 6 — Anthropic provider + Fallback chain 🔀⛓️
-*Shipped 2026-05-12. Provider story completes — three real providers + a graceful degradation path.*
+### v0.2 slice 8 — Insert-at-cursor ✒️
+*Отгружено 2026-05-12. Промоутирует вывод агента туда, где сейчас редактирует автор.*
 
-- [x] **`src/model/ai/AnthropicProvider.ts`** — Claude over `POST /v1/messages` with `stream: true`. Splits system prompt out-of-band (Anthropic API shape). Parses SSE `data: {...}` lines, consumes `content_block_delta` text deltas, surfaces inline `error` events. Browser-direct calls use the `anthropic-dangerous-direct-browser-access` opt-in header (local prototype only).
-- [x] **`src/model/ai/FallbackProvider.ts`** — wraps an ordered list of providers. Tries each in turn; on error logs and moves to the next. Resets the visible partial to `""` between providers so the chat bubble doesn't show a broken fragment glued to the next reply. Aggregates errors and throws if all fail.
-- [x] **`useAiConfigStore` v2** — adds `anthropicApiKey`, `anthropicModel`, `useFallback`. Storage key bumped to `eclipse_dnd_ai_config_v2`. `getProvider()` now returns `FallbackProvider` when `useFallback` is on, with chain order `[primary, ...eligible others]` where eligibility means "has enough config to attempt a call".
-- [x] **Launcher updated** — third provider tab "Anthropic Claude (cloud)" with key + model fields and the same optional-OpenAI-key shape Ollama already had. Below the tabs, a single "Enable fallback chain" checkbox with a one-paragraph explainer.
-- [x] **`AiProviderId` widened to `"openai" | "ollama" | "anthropic"`**, `AiProvider.id` accepts `AiProviderId | "fallback"` so the wrapper has a clean identity without polluting the user-facing union.
+- [x] **`insertTextAtCursor(text)` и `insertNpcQuoteAtCursor(speaker, text)`** добавлены в `sessionInjector.ts`. Используют `Transforms.insertText(globalEditor, ..., { at: editor.selection })`. Откатываются на `appendParagraphToSession`, когда нет выделения.
+- [x] **Все три кнопки Insert** (реплики NPC, нарратив DM, зацепка генератора NPC) переключены с append-в-конец на cursor-aware. Тултипы обновлены.
+- [x] **Учтена нормализация Slate** — редактор в этой кодовой базе склеивает несколько параграфов в один со встроенными `\n`, так что вставка `\n` + текст — правильная форма.
+
+### v0.2 slice 9 — Combat AI ⚔️
+*Отгружено 2026-05-12. Третий тип агента на той же архитектуре — монстры как тактические советники.*
+
+- [x] **`src/model/agents/CombatAgent.ts`** — `buildCombatSystemPrompt(ctx)` собирает промпт *DM-side боевого советника*: полная карточка существа (вкл. goal), герои / NPC / другие присутствующие существа, нарратив поля боя. Строгие правила вывода: одно предложение, настоящее время, без упоминания механики, без запросов бросков, на языке игрока.
+- [x] **`suggestCombatTactic(monsterEntityId, onPartial)`** — single-shot стриминг-вызов через тот же `currentProvider()` пайплайн — прозрачно поддерживает OpenAI / Ollama / Anthropic / Fallback chain.
+- [x] **NpcDialoguePanel — блок «Боевой AI»** — виден только когда выбранная сущность `kind === "monster"`. Показывает предложенную тактику курсивом + кнопка «Вставить тактику».
+- [x] Одно-предложенные предложения намеренно decision-only: DM всё ещё нарративизирует фактический исход, агент остаётся в роли советника.
+
+### v0.2 slice 10 — Off-screen World Tick 🌍⏳
+*Отгружено 2026-05-13. Петля «живого мира» — сущности действуют между сессиями, даже когда DM не за столом.*
+
+- [x] **`src/model/agents/WorldTickAgent.ts`** — `buildWorldTickSystemPrompt(ctx)` собирает промпт world-симуляции для ОДНОЙ сущности за раз. Вывод — JSON-объект (`{action, consequence?}`), парсится вручную, так что тот же код работает на Ollama и Anthropic. Прощающий парсер; некорректные ответы всплывают как `raw`-only события вместо краша всего батча.
+- [x] **`runWorldTick({onEventCommitted, tickId?})`** — оркестратор, который итерирует каждую сущность с `goal` (только NPC / монстры / фракции — герои исключены), запускает тики параллельно с concurrency cap 3.
+- [x] **`src/store/useWorldEventStore.ts`** — Zustand-журнал событий с `localStorage`-персистентностью. Хард-кап 200 событий. Трекает `insertedIds` и `currentTickId`-фильтр.
+- [x] **`src/view/dnd/WorldTickPanel.tsx`** — широкая чат-подобная панель: баннер eligibility, кнопка «Продвинуть мир» (стримит события по мере поступления), карточка на каждое событие + кнопка «Вставить». «Вставить все в сессию» консолидирует весь тик в один блок.
+- [x] **Cross-reference в чат-историю** — каждое off-screen действие также зеркалится в чат-историю сущности.
+- [x] **Подключение в тулбар** — глобальная кнопка «⏳ Продвинуть мир» рядом с DM.
+
+### v0.2 slice 11 — DM ↔ World Tick awareness 🔗
+*Отгружено 2026-05-13. Замыкает петлю: тики происходят → нарратив DM естественно их упоминает.*
+
+- [x] **Watermark в `useWorldEventStore`** — поле `lastDmAcknowledgedAt` (персистится в localStorage). Действие `markDmAcknowledged()` поднимает его; селектор `getEventsForDm()` возвращает только события с `action` и `createdAt > lastDmAcknowledgedAt`.
+- [x] **`buildDmSystemPrompt` расширен** — добавляет секцию «OFF-SCREEN EVENTS SINCE YOUR LAST NARRATION», когда есть pending-события. Строгая инструкция: вплести хотя бы одно естественно, не перечислять игрокам списком.
+- [x] **`runDmTurn`** — тянет до 20 свежих pending-событий в контекст, зовёт `markDmAcknowledged()` только при успешном стриме.
+- [x] **Индикатор в DmAgentPanel** — живой чип «🌍 N событий за кулисами ждёт», реактивно подписан на стор.
+
+### v0.2 slice 12 — World Tick auto-scheduling ⏱️
+*Отгружено 2026-05-13. Мир может продвигаться сам, пока приложение открыто.*
+
+- [x] **Enum `WorldTickInterval` + lookup-таблицы** в `useWorldEventStore`: `off | 5min | 15min | 1h | 4h`, с label- и millisecond-картами. По умолчанию `off`.
+- [x] **Два новых персистируемых поля**: `autoTickInterval` и `lastAutoTickAt`.
+- [x] **Действия стора `setAutoTickInterval()` + `markAutoTicked()`**. Ручные тики тоже зовут `markAutoTicked()`, чтобы авто-планировщик не сработал сразу после клика.
+- [x] **Settings-строка в `WorldTickPanel`** — Select со всеми пятью каденциями + подпись «Последний тик: ЧЧ:ММ:СС».
+- [x] **Эффект авто-планировщика в `VisualWritingInterface`** — поллит каждые 30с, срабатывает когда `Date.now() - lastAutoTickAt >= intervalMs`. Только in-tab — закрытие вкладки ставит планировщик на паузу.
+
+### v0.2 slice 13 — Cross-provider structured outputs 🔌
+*Отгружено 2026-05-13. Освобождает entity/location-экстракторы и генератор NPC от жёсткой зависимости от OpenAI.*
+
+- [x] **`AiProvider.generateStructured<T>(messages, spec, options)`** — новый метод интерфейса провайдера. Возвращает типизированное значение, провалидированное против zod-схемы. Бросает при провале валидации, чтобы FallbackProvider мог перейти к следующему провайдеру.
+- [x] **`src/model/ai/zodToJsonSchema.ts`** — минимальный in-house конвертер для zod-форм, которые реально использует Eclipse DnD Forge (object / array / string / number / boolean / enum / optional). ~40 строк.
+- [x] **`OpenAIProvider.generateStructured`** — использует `zodResponseFormat`.
+- [x] **`AnthropicProvider.generateStructured`** — использует tool-use. Объявляет один tool с `input_schema` из zod-схемы, форсит `tool_choice`, извлекает payload из `tool_use` блока.
+- [x] **`OllamaProvider.generateStructured`** — использует `format: "json"` + инжектит JSON Schema в system prompt. Парсит + валидирует zod'ом.
+- [x] **`FallbackProvider.generateStructured`** — та же chain-семантика, что и `streamChat`.
+- [x] **Рефактор `JSONPrompt`** — ветвится по активному конфигу: OpenAI без fallback → существующий стриминг-путь; всё остальное → `currentProvider().generateStructured`.
+- [x] **Текст Launcher обновлён** — убран дисклеймер «structured outputs только для OpenAI».
+
+### v0.2 slice 14 — Генератор энкаунтеров ⚔️🎲
+*Отгружено 2026-05-13. Классический DM-инструмент, теперь усиленный Agent-стеком под ним.*
+
+- [x] **`src/model/prompts/generators/EncounterGenerator.ts`** — `EncounterGenerator` возвращает структурированный payload: группы монстров (каждая с боевой ролью, количеством, полным statblock, goal, knowledge) + environmental twist + XP-budget estimate. Использует cross-provider structured-output путь.
+- [x] **`calcXpBudget(level, size, difficulty)`** — таблица XP-бюджета из DMG 2014 встроена. Показывается в UI для sanity-check.
+- [x] **`generateEncounterIntoScene`** — спавнит каждую группу монстров как новые `EntityNode` (`kind: monster`, полные статы, goal, knowledge), multi-count группы получают суффиксы `#N`.
+- [x] **`src/view/dnd/EncounterGeneratorPanel.tsx`** — панель по выбранной локации: форма уровень/размер/сложность/заметки, живой XP-budget readout, блок результата + кнопка «Вставить в сессию».
+- [x] **Подключение** — на вкладке «Мир и локации», когда выбрана ровно одна location-нода, в тулбаре появляется кнопка-секира.
+- [x] **Combat AI заранее подключён** — сгенерированные монстры несут goal + knowledge, так что кнопка «Предложить тактику» работает на них из коробки.
+
+### v0.2 slice 15 — Трекер инициативы 🗡️
+*Отгружено 2026-05-13. Чистое состояние, без AI — но тянет живые данные из графа мира.*
+
+- [x] **`src/store/useInitiativeStore.ts`** — Zustand-стор с localStorage-персистентностью: упорядоченный `InitiativeEntry[]`, `activeIndex`, `round`, флаг `active`. Действия: `addEntry`, `removeEntry`, `updateEntry`, `startCombat`, `nextTurn`, `endCombat`, `clearAll`.
+- [x] **`src/view/dnd/InitiativePanel.tsx`** — панель тулбара: чип-ряд сущностей, ещё не в трекере (один клик → авто-бросок d20 + мод. ЛОВ); форма ручного добавления; упорядоченный список с подсветкой активного хода, inline-редактор HP; нижние кнопки — Начать бой / Следующий ход / Завершить бой / Очистить.
+- [x] **Подключение в тулбар** — глобальная кнопка `🗡️` рядом с World Tick.
+
+### v0.2 slice 16 — Кубики 🎲
+*Отгружено 2026-05-13. Чистая утилита — без AI-вызовов.*
+
+- [x] **`src/model/dice.ts`** — `parseDiceExpression(raw)` + `rollDice(expr)` + `formatRoll(result)`. Поддерживает `dX`, `NdX`, `NdX±M` с sanity-границами.
+- [x] **`src/view/dnd/DiceRollerPanel.tsx`** — кнопки быстрых бросков d4/d6/d8/d10/d12/d20/d100, ввод произвольного выражения, история на 30 записей с вставкой в один клик.
+- [x] **Кнопка «Найти и бросить все `/roll …` в сессии»** — regex находит каждый токен `/roll <выражение>` в тексте сессии, бросает и заменяет результатом.
+- [x] **Подключение в тулбар** — глобальная кнопка `🎲` рядом с Initiative.
+
+### v0.2 slice 17 — D&D-aware текстовые редакторы ⚙️
+*Отгружено 2026-05-13. Слайдер на стате переписывает текст сессии механически-осознанно.*
+
+- [x] **`ChangeHpPrompt`** — новый подкласс TextEditPrompt. Маппит дельту HP на лестницу тяжести (царапина → ранен → без сознания; подлечен → полностью исцелён). Просит модель переписать текст сессии, отражая состояние, без упоминания цифр / AC / кубиков / механики.
+- [x] **`ChangeDangerPrompt`** — тот же паттерн для `Location.danger`. 1-3 = мирно, 4-6 = тревожно, 7-9 = активно опасно, 10 = смертельно. Переписывает только атмосферное / сенсорное описание локации.
+- [x] **HP-слайдер на `EntityNodeComponent`** — появляется под слайдерами свойств, когда у сущности `hp > 0` и она выбрана. Drag-end обновляет стат + запускает `ChangeHpPrompt`.
+- [x] **Danger-слайдер на `LocationNodeComponent`** — поп-ап под location-нодой при выборе. Drag-end обновляет стат + запускает `ChangeDangerPrompt`.
+- [x] **Без новой TextEditPrompt-машинерии** — оба класса вставляются в существующий пайплайн `execute() → TextPrompt → finalize`.
+
+### v0.2 slice 18 — Сессии как first-class слой 📖
+*Отгружено 2026-05-13. Главы кампании с AI-recap'ами, которые возвращаются в DM-контекст.*
+
+- [x] **Модель `CampaignSession` + `useSessionStore`** — `{id, name, startedAt, endedAt, text, recap?}`, персистится в `eclipse_dnd_sessions_v1`. Хард-кап 100 сессий.
+- [x] **`SessionRecapAgent.generateSessionRecap()`** — plain-text стриминг-вызов через `currentProvider()`. 2-4 предложения в прошедшем времени, упоминает NPC по именам, без упоминания механики, на языке кампании.
+- [x] **`SessionsPanel`** — форма завершения текущей сессии (авто-имя, опция skip-recap), error fallback, который архивирует сессию даже при провале recap'а, список архивных сессий с regenerate-recap и удалением.
+- [x] **Расширение контекста DM-агента** — `DmAgentContext.recentSessions`. До 3 свежих архивных сессий складываются в system prompt как блок «PREVIOUSLY ON THIS CAMPAIGN».
+- [x] **Сущности / локации / world events переживают сессии** — сессии это главы одного мира кампании, а не отдельные миры.
+- [x] **Подключение в тулбар** — кнопка `📖` рядом с Кубиками.
+
+### v0.2 slice 19 — Переписывание по характеристикам 🎯
+*Отгружено 2026-05-13. Закрывает трио v0.2 «D&D-aware редакторов» (HP / danger / ability).*
+
+- [x] **`ChangeAbilityScorePrompt`** — сестра ChangeHpPrompt / ChangeDangerPrompt. У каждой из 6 характеристик (STR/DEX/CON/INT/WIS/CHA) есть narrative-маппинг high/mid/low, сфокусированный на том, что заметил бы СТОРОННИЙ наблюдатель.
+- [x] **Tier-aware skip** — промпт пропускает себя (`canBeExecuted = false`), когда старое и новое значение в одном тире (low ≤8, mid 9-15, high ≥16). Косметичные перетаскивания 14 → 15 не жгут API-вызов.
+- [x] **Шесть слайдеров в сворачиваемом `<details>`** на выбранных entity-нодах — рендерятся только при наличии блока `abilities`.
+
+### v0.2 slice 20 — Полная RU-локализация 🇷🇺
+*Отгружено 2026-05-14. Весь интерфейс, README и ROADMAP на русском.*
+
+- [x] **UI** — Launcher (вкладки провайдеров, поля, гейтинг), обе вкладки + все тултипы тулбара, campaign templates (заголовки + подзаголовки), все 8 панелей (NpcDialogue, NpcGenerator, DmAgent, EncounterGenerator, WorldTick, Initiative, Dice, Sessions), kind-бейджи и слайдеры на EntityNode/LocationNode, плейсхолдеры в редакторах сущностей/локаций.
+- [x] **Сообщения об ошибках** — user-facing fallback'и в агентах и провайдерах (`(тик не удался: …)`, «Все AI-провайдеры недоступны», «Anthropic: API-ключ пуст»).
+- [x] **`WORLD_TICK_INTERVAL_LABELS`** в сторе переведены.
+- [x] **`README.md`** — полный перевод (статус, стратегический вектор, demo + быстрый старт, «Что внутри», gameplay loop, стек, структура, безопасность ключей).
+- [x] **`ROADMAP.md`** — целевой перевод всего файла; код-идентификаторы, пути файлов и SHA коммитов оставлены как есть.
+- Намеренно оставлено на английском: содержимое system-промптов (модели лучше работают с EN-инструкциями; агенты получают инструкцию «отвечай на языке игрока»), seed-кампании текст + backstory NPC (reference-данные, AI адаптирует под язык чата), CLAUDE.md (для AI-агентов-разработчиков).
 
 ---
 
-## 🚧 Active
+## 🚧 Активный слайс
 
-*(slot open — next slice to be promoted from below)*
-
----
-
-## 🎯 Next (small, bounded)
-
-### Agent layer extensions (priority — same architecture, new agent types)
-
-
-### Open follow-ups
-
-- [ ] **RU-локализация — финиш** *(в работе, 2026-05-13)* — критичные UI-поверхности готовы (Launcher, tabs, 6 из 8 панелей, EntityNode kind-бейджи, LocationNode danger-бейдж и slider). Осталось:
-      - `DiceRollerPanel` — все строки (заголовок, кнопки, "Scan & roll all", history empty state)
-      - `SessionsPanel` — все строки (заголовок, End-session форма, recap-actions)
-      - `EncounterGeneratorPanel` — `XP estimate vs target budget` строка
-      - 2-3 оставшихся error fallback'а в агентах (`SessionRecapAgent`)
-      - `README.md` — финальный перевод (топ + middle уже RU, остался "Стек" + "Безопасность ключей" + "Вдохновение")
-      - `ROADMAP.md` — целевой перевод (сейчас весь EN)
-      - Slice descriptions в README — переводить или оставить как есть (это техническая часть для devs, можно оставить EN)
-- [ ] **ActionEdge → SceneBeat** — historical Action timeline is still narrative-only; a Session-aware scene-beat type would link timeline edges to the new Session model so the timeline can show chapter dividers
-- [ ] **Auto-end session at heuristic boundaries** — surface a non-blocking suggestion "you've written 2000+ words since last archived session, archive now?"
+*(слот свободен — следующий слайс повышается из списка ниже)*
 
 ---
 
-## 🏰 Backlog (larger / R&D)
+## 🎯 Следующее (мелкое, ограниченное)
 
-From the original v0.3-v1.0 roadmap, kept intact:
+### Открытые follow-ups
 
-- Procedural dungeon generator + hex world map
-- Fog of War for player view
-- Temporal world states (ancient / ruined / present version of a location)
-- Upscale pipeline for portraits and maps
-- VIGA 3D scene generation from sketches
-- Character sheets, inventory & loot tracker
-- PDF / Markdown campaign export
-- Multiplayer (player views vs DM view)
-- Full autonomous AI DM mode
-- D&D Beyond / Roll20 import/export
-- Ambient audio per scene
-- Cinematic NPC briefings (portrait avatars, voice profiles)
+- [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
+- [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
 
 ---
 
-## 🧱 Known legacy / debt
+## 🏰 Бэклог (крупное / R&D)
 
-- `src/study/*` — HCI study scaffolding from VisualStoryWriting, untouched. Not part of the product surface but still in the bundle.
-- `Action` type still represents generic narrative actions — needs reframing as "scene beats" inside a Session container.
-- `dangerouslyAllowBrowser: true` on the OpenAI client — fine for local prototyping, must route through a backend before any hosted release.
-- Build status: `npm run build` has not been run since the v0.1 slice was committed because of repeated `ECONNRESET` against npm registry in the dev environment. Run locally and pin the result here when network allows.
+Из изначального roadmap v0.3-v1.0, сохранено:
+
+- Процедурный генератор подземелий + hex-карта мира
+- Fog of War для вида игрока
+- Temporal world states (древняя / разрушенная / текущая версия локации)
+- Upscale-пайплайн для портретов и карт
+- VIGA — генерация 3D-сцен из скетчей
+- Листы персонажей, трекер инвентаря и лута
+- Экспорт кампании в PDF / Markdown
+- Мультиплеер (виды игроков против вида DM)
+- Полностью автономный режим AI DM
+- Импорт/экспорт D&D Beyond / Roll20
+- Ambient-аудио для сцен
+- Cinematic NPC-брифинги (портретные аватары, голосовые профили)
 
 ---
 
-## How to update this file
+## 🧱 Известный легаси / долг
 
-When you ship a slice:
-1. Tick the matching `[ ]` under **Active** or **Next**, move it under **Done** with the commit SHA.
-2. Promote one item from **Next** into **Active** if the active slot is empty.
-3. Update the "Last update" date at the top.
-4. Keep the file under ~150 lines — backlog items are pointers, not specs.
+- `src/study/*` — HCI study-каркас из VisualStoryWriting, нетронут. Не часть продуктовой поверхности, но всё ещё в бандле.
+- Тип `Action` всё ещё представляет generic narrative actions — нужен рефрейминг в «scene beats» внутри Session-контейнера.
+- `dangerouslyAllowBrowser: true` на OpenAI-клиенте — норм для локального прототипа, перед любым хостед-релизом нужно маршрутизировать через бэкенд.
+- Build-статус: `npm run build` не запускался локально с момента отгрузки v0.1-слайса из-за повторяющихся `ECONNRESET` к npm registry в dev-окружении. Деплой на GitHub Pages при этом работает (workflow билдит на своём CI). Прогнать локально и зафиксировать здесь, когда сеть позволит.
+
+---
+
+## Как обновлять этот файл
+
+Когда отгружаешь слайс:
+1. Поставь галочку на пункте под **Активный слайс** или **Следующее**, перенеси его под **Сделано** с SHA коммита.
+2. Подними один пункт из **Следующее** в **Активный слайс**, если слот свободен.
+3. Обнови дату «Последнее обновление» сверху.
+4. Держи файл осмысленным — пункты бэклога это указатели, не спеки.

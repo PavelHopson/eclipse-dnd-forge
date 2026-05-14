@@ -25,7 +25,7 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
             setHistory((h) => [result, ...h].slice(0, 30));
             return result;
         } catch (err: any) {
-            setError(typeof err?.message === "string" ? err.message : "Invalid expression");
+            setError(typeof err?.message === "string" ? err.message : "Некорректное выражение");
             return null;
         }
     };
@@ -50,7 +50,7 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
         });
 
         if (!replacedAny) {
-            setScanReport(`No /roll expressions found in the session text.`);
+            setScanReport(`В тексте сессии не найдено выражений /roll.`);
             return;
         }
 
@@ -59,7 +59,7 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
         // node is the correct shape.
         const newState = [{ children: [{ text: replaced }] }];
         useModelStore.getState().setTextState(newState as any, true, true);
-        setScanReport(`Rolled and replaced ${rollCount} expression${rollCount === 1 ? "" : "s"} in the session.`);
+        setScanReport(`Брошено и заменено выражений в сессии: ${rollCount}.`);
     };
 
     return (
@@ -86,11 +86,11 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <GiDiceTwentyFacesTwenty style={{ fontSize: 24, color: "#7a1f1f" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Dice Roller</span>
-                        <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>Quick rolls or scan /roll patterns</span>
+                        <span style={{ fontWeight: 800, color: "#2a1a1a", lineHeight: 1.1 }}>Кубики</span>
+                        <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>Быстрые броски или сканер /roll</span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Close dice roller">
+                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть панель кубиков">
                     <IoClose />
                 </Button>
             </div>
@@ -113,8 +113,8 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
                 <Input
                     size="sm"
                     variant="faded"
-                    label="Expression"
-                    placeholder="e.g. 2d6+3"
+                    label="Выражение"
+                    placeholder="напр. 2d6+3"
                     value={expr}
                     onValueChange={setExpr}
                     onKeyDown={(e) => {
@@ -132,13 +132,13 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
                     onClick={() => rollAndPush(expr)}
                     style={{ background: "#7a1f1f", height: 36 }}
                 >
-                    Roll
+                    Бросить
                 </Button>
             </div>
 
-            <Tooltip content="Find every /roll <expr> in the session text and replace it with a rolled result" closeDelay={0}>
+            <Tooltip content="Найти каждое /roll <выражение> в тексте сессии и заменить результатом броска" closeDelay={0}>
                 <Button size="sm" variant="flat" onClick={scanAndRollAll}>
-                    Scan & roll all <code style={{ fontSize: 11, background: "#f0e4c8", padding: "0 4px", borderRadius: 3, marginLeft: 4 }}>/roll …</code> in session
+                    Найти и бросить все <code style={{ fontSize: 11, background: "#f0e4c8", padding: "0 4px", borderRadius: 3, marginLeft: 4 }}>/roll …</code> в сессии
                 </Button>
             </Tooltip>
 
@@ -156,7 +156,7 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
             <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 260, overflowY: "auto" }}>
                 {history.length === 0 ? (
                     <div style={{ color: "#9a8a7a", fontStyle: "italic", textAlign: "center", padding: 12, fontSize: 12 }}>
-                        Roll history will appear here.
+                        История бросков появится здесь.
                     </div>
                 ) : (
                     history.map((r, idx) => (
@@ -180,14 +180,14 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
                                     ({r.rolls.join("+")}{r.modifier ? (r.modifier > 0 ? `+${r.modifier}` : `${r.modifier}`) : ""})
                                 </span>
                             </span>
-                            <Tooltip content="Insert this roll into the session text at the cursor" closeDelay={0}>
+                            <Tooltip content="Вставить этот бросок в текст сессии в позицию курсора" closeDelay={0}>
                                 <Button
                                     size="sm"
                                     isIconOnly
                                     variant="light"
                                     onClick={() => insertTextAtCursor(formatRoll(r))}
                                     style={{ minWidth: 22, height: 22 }}
-                                    aria-label="Insert"
+                                    aria-label="Вставить"
                                 >
                                     <GiScrollQuill style={{ fontSize: 12 }} />
                                 </Button>
