@@ -19,7 +19,7 @@ jobs:
       - run: npm i
       - run: npm run build
         env:
-          BASE_URL: /eclipse-dnd-forge/
+          BASE_URL: /
       - run: touch build/.nojekyll
       - name: Push
         uses: s0/git-publish-subdir-action@develop
