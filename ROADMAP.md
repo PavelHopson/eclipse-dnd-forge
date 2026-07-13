@@ -24,6 +24,28 @@
 
 ---
 
+## 📥 Research intake — 2026-07-13
+
+Источник: [Eclipse Library · Applied project plan](https://library.eclipse-forge.ru/#guide/applied-project-plan-2026-07-13).
+
+### Voice / session memory
+
+- [ ] **Live session transcript** — запись голосовой партии → текст → recap → unresolved hooks → Session model.
+- [ ] **Multilingual table mode** — Sokuji-style subtitles/translation для партий на разных языках. Сначала subtitles, потом translated mic output.
+- [ ] **Consent-safe voices** — Fish Audio-style NPC/DM voices только для fictional/generated voices или с явным согласием игрока.
+
+### Route / space references
+
+- [ ] **Location board prompts** — AI interior design toolkit как источник prompt-паков для таверн, подземелий, домов NPC и городских сцен.
+- [ ] **Travel workspace MVP** — объединить TREK-пункты в первый слайс: route board + party log + party polls.
+
+### Guardrails
+
+- Автономный DM остаётся player-gated: никакого runaway-loop без действия игрока.
+- Голос/клон/перевод должны иметь явное состояние в UI: кто говорит, что переводится, есть ли consent.
+
+---
+
 ## ✅ Сделано
 
 ### v0.1 slice 1 — D&D-ребрендинг точки входа
