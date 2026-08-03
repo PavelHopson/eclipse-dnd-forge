@@ -322,6 +322,8 @@
 
 ### Открытые follow-ups
 
+- [ ] **P1 / M — production AI gateway** — заменить browser-direct OpenAI/Anthropic на backend с user auth, server-side secrets, per-user budgets, rate limits и audit metadata без prompt/response logging. До этого cloud BYOK остаётся только demo-сценарием.
+- [ ] **P3 / S — обновить GitHub Pages publisher** — заменить `s0/git-publish-subdir-action`, который всё ещё объявляет Node.js 20 и запускается runner'ом в compatibility mode с Node.js 24. Текущий deploy зелёный, но annotation нужно убрать до принудительного отключения совместимости.
 - [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
 - [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
 
