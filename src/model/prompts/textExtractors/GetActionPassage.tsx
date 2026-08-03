@@ -22,7 +22,7 @@ export function GetActionPassage(text: string, actionName: string, source: Entit
     const targetNode = useModelStore.getState().entityNodes.find((node) => node.data.name === target.name);
 
     if (sourceNode && targetNode) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             actionExtactor.execute().then((result) => {
                 console.log("Actions extracted", result);
                 const actionEdge = CreateActionEdge({

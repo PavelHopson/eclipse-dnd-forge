@@ -44,7 +44,7 @@ export abstract class TextEditPrompt {
         return result;
     }
 
-    isResultValid(result: string): boolean {
+    isResultValid(_result: string): boolean {
         return true;
     }
 
@@ -52,5 +52,5 @@ export abstract class TextEditPrompt {
         return useModelStore.getState().text.length > 0;
     }
 
-    onPartialResult(result: string): void {}
+    onPartialResult(_result: string): void {}
 }

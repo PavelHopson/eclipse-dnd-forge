@@ -10,7 +10,7 @@ export default function StudyVideo(props: { video: string }) {
     Your browser does not support the video tag.
   </video>
   <div style={{ width: '80%', display: "flex", justifyContent: "right" }}>
-              <Button style={{ marginTop: 15, marginBottom: 40, padding: 20 }} onClick={(e) => {
+              <Button style={{ marginTop: 15, marginBottom: 40, padding: 20 }} onClick={() => {
             useStudyStore.getState().logEvent("NEXT_PRESSED");
             nextStep();
           }}>Next</Button>

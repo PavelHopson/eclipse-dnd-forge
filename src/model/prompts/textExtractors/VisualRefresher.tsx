@@ -96,7 +96,7 @@ export class VisualRefresher {
             return prompt
         });
 
-        new ParallelPrompts(actionPromises).execute().then((results) => {
+        new ParallelPrompts(actionPromises).execute().then(() => {
             const actions = useModelStore.getState().actionEdges.map((actionEdge) => {
                 const sourceEntity = useModelStore.getState().entityNodes.find(entity => entity.id === actionEdge.source);
                 const targetEntity = useModelStore.getState().entityNodes.find(entity => entity.id === actionEdge.target);

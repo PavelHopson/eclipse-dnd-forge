@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CreateEntityNode } from "../../../view/entityActionView/EntityNodeComponent";
 import { LayoutUtils } from "../../LayoutUtils";
-import { Entity, EntityKind, EntityNode, useModelStore } from "../../Model";
+import { Entity, EntityNode, useModelStore } from "../../Model";
 import { JSONPrompt } from "../utils/JSONPrompt";
 
 const ENTITY_KIND_ENUM = z.enum(["hero", "npc", "monster", "faction", "unknown"]);
@@ -20,17 +20,8 @@ const ENTITY_SCHEMA = z.object({
 });
 
 
-export function extractedEntitiesToNodeEntities(extractedData: z.infer<typeof ENTITY_SCHEMA>) : EntityNode[] {
-    return extractedData.entities.map((entity, index) => {
-        const e: Entity = {
-            name: entity.name,
-            emoji: entity.emoji,
-            properties: entity.properties,
-            kind: entity.kind as EntityKind,
-            role: entity.role,
-        };
-        return CreateEntityNode(e, index);
-    });
+export function extractedEntitiesToNodeEntities(extractedData: { entities: Entity[] }) : EntityNode[] {
+    return extractedData.entities.map((entity, index) => CreateEntityNode(entity, index));
 }
 
 
@@ -67,7 +58,7 @@ export function EntitiesExtractor(text : string, center: {x: number, y: number})
         LayoutUtils.optimizeNodeLayout("entity", entities, useModelStore.getState().setEntityNodes, {x: center.x, y: center.y}, 120);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         entityExtractor.execute().then((result) => {
             console.log("Extracted entities:", result.result.entities);
             resolve(useModelStore.getState().entityNodes);

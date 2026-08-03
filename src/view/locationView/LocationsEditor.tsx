@@ -1,4 +1,4 @@
-import { Background, BackgroundVariant, Controls, Node, NodeProps, ReactFlow, applyNodeChanges, useReactFlow } from '@xyflow/react';
+import { Background, BackgroundVariant, Controls, Node, NodeProps, ReactFlow, useReactFlow } from '@xyflow/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import '@xyflow/react/dist/style.css';
@@ -211,12 +211,21 @@ export default function LocationsEditor() {
         }}*/
 
         onNodesChange={(changes) => {
-          const shouldChange = changes.some(change => change.type === 'position');
-          if (shouldChange) {
+          const positionChanges = new Map(
+            changes.flatMap((change) => change.type === 'position' && change.position
+              ? [[change.id, change.position] as const]
+              : []),
+          );
+          if (positionChanges.size > 0) {
             //setCanSimulateForce(false);
-            // @ts-ignore
-            setSpatialEntityNodes(applyNodeChanges(changes, spatialEntityNodes))
-            setLocationNodes(applyNodeChanges(changes, locationNodes))
+            setSpatialEntityNodes(spatialEntityNodes.map((node) => {
+              const position = positionChanges.get(node.id);
+              return position ? { ...node, position } : node;
+            }));
+            setLocationNodes(locationNodes.map((node) => {
+              const position = positionChanges.get(node.id);
+              return position ? { ...node, position } : node;
+            }));
           } 
         }}
 
@@ -233,7 +242,7 @@ export default function LocationsEditor() {
           setCanSimulateForce(false);
         }}
 
-        onNodeDrag={(event, node) => {
+        onNodeDrag={(_event, node) => {
           const intersections = getIntersectingNodes(node);
           let resetHoveredElement = true;
           if (node.type === "spatialEntityNode") {
@@ -250,7 +259,7 @@ export default function LocationsEditor() {
           }
         }}
 
-        onNodeDragStop={(event, node) => {
+        onNodeDragStop={(_event, node) => {
           const hoveredLocation = useViewModelStore.getState().hoveredLocation;
           if (node.type === "spatialEntityNode" && hoveredLocation) {
             const spatialEntityNode = (node as SpatialEntityNode);

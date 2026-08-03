@@ -48,6 +48,17 @@
 
 ## ✅ Сделано
 
+### v0.3 slice 24 — CI type-safety baseline и безопасные study messages
+*Отгружено 2026-08-03 после первого полного lockfile/typecheck gate.*
+
+- [x] Удалены накопленные `noUnusedLocals`/`noUnusedParameters` ошибки без ослабления strict TypeScript.
+- [x] Hardcoded study entities/locations теперь проходят через те же node factories без требования выдуманных обязательных полей.
+- [x] `clearEvents` сохраняет полный persisted auto-tick contract, а location node changes остаются типизированы как location nodes.
+- [x] Study messages больше не используют `dangerouslySetInnerHTML`: текст React-escaped, а ссылка появляется только для валидного `https:` URL с `noopener noreferrer`.
+- [x] Добавлен security regression contract; общий importer/security suite содержит 5 тестов.
+
+**CI:** первый run `30795363770` намеренно остановил deploy на inherited TypeScript baseline. Исправления должны пройти повторный typecheck, lint, tests и build до публикации Pages.
+
 ### v0.3 slice 23 — Azgaar world-map workflow 🗺️
 *Отгружено 2026-08-03. Карта создаётся во внешнем специализированном редакторе, а кампания получает только проверенные location nodes.*
 

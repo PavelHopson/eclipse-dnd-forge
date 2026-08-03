@@ -53,8 +53,8 @@ const initialState: StudyModelState = {
 
 export const useStudyStore = create<StudyModelState & StudyModelAction>()((set, get) => ({
     ...initialState,
-    reset: () => set((state) => ({ ...initialState })),
-    setParticipantId: (participantId: number) => set((state) => ({ participantId: participantId })),
+    reset: () => set({ ...initialState }),
+    setParticipantId: (participantId: number) => set({ participantId: participantId }),
     resetStep: () => {
         useModelStore.getState().reset();
         useViewModelStore.getState().reset();
@@ -80,7 +80,7 @@ export const useStudyStore = create<StudyModelState & StudyModelAction>()((set, 
         }
     },
     setStepId: (stepId: number) => {
-        set((state) => ({ stepId: stepId }))
+        set({ stepId: stepId })
 
         if (get().stepId < get().steps.length) {
             const newStepId = get().stepId;
@@ -100,11 +100,11 @@ export const useStudyStore = create<StudyModelState & StudyModelAction>()((set, 
                 previousTimeout = null;
             }
 
-            set((state) => ({ isOutOfTime: false }));
+            set({ isOutOfTime: false });
 
             if (step.type === "TASK") {
                 previousTimeout = setTimeout(() => {
-                    useStudyStore.setState((state) => ({ isOutOfTime: true }));
+                    useStudyStore.setState({ isOutOfTime: true });
                     useStudyStore.getState().logEvent("TIMEOUT_REACHED");
                 }, TIMEOUT_TIME);    
             }
@@ -121,14 +121,14 @@ export const useStudyStore = create<StudyModelState & StudyModelAction>()((set, 
             window.location.hash = hashSplitted.slice(0, hashSplitted.length - 1).join("?") + "?" + params.toString();
         }
     },
-    setSteps: (steps: StudyStep[]) => set((state) => ({ steps: steps })),
+    setSteps: (steps: StudyStep[]) => set({ steps: steps }),
     nextStep: () => {
         if (get().stepId + 1 < get().steps.length) {
             get().setStepId(get().stepId + 1);
         }
     },
-    setStudyType: (studyType: "READING" | "WRITING") => set((state) => ({ studyType: studyType })),
-    logEvent(eventName: string, parameters?: any) {
+    setStudyType: (studyType: "READING" | "WRITING") => set({ studyType: studyType }),
+    logEvent(_eventName: string, _parameters?: any) {
         //console.log("LOG:", eventName, parameters)
        /*if (get().isDataSaved) {
             let strParams = parameters ? btoa(unescape(encodeURIComponent(JSON.stringify(parameters)))) : "";
@@ -146,7 +146,7 @@ export const useStudyStore = create<StudyModelState & StudyModelAction>()((set, 
         }*/
     },
 
-    saveData(clear = true, fromCookie = false): void {
+    saveData(_clear = true, _fromCookie = false): void {
         /*if (get().isDataSaved) {
             const element = document.createElement('a');
             element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(fromCookie ? localStorage.getItem("studyData_" + get().participantId) || "" : get().csvData));
@@ -165,7 +165,7 @@ export const useStudyStore = create<StudyModelState & StudyModelAction>()((set, 
         }*/
     },
 
-    setIsDataSaved: (isDataSaved) => set((state) => ({ isDataSaved: isDataSaved })),
+    setIsDataSaved: (isDataSaved) => set({ isDataSaved: isDataSaved }),
 }))
 
 

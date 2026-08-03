@@ -112,11 +112,11 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
 
   return <>
     <div className='custom-drag-handle node-entity' style={{ position: 'relative', border: `1px solid ${isSelected ? '#4180d9' : 'white'}`, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px', padding: 10, background: 'white', borderRadius: 5, opacity: isFaded ? '0.4' : 1 }}
-      onMouseEnter={(event) => {
+      onMouseEnter={() => {
         useModelStore.getState().setHighlightedEntities([props.id]);
       }}
 
-      onMouseLeave={(event) => {
+      onMouseLeave={() => {
         useModelStore.getState().setHighlightedEntities([]);
       }}
     >

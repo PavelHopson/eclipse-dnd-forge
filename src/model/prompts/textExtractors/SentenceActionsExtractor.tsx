@@ -40,18 +40,10 @@ export function extractedActionsToEdgeActions(extractedData: z.infer<typeof SCHE
             entitiesDict[entity.data.name.toLowerCase()] = entity;
         });
 
-        extractedData.actions.forEach((action, index) => {
+        extractedData.actions.forEach((action) => {
             if (action.source.toLowerCase() in entitiesDict && action.target.toLowerCase() in entitiesDict) {
-                // Figure out the best handles to use based on the position of the source and target entities
                 const sourceEntity = entitiesDict[action.source.toLowerCase()];
                 const targetEntity = entitiesDict[action.target.toLowerCase()];
-                let sourceHandle = sourceEntity.position.y < targetEntity.position.y ? 'b' : 't';
-                let targetHandle = sourceEntity.position.y < targetEntity.position.y ? 't' : 'b';
-                if (Math.abs(sourceEntity.position.y - targetEntity.position.y) < 20) {
-                    sourceHandle = sourceEntity.position.x < targetEntity.position.x ? 'r' : 'l';
-                    targetHandle = sourceEntity.position.x < targetEntity.position.x ? 'l' : 'r';
-                }
-                
                 edges.push(CreateActionEdge(action, passage, sourceEntity, targetEntity));
             }
         });

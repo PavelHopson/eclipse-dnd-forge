@@ -121,7 +121,7 @@ export class ReadingStudyTaskGenerator {
                 ...text
             });
       
-            tasks.forEach((taskId, idx) => {
+            tasks.forEach((taskId) => {
               const task = taskDictionary[taskId];
 
                 steps.push({
@@ -158,8 +158,6 @@ export class ReadingStudyTaskGenerator {
 
 
 
-        //const url = "";
-        const url = ``
         steps.push({
             type: "MESSAGE",
             task: "NOT_A_TASK",

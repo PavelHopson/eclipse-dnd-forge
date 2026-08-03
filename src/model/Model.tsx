@@ -172,7 +172,7 @@ function getInitialState() {
 
 export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
     ...getInitialState(),
-    reset: () => set((state) => ({ ...getInitialState() })),
+    reset: () => set({ ...getInitialState() }),
     getFilteredEntityNodes: (actionFilter: { start: number, end: number } | null) => {
         if (actionFilter === null || actionFilter.start === 0 && actionFilter.end === get().actionEdges.length - 1) {
             return get().entityNodes;
@@ -193,15 +193,15 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
         return get().locationNodes.filter((node) => filteredLocations.includes(node.data.name));
     },
     setEntityNodes: (nodes) => {
-        set((state) => ({ entityNodes: nodes }))
+        set({ entityNodes: nodes })
     },
     setLocationNodes: (nodes) => {
-        set((state) => ({ locationNodes: nodes }))
+        set({ locationNodes: nodes })
     },
     setActionEdges: (edges) =>  {
         // Find the position of the actions in the text
         const textActionMatches = TextUtils.matchActionsToText(edges.map((edge) => edge.data!), get().text);
-        set((state) => ({ actionEdges: edges, textActionMatches: textActionMatches }));
+        set({ actionEdges: edges, textActionMatches: textActionMatches });
     },
     setTextState: (textState, updateEditor = true, addHistoryNode = true) => {
         const text = SlateUtils.stateToText(textState);
@@ -231,12 +231,12 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
         if (isTextDifferent) {
             // Update the text and the position of the actions in the text (at least do it as best it can)
             const textActionMatches = TextUtils.matchActionsToText(get().actionEdges.map((edge) => edge.data!), text);
-            set((state) => ({ textState: textState, text: text, textActionMatches: textActionMatches, isStale: true }));
+            set({ textState: textState, text: text, textActionMatches: textActionMatches, isStale: true });
 
             if (addHistoryNode) useHistoryModelStore.getState().addHistoryNode(get());
         } else {
             // Only update the state because this one might still be different even if invisibly so
-            set((state) => ({ textState: textState }));
+            set({ textState: textState });
         }
         
         if (updateEditor) {
@@ -248,13 +248,13 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
      * All modifications done to the text in the next 200ms (arbitrary) will be marked as suggestions
      */
     suggestNextTextChanges: () => {
-        set((state) => ({ suggestModeUntilTimestamp: Date.now() + 200 }));
+        set({ suggestModeUntilTimestamp: Date.now() + 200 });
     },
     acceptSuggestions: () => {
         let newState = (JSON.parse(JSON.stringify(get().textState))[0] as any)
         newState.children = newState.children.filter((node: any) => node.removed === undefined);
         newState.children = newState.children.map((node: any) => ({ text: node.text }));
-        set((state) => ({ textState: [newState]}));
+        set({ textState: [newState]});
         globalEditor.children = [newState]
         globalEditor.onChange();
     },
@@ -262,7 +262,7 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
         let newState = (JSON.parse(JSON.stringify(get().textState))[0] as any)
         newState.children = newState.children.filter((node: any) => node.added === undefined);
         newState.children = newState.children.map((node: any) => ({ text: node.text }));
-        set((state) => ({ textState: [newState]}));
+        set({ textState: [newState]});
         globalEditor.children = [newState]
         globalEditor.onChange();
     },
@@ -274,7 +274,7 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
     },
     setSelectedNodes: (nodes) => {
         if (!shallow(get().selectedNodes, nodes)) {
-            set((state) => ({ selectedNodes: nodes }));
+            set({ selectedNodes: nodes });
         }
     },
     setSelectedEdges: (edges) => {
@@ -289,33 +289,33 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
                     edge.selected = true;
                 }
             }
-            if (modified) set((state) => ({ actionEdges: allEdges }));
+            if (modified) set({ actionEdges: allEdges });
             useStudyStore.getState().logEvent("EDGES_SELECTED", { edges });
-            set((state) => ({ selectedEdges: edges }));
+            set({ selectedEdges: edges });
         }
     },
     setHighlightedActionsSegment: (startActionId, endActionId) => {
         if (get().highlightedActionsSegment?.start !== startActionId || get().highlightedActionsSegment?.end !== endActionId) {
-            set((state) => ({ highlightedActionsSegment: startActionId !== null && endActionId !== null ? { start: startActionId, end: endActionId } : null }));
+            set({ highlightedActionsSegment: startActionId !== null && endActionId !== null ? { start: startActionId, end: endActionId } : null });
         }
     },
     setFilteredActionsSegment: (startActionId, endActionId) => {
          // Only modify if different (zustand is not clever enough to do this by itself)
          if (get().filteredActionsSegment?.start !== startActionId || get().filteredActionsSegment?.end !== endActionId) {
-            set((state) => ({ filteredActionsSegment: startActionId !== null && endActionId !== null ? { start: startActionId, end: endActionId } : null }));
+            set({ filteredActionsSegment: startActionId !== null && endActionId !== null ? { start: startActionId, end: endActionId } : null });
          }
     },
     setHighlightedEntities: (entities) => {
-        set((state) => ({ highlightedEntities: entities }));
+        set({ highlightedEntities: entities });
     },
     setIsStale: (isStale) => {
-        set((state) => ({ isStale: isStale }));
+        set({ isStale: isStale });
     },
     setOpenAIKey: (key) => {
         openai.apiKey = key;
       },
     setIsReadOnly: (isReadOnly) => {
-        set((state) => ({ isReadOnly: isReadOnly }));
+        set({ isReadOnly: isReadOnly });
     }
 }))
 

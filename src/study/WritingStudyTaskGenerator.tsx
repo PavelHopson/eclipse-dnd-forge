@@ -95,12 +95,6 @@ export class WritingStudyTaskGenerator {
                 message: videoName[taskId[0]],
               });
 
-             const taskName : {[name: string]: string} = {
-                "E": 'Entities-Event',
-                "M": 'Entities-Location',
-                "R": 'Entities-Order',
-              }
-
               steps.push({
                 ...task,
                 type: "TASK",

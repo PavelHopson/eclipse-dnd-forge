@@ -71,7 +71,7 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
 
 
   const activeSelectionDecoration = useCallback(
-    ([node, path]: NodeEntry) => {
+    ([, path]: NodeEntry) => {
       const ranges : Range[] = [];
       let idsToDecorate : number[] = [];
 

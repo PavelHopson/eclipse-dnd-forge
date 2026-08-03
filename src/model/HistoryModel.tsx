@@ -43,7 +43,7 @@ function getInitialState() : HistoryModelState {
 
 export const useHistoryModelStore = create<HistoryModelState & HistoryModelAction>()((set, get) => ({
     ...getInitialState(),
-    reset: () => set((state) => ({ ...getInitialState() })),
+    reset: () => set({ ...getInitialState() }),
     setPositionInTree: (position: number[]) => {
         // Restore the state
         const node = get().getNodeAtPosition(position);
@@ -60,7 +60,7 @@ export const useHistoryModelStore = create<HistoryModelState & HistoryModelActio
 
             useStudyStore.getState().logEvent("SET_POSITION_IN_HISTORY_TREE", { position });
 
-            set((state) => ({ positionInTree: position, redoPositionStack: [] }));
+            set({ positionInTree: position, redoPositionStack: [] });
         }
     },
     getNodeAtPosition: (position: number[]) => {
@@ -144,7 +144,7 @@ export const useHistoryModelStore = create<HistoryModelState & HistoryModelActio
                 } 
             }
         }
-        set((state) => ({ historyTree: JSON.parse(JSON.stringify(tree)), positionInTree: newPosition, redoPositionStack: [], timestampLastAddedNode: Date.now() }));
+        set({ historyTree: JSON.parse(JSON.stringify(tree)), positionInTree: newPosition, redoPositionStack: [], timestampLastAddedNode: Date.now() });
     },
     undo: () => {
         const position = get().positionInTree;
@@ -153,7 +153,7 @@ export const useHistoryModelStore = create<HistoryModelState & HistoryModelActio
             const newPosition = position.slice(0, position.length - 1);
             const redoStack = [...get().redoPositionStack, position];
             get().setPositionInTree(newPosition);
-            set((state) => ({ redoPositionStack: redoStack }));
+            set({ redoPositionStack: redoStack });
         }
     },
     redo: () => {
@@ -162,7 +162,7 @@ export const useHistoryModelStore = create<HistoryModelState & HistoryModelActio
             const position = redoPositionStack[redoPositionStack.length - 1];
             const redoStack = [...redoPositionStack.slice(0, redoPositionStack.length - 1)];
             get().setPositionInTree(position);
-            set((state) => ({ redoPositionStack: redoStack}));
+            set({ redoPositionStack: redoStack});
         }
     }
 

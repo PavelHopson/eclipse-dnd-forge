@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CreateLocatioNode } from "../../../view/locationView/LocationNodeComponent";
 import { LayoutUtils } from "../../LayoutUtils";
-import { Location, LocationKind, LocationNode, useModelStore } from "../../Model";
+import { Location, LocationNode, useModelStore } from "../../Model";
 import { JSONPrompt } from "../utils/JSONPrompt";
 
 const LOCATION_KIND_ENUM = z.enum(["dungeon", "town", "wild", "plane", "stronghold", "unknown"]);
@@ -16,17 +16,8 @@ const LOCATION_SCHEMA = z.object({
     }))
 });
 
-export function extractedLocationsToNodeLocations(extractedData: z.infer<typeof LOCATION_SCHEMA>) : LocationNode[] {
-    return extractedData.locations.map((location, index) => {
-        const l: Location = {
-            name: location.name,
-            emoji: location.emoji,
-            kind: location.kind as LocationKind,
-            biome: location.biome,
-            danger: location.danger,
-        };
-        return CreateLocatioNode(l, index);
-    });
+export function extractedLocationsToNodeLocations(extractedData: { locations: Location[] }) : LocationNode[] {
+    return extractedData.locations.map((location, index) => CreateLocatioNode(location, index));
 }
 
 
@@ -65,7 +56,7 @@ export function LocationExtractor(text : string, center: {x: number, y: number})
         LayoutUtils.optimizeNodeLayout("location", locations, useModelStore.getState().setLocationNodes, {x: center.x, y: center.y}, 120);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         locationExtractor.execute().then((result) => {
             console.log("Extracted locations:", result.result);
             resolve(useModelStore.getState().locationNodes);

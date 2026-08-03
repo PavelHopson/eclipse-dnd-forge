@@ -239,12 +239,12 @@ export default function ActionTimeline() {
             }
           }}
 
-          onMouseLeave={(e) => {
+          onMouseLeave={() => {
             setHighlightedActionsSegment(null, null);
             setIsHovered(false);
           }}
 
-          onMouseEnter={(e) => {
+          onMouseEnter={() => {
             setIsHovered(true);
           }}
 
@@ -302,12 +302,12 @@ export default function ActionTimeline() {
           setActionLinks(applyNodeChanges(changes, actionLinks)) 
         }}
 
-        onNodeDragStart={(event, node) => {
+        onNodeDragStart={() => {
           setHighlightedActionsSegment(null, null);
           setFilteredActionsSegment(null, null);
         }}
 
-        onNodeDragStop={(event, node) => {
+        onNodeDragStop={(_event, node) => {
           const targetIndex = Math.round((node.position.x - paddingLeft - actionLeftPadding+actionSpacing/2) / actionSpacing);
           const originalIndex = actionLinks.findIndex(link => link.id === node.id);
 

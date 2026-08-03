@@ -546,13 +546,13 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                   const locationsExtractor = LocationExtractor(useModelStore.getState().text, center);
 
 
-                  let refreshRequirements: Promise<any> = new Promise<void>((resolve, reject) => { resolve() });
+                  let refreshRequirements: Promise<any> = Promise.resolve();
 
                   if (useModelStore.getState().locationNodes.length === 0 && useModelStore.getState().entityNodes.length === 0) refreshRequirements = Promise.all([entitiesExtractor, locationsExtractor]);
                   if (useModelStore.getState().locationNodes.length === 0) refreshRequirements = locationsExtractor;
                   if (useModelStore.getState().entityNodes.length === 0) refreshRequirements = entitiesExtractor;
 
-                  refreshRequirements.then((response) => {
+                  refreshRequirements.then(() => {
                     visualRefreshCallback();
                   });
                 }}

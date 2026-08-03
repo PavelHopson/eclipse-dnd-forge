@@ -16,7 +16,7 @@ export interface MessageGPT {
 
 export class BasePrompt<O> {
     execute(): Promise<O> {
-        return new Promise<O>((resolve, reject) => {
+        return new Promise<O>((resolve) => {
             resolve(null as any);
         });
     }

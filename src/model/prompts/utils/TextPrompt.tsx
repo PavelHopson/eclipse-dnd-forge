@@ -11,7 +11,7 @@ export class TextPrompt extends BasePrompt<PromptResult<string>> {
     }
 
     execute(): Promise<PromptResult<string>> {
-        return new Promise<PromptResult<string>>((resolve, reject) => {
+        return new Promise<PromptResult<string>>((resolve) => {
             
             (async () => {
                 const stream = await openai.chat.completions.create({

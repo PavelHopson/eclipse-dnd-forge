@@ -35,7 +35,7 @@ export abstract class JSONExtractorPrompt<T> extends JSONPrompt<T> {
                 return result;
             });
         }
-        return new Promise<PromptResult<T>>((resolve, reject) => {resolve({result: [] as any})});
+        return new Promise<PromptResult<T>>((resolve) => {resolve({result: [] as any})});
     }
 
     finalize(): void {}

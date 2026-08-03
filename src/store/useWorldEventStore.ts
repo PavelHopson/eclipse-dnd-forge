@@ -158,7 +158,7 @@ export const useWorldEventStore = create<WorldEventState>((set, get) => {
         },
 
         clearEvents: () => {
-            persist({ events: [], insertedIds: [], lastDmAcknowledgedAt: get().lastDmAcknowledgedAt });
+            persist({ ...snapshot(), events: [], insertedIds: [] });
             set({ events: [], insertedIds: [], currentTickId: null });
         },
 

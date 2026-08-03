@@ -95,11 +95,11 @@ export default function StudyInterface() {
           />}
           { !showSlider && <Popover isOpen={resetPopoverEnabled} onClose={() => setResetPopoverEnabled(false)}>
             <PopoverTrigger>
-              <Button variant={"light"} onPressStart={(e) => {
+              <Button variant={"light"} onPressStart={() => {
                 setResetButtonTimestamp(new Date().getTime());
               }}
 
-              onPressEnd={(e) => {
+              onPressEnd={() => {
                 if (new Date().getTime() - resetButtonTimestamp > 1000) {
                   useStudyStore.getState().logEvent("RESET_PRESSED");
                   useStudyStore.getState().resetStep();
@@ -114,7 +114,7 @@ export default function StudyInterface() {
               <p>Press for at least 1 second</p>
             </PopoverContent>
           </Popover>}
-          <Button isDisabled={showSlider && sliderValue < 0} color={isOutOfTime ? "danger" : undefined} style={{ flexGrow: 5 }} onClick={(e) => {
+          <Button isDisabled={showSlider && sliderValue < 0} color={isOutOfTime ? "danger" : undefined} style={{ flexGrow: 5 }} onClick={() => {
             useStudyStore.getState().logEvent("NEXT_PRESSED");
             if (instructionIndex + 1 < currentStep.instructions!.length) {
               useStudyStore.getState().logEvent("SUBTASK_COMPLETED"/*, { finalState: useModelStore.getState(), text: document.getElementById("mainTextField")?.innerText }*/);

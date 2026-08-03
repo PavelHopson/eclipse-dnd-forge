@@ -42,7 +42,7 @@ export default function HistoryTree() {
   }, []);
 
 
-  const onNodeClick = (position: number[], nodeData: HierarchyPointNode<TreeNodeDatum>) => {
+  const onNodeClick = (position: number[]) => {
     useHistoryModelStore.getState().setPositionInTree(position);
   }
 
@@ -71,7 +71,7 @@ export default function HistoryTree() {
             const isSelected = position.join(',') === positionInTree.join(',');
 
             return <circle className='history-node' r={6} fill={isSelected ? '#326FEE' : '#6D6E6E'} strokeWidth={0}
-            onClick={() => onNodeClick(position, nodeData.hierarchyPointNode)}></circle>;
+            onClick={() => onNodeClick(position)}></circle>;
           }}
           />
       </div>

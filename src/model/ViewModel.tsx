@@ -22,11 +22,11 @@ const initialState: ViewModelState = {
 }
 
 
-export const useViewModelStore = create<ViewModelState & ViewModelAction>()((set, get) => ({
+export const useViewModelStore = create<ViewModelState & ViewModelAction>()((set) => ({
     ...initialState,
-    reset: () => set((state) => ({ ...initialState })),
-    setHoveredLocation: (location) => set((state) => ({ hoveredLocation: location })),
-    setTextIsBeingEdited: (isBeingEdited) => set((state) => ({ textIsBeingEdited: isBeingEdited })),
+    reset: () => set({ ...initialState }),
+    setHoveredLocation: (location) => set({ hoveredLocation: location }),
+    setTextIsBeingEdited: (isBeingEdited) => set({ textIsBeingEdited: isBeingEdited }),
 }))
 
 
