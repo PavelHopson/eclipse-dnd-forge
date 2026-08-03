@@ -87,7 +87,7 @@ rollback_on_failure() {
   if [[ $exit_code -ne 0 ]]; then
     echo "DnD public activation failed; rolling back public exposure" >&2
     if [[ $CHAT_CHANGED -eq 1 && -n "$CHAT_BACKUP" && -f "$CHAT_BACKUP" ]]; then
-      install -o www-data -g www-data -m 0600 "$CHAT_BACKUP" "$CHAT_ENV"
+      install -o root -g www-data -m 0640 "$CHAT_BACKUP" "$CHAT_ENV"
       supervisorctl restart eclipse-chat-server >/dev/null 2>&1
       echo "Previous Chat identity configuration restored with secure permissions" >&2
     fi
@@ -249,7 +249,7 @@ upsert_env_value "ECOSYSTEM_IDENTITY_KEY_ID" "$CHAT_IDENTITY_KID" "$CHAT_TEMP"
 upsert_env_value "ECOSYSTEM_IDENTITY_ISSUER" "https://app.star-crm.ru/eclipse-chat" "$CHAT_TEMP"
 upsert_env_value "ECOSYSTEM_IDENTITY_REDIRECT_URIS" "https://dnd.eclipse-forge.ru/" "$CHAT_TEMP"
 upsert_env_value "ECOSYSTEM_IDENTITY_PREVIOUS_JWKS_JSON" "'{\"keys\":[]}'" "$CHAT_TEMP"
-install -o www-data -g www-data -m 0600 "$CHAT_TEMP" "$CHAT_ENV"
+install -o root -g www-data -m 0640 "$CHAT_TEMP" "$CHAT_ENV"
 secure_remove "$CHAT_TEMP"
 CHAT_TEMP=""
 unset PRIVATE_KEY_B64

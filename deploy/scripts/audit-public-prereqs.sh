@@ -84,7 +84,12 @@ if [[ ! -f "$CHAT_ENV" ]]; then
   echo "MISSING Chat environment: $CHAT_ENV" >&2
   exit 1
 fi
-echo "Chat environment owner/group/mode: $(stat -c '%U/%G/%a' "$CHAT_ENV")"
+CHAT_ENV_PERMISSIONS="$(stat -c '%U/%G/%a' "$CHAT_ENV")"
+echo "Chat environment owner/group/mode: $CHAT_ENV_PERMISSIONS"
+if [[ "$CHAT_ENV_PERMISSIONS" != "root/www-data/640" ]]; then
+  echo "Chat environment must be root-owned, group-readable by www-data and not writable by the service" >&2
+  exit 1
+fi
 if grep -Eq '^ECOSYSTEM_IDENTITY_PRIVATE_KEY_B64=.+$' "$CHAT_ENV"; then
   echo "Chat ecosystem identity key is already configured"
 else
