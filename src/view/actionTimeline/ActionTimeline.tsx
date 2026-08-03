@@ -204,13 +204,13 @@ export default function ActionTimeline() {
       </span>
 
       <div>
-      <Button variant='light' size="sm" isIconOnly onClick={() => {
+      <Button variant='light' size="sm" isIconOnly aria-label="Прокрутить таймлайн влево" onClick={() => {
         // Scroll the react flow to the left
         reactFlow.setViewport({ ...reactFlow.getViewport(), x: reactFlow.getViewport().x + 100 }, { duration: 100 })
       }}>
         <GrPrevious />
       </Button>
-      <Button variant='light' size="sm" isIconOnly onClick={() => {
+      <Button variant='light' size="sm" isIconOnly aria-label="Прокрутить таймлайн вправо" onClick={() => {
         // Scroll the react flow to the right
         reactFlow.setViewport({ ...reactFlow.getViewport(), x: reactFlow.getViewport().x - 100 }, { duration: 100 })
       }}>

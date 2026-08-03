@@ -286,7 +286,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsMapPanelOpen(false);
                       }
                     }}
-                    aria-label="Toggle DM panel"
+                    aria-label="Переключить AI Мастера"
                   >
                     <GiCrown />
                   </Button>
@@ -308,7 +308,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsMapPanelOpen(false);
                       }
                     }}
-                    aria-label="Toggle World Tick panel"
+                    aria-label="Продвинуть мир"
                   >
                     <GiSandsOfTime />
                   </Button>
@@ -450,7 +450,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsMapPanelOpen(false);
                         }
                       }}
-                      aria-label="Toggle NPC generator"
+                      aria-label="Открыть генератор NPC"
                     >
                       <GiSpellBook />
                     </Button>
@@ -481,7 +481,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                   </Tooltip>
                 )}
                 <Tooltip content="Очистить холст" closeDelay={0}>
-                  <Button style={{ fontSize: 18 }} isIconOnly onClick={() => {
+                  <Button style={{ fontSize: 18 }} isIconOnly aria-label="Очистить холст" onClick={() => {
                     LayoutUtils.stopAllSimulations();
                     useModelStore.getState().setActionEdges([]);
                     useModelStore.getState().setLocationNodes([]);
@@ -552,6 +552,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
           {!isReadOnly && <div className='dnd-sync-actions'>
             <Tooltip content="Обновить граф из текста" closeDelay={0}>
               <Button style={{ fontSize: 22 }} color={isStale ? "primary": "default"} isLoading={isExtracting} isIconOnly radius={'full'}
+                aria-label="Обновить граф из текста"
                 onClick={() => {
 
                   const center = { x: visualPanelRef.current!.clientWidth / 2, y: visualPanelRef.current!.clientHeight / 2 };
@@ -587,6 +588,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
 
             <Tooltip placement='bottom' content="Переписать текст из визуала" closeDelay={0}>
               <Button style={{ fontSize: 22 }} isLoading={isExtracting} isIconOnly radius={'full'}
+                aria-label="Переписать текст из графа"
                 onClick={() => {
                   new RewriteFromVisual().execute();
                 }}

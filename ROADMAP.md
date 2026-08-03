@@ -56,6 +56,7 @@
 - [x] Legacy Anthropic key fail-closed удаляется из `localStorage`: несекретные settings сохраняются, credential переносится только в текущую tab session.
 - [x] На viewport до 760px основной workspace показывает один понятный режим — «Текст сессии» или «Мир и инструменты»; desktop сохраняет двухпанельный layout.
 - [x] Launcher provider tabs прокручиваются горизонтально, парные поля складываются в колонку, а все десять tool panels ограничены шириной viewport и собственным scroll.
+- [x] Все icon-only actions основной панели, синхронизации и timeline получили понятные accessible names на русском.
 - [x] Добавлены credential migration/hash cleanup, security и responsive contracts; общий suite содержит 11 тестов.
 
 **Ограничение:** `sessionStorage` снижает persistence, но не защищает от same-origin XSS. Browser-direct OpenAI/Anthropic остаются demo-only; production gateway с server-side secrets, budgets и rate limits — отдельный архитектурный слайс.
