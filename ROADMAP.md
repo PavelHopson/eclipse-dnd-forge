@@ -48,6 +48,16 @@
 
 ## ✅ Сделано
 
+### v0.3 slice 29 — loopback dark-launch runtime
+*Реализовано 2026-08-03; публичный endpoint и managed UI остаются выключены.*
+
+- [x] Добавлены dedicated `eclipse-dnd-bff` service account, Supervisor runtime, root-managed environment и single-process health smoke.
+- [x] Dark bootstrap атомарно добавляет только `models:read` + `chat:write`, проверяет запрет telemetry и сохраняет другие AI Hub clients.
+- [x] Rollback восстанавливает gateway/BFF environments и процессы при любой ошибке smoke; secrets не выводятся и не попадают в artifacts.
+- [x] Exchange rate limit больше не доверяет клиентскому `X-Forwarded-For`; `X-Real-IP` принимается только от loopback reverse proxy, regression проверяет 31 spoofed попытку.
+
+**Остаётся закрыто:** DNS/TLS для `api.dnd.eclipse-forge.ru`, Nginx exposure, Chat identity signing key, synthetic canary и frontend flag.
+
 ### v0.3 slice 28 — Chat identity и dark-launched DnD AI BFF
 *Реализовано 2026-08-03; production activation намеренно закрыт инфраструктурными gates.*
 

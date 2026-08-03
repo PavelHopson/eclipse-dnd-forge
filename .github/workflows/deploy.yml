@@ -31,6 +31,8 @@ jobs:
         run: npm run typecheck
       - name: Test
         run: npm test
+      - name: Validate BFF runtime scripts
+        run: bash -n deploy/scripts/*.sh
       - name: Lint
         run: npm run lint
       - name: Build production bundle

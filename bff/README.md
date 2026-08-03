@@ -46,8 +46,9 @@ DND_BFF_MAX_OUTPUT_TOKENS=2048
 DND_BFF_AI_ENABLED=true
 ```
 
-The environment file must be root-owned and mode `0600`. The budget path must
-be outside the repository and writable only by the BFF service account.
+The environment file must be `root:eclipse-dnd-bff`, mode `0640`. The dedicated
+service account can read it but cannot change it. The budget path must be outside
+the repository and writable only by that account.
 
 Run locally with:
 
@@ -103,6 +104,12 @@ Emergency rollback is either `DND_BFF_AI_ENABLED=false` or removing
 `VITE_DND_MANAGED_AI_ENABLED` in the next Pages build. Direct BYOK and local
 Ollama remain explicit separate modes; the managed provider never silently
 falls back to them.
+
+The first server rollout uses `deploy/scripts/bootstrap-dark.sh`. It installs one
+loopback-only Supervisor process, upserts only the scoped DnD gateway client,
+checks that DnD receives `403` from telemetry, confirms Chat still receives `200`,
+and restores both environment files if any smoke fails. It intentionally does
+not add Nginx, DNS, TLS, the Chat signing key or the frontend flag.
 
 ## Current constraints
 

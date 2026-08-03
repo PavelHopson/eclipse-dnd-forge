@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
+import { isIP } from 'node:net';
 import { AtomicBudgetStore, BudgetExceededError } from './budget.mjs';
 import { IdentityValidationError, JwksVerifier } from './identity.mjs';
 
@@ -126,13 +127,14 @@ function tokenHash(value) {
 }
 
 function clientAddress(request) {
-  const forwarded = request.headers['x-forwarded-for'];
-  const candidate = typeof forwarded === 'string'
-    ? forwarded.split(',')[0]?.trim()
-    : request.socket.remoteAddress;
-  return typeof candidate === 'string' && /^[A-Fa-f0-9:.]{1,64}$/.test(candidate)
-    ? candidate
-    : 'unknown';
+  const peer = request.socket.remoteAddress?.trim() || '';
+  const loopbackPeer = peer === '127.0.0.1' || peer === '::1' || peer === '::ffff:127.0.0.1';
+  const realIp = request.headers['x-real-ip'];
+  if (loopbackPeer && typeof realIp === 'string') {
+    const candidate = realIp.trim();
+    if (candidate.length <= 64 && isIP(candidate)) return candidate;
+  }
+  return peer.length <= 64 && isIP(peer) ? peer : 'unknown';
 }
 
 function safeEqual(left, right) {

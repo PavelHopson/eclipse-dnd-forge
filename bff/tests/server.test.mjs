@@ -149,3 +149,28 @@ test('exchanges PKCE for an HttpOnly session and keeps the AI service token serv
     await close(server);
   }
 });
+
+test('does not let a client bypass the exchange limit with spoofed forwarding headers', async () => {
+  const server = await createDndBffServer(testConfig(), {
+    fetchImpl: async () => { throw new Error('identity provider must not be called'); },
+    verifier: { verify: async () => { throw new Error('verifier must not be called'); } },
+    logger: { info() {}, error() {} },
+  });
+  const baseUrl = await listen(server);
+  try {
+    for (let attempt = 1; attempt <= 31; attempt += 1) {
+      const response = await fetch(`${baseUrl}/api/v1/auth/exchange`, {
+        method: 'POST',
+        headers: {
+          Origin: 'https://dnd.example.test',
+          'Content-Type': 'application/json',
+          'X-Forwarded-For': `198.51.100.${attempt}`,
+        },
+        body: JSON.stringify({}),
+      });
+      assert.equal(response.status, attempt <= 30 ? 400 : 429);
+    }
+  } finally {
+    await close(server);
+  }
+});
