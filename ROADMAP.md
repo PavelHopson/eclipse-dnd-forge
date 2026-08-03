@@ -49,7 +49,7 @@
 ## ✅ Сделано
 
 ### v0.3 slice 27 — изолированный GitHub Pages publisher
-*Подготовлено 2026-08-03; production run фиксируется после push.*
+*Отгружено 2026-08-03; первый успешный production run — `30805647033`.*
 
 - [x] Удалён community publisher `s0/git-publish-subdir-action` с устаревшим Node.js 20 runtime.
 - [x] Pipeline разделён на `build` с `contents: read` и `persist-credentials: false` и короткий `publish` с необходимым `contents: write`: npm dependencies и project scripts больше не выполняются рядом с write-token.
@@ -59,7 +59,9 @@
 
 **Rollback:** предыдущий snapshot остаётся доступен в истории удалённой `gh-pages`; при сбое workflow production не меняется. Принудительная запись разрешена только для generated deploy branch.
 
-**Локально:** 12/12 Node tests зелёные. Две попытки locked install зависли на registry и вторая завершилась по timeout 300 секунд, поэтому typecheck/lint/build этого слайса должен подтвердить чистый GitHub Actions runner до публикации.
+**Проверено:** локально 12/12 Node tests зелёные; две попытки locked install зависли на registry, вторая завершилась по timeout 300 секунд. На clean GitHub runner run `30805647033` успешно прошёл `npm ci --ignore-scripts`, typecheck, 12 tests, lint, production build, проверки artifact, digest-verified download и publish; annotations обоих jobs пусты. `gh-pages` commit `9dede14` содержит `Deploy 1b839c1...`, а `https://dnd.eclipse-forge.ru/` отвечает `200 OK` и отдаёт корректный title/assets.
+
+**Диагностика release:** первый run `30805503338` безопасно остановился до изменения production, потому что checkout v7 хранит token в временном credential file, а не в local `extraheader`. Коммит `1b839c1` передаёт этот файл только одному `git push` через `-c include.path=...`; token не копируется в generated repository config и удаляется checkout post-step.
 
 ### v0.3 slice 26 — session-only BYOK и mobile workspace
 *Отгружено 2026-08-03 после security и responsive-аудита публичной demo.*
