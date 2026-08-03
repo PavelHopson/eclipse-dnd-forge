@@ -2,7 +2,7 @@
 
 # ⚔️ Eclipse DnD Forge
 
-### AI Campaign Manager — настолка с ИИ-агентами
+### AI Campaign Manager — настолка с ИИ-агентами и картой мира
 
 **🌐 Live demo: <https://pavelhopson.github.io/eclipse-dnd-forge/>**
 
@@ -114,6 +114,7 @@ JSONPrompt────→ │  generateStructured()       │
 - **Danger slider** на location → AI rewrite атмосферы (1-3/4-6/7-9/10 тиры)
 - **Ability sliders** STR/DEX/CON/INT/WIS/CHA → AI rewrite поведения персонажа при tier-change (skipped когда cosmetic)
 - **Insert-at-cursor** на каждом AI-output → реплика/нарратив/тактика/event/roll прыгает в Slate в позицию курсора
+- **Карта мира через Azgaar** — DnD Forge собирает бриф из кампании, открывает официальный редактор и безопасно импортирует значимые города из `Export → JSON → Minimal`. До подтверждения показываются preview, дубли и точное число новых локаций
 
 ### Стартовые кампании
 
@@ -134,12 +135,13 @@ JSONPrompt────→ │  generateStructured()       │
 4. 💬 Кликнуть Toblen → **Поговорить** → диалог с памятью DM-сцены
 5. ⏳ Поставить **Авто-тик: Каждые 15 минут** → каждые 15 мин тики → «🌍 N событий ждёт» в DM
 6. На вкладке «Мир и локации» выбрать **логово Cragmaw** → 🪓 **Сгенерировать энкаунтер** → 4 группы монстров с тактикой
-7. На вкладке «Герои и NPC» выбрать монстра → ⚔️ **Предложить тактику** → «Кларг бросается на жреца...» → Вставить
-8. 🗡️ **Трекер инициативы** → добавить партию + Кларга → Начать бой → Следующий ход
-9. 🎲 **Кубики** → `2d6+3` → 11 → Вставить как бросок
-10. Тянуть HP Кларга 30→8 → AI переписывает сцену: «Кларг качается, плюётся кровью...»
-11. Тянуть опасность Фандалина 3→7 → AI переписывает: «Улицы непривычно пусты, тревога в воздухе...»
-12. 📖 **Завершить сессию** → AI генерирует recap → следующий ход DM знает «Ранее в этой кампании...»
+7. 🌍 **Карта мира** → Скопировать бриф → Открыть Azgaar → `Export → JSON → Minimal` → проверить preview → добавить города без дублей
+8. На вкладке «Герои и NPC» выбрать монстра → ⚔️ **Предложить тактику** → «Кларг бросается на жреца...» → Вставить
+9. 🗡️ **Трекер инициативы** → добавить партию + Кларга → Начать бой → Следующий ход
+10. 🎲 **Кубики** → `2d6+3` → 11 → Вставить как бросок
+11. Тянуть HP Кларга 30→8 → AI переписывает сцену: «Кларг качается, плюётся кровью...»
+12. Тянуть опасность Фандалина 3→7 → AI переписывает: «Улицы непривычно пусты, тревога в воздухе...»
+13. 📖 **Завершить сессию** → AI генерирует recap → следующий ход DM знает «Ранее в этой кампании...»
 
 ---
 
@@ -186,7 +188,8 @@ src/
 │   │   ├── textEditors/       — ChangeHp / ChangeDanger / ChangeAbilityScore
 │   │   └── utils/             — JSONPrompt (cross-provider) + TextPrompt
 │   └── dnd/
-│       └── campaignTemplates.ts — 4 seed кампании
+│       ├── campaignTemplates.ts — 4 seed кампании
+│       └── azgaarImport.ts      — bounded parser, preview plan, duplicate guard
 ├── store/
 │   ├── useAgentStore.ts       — per-entity chat histories
 │   ├── useAiConfigStore.ts    — provider config + fallback flag
@@ -204,6 +207,7 @@ src/
     │   ├── WorldTickPanel.tsx
     │   ├── InitiativePanel.tsx
     │   ├── DiceRollerPanel.tsx
+    │   ├── MapWorkflowPanel.tsx
     │   └── SessionsPanel.tsx
     ├── entityActionView/      — entity node + sliders (HP, abilities, properties)
     └── locationView/          — location node + danger ring + slider
@@ -218,12 +222,15 @@ src/
 - ActionEdge → SceneBeat (связать timeline с Session model)
 - Auto-suggest end-session по word-count эвристике
 - 🏰 **Backlog** (R&D, не запланировано): процедурный dungeon-gen, hex world-map, fog of war, temporal world states, character sheets, PDF export, multiplayer, autonomous AI DM mode, cinematic NPC briefings, voice profiles, ambient audio per scene
+- 🗺️ **Следующий map-этап:** Campaign Map Asset v1 — хранить metadata Azgaar, выбранные burg ids и безопасный re-import diff; roads/states и fog-of-war не входят в первый срез
 
 ---
 
 ## Безопасность ключей
 
 API-ключи (OpenAI / Anthropic) хранятся **только в браузерном localStorage**. Этот демо — для локального прототипирования и личного использования. Перед любым публичным размещением (paid SaaS, прод-deploy) ключи нужно вынести в backend (OpenAI client сейчас работает с `dangerouslyAllowBrowser: true`, Anthropic с `anthropic-dangerous-direct-browser-access` header — это сигналы официальных SDK'ов о том же).
+
+Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
 
 ---
 
@@ -233,6 +240,7 @@ API-ключи (OpenAI / Anthropic) хранятся **только в брау�
 - [D&D 5.1 SRD](https://www.dndbeyond.com/sources/srd) — Open Gaming License
 - [donjon](https://donjon.bin.sh/) — генераторы для D&D
 - [Dungeon Scrawl](https://dungeonscrawl.com/) — редактор карт подземелий
+- [Azgaar’s Fantasy Map Generator](https://azgaar.github.io/Fantasy-Map-Generator/) — карта мира и официальный Minimal JSON handoff (MIT)
 
 ---
 

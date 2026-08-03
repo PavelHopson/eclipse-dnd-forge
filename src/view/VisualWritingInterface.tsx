@@ -2,7 +2,7 @@ import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
-import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiMeeple, GiSandsOfTime, GiSpellBook, GiSwordman } from 'react-icons/gi';
+import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiMeeple, GiSandsOfTime, GiSpellBook, GiSwordman, GiWorld } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -22,6 +22,7 @@ import DiceRollerPanel from './dnd/DiceRollerPanel';
 import DmAgentPanel from './dnd/DmAgentPanel';
 import EncounterGeneratorPanel from './dnd/EncounterGeneratorPanel';
 import InitiativePanel from './dnd/InitiativePanel';
+import MapWorkflowPanel from './dnd/MapWorkflowPanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
 import PlayModePanel from './dnd/PlayModePanel';
@@ -43,8 +44,11 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isDicePanelOpen, setIsDicePanelOpen] = useState(false);
   const [isSessionsPanelOpen, setIsSessionsPanelOpen] = useState(false);
   const [isPlayModePanelOpen, setIsPlayModePanelOpen] = useState(false);
+  const [isMapPanelOpen, setIsMapPanelOpen] = useState(false);
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
+  const selectedNodes = useModelStore(state => state.selectedNodes);
+  const entityNodes = useModelStore(state => state.entityNodes);
 
   // A location is "encounter-able" when exactly one location node is selected
   // on the Realms tab.
@@ -55,8 +59,6 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   })();
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
-  const selectedNodes = useModelStore(state => state.selectedNodes);
-  const entityNodes = useModelStore(state => state.entityNodes);
   const escapePressed = useKeyPress(["Escape"]);
 
   // A selection is "talkable" when exactly one entity node is currently selected.
@@ -237,6 +239,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsDicePanelOpen(false);
                         setIsSessionsPanelOpen(false);
                         setEncounterForLocationId(null);
+                        setIsMapPanelOpen(false);
                       }
                     }}
                     aria-label="Переключить режим игры"
@@ -256,6 +259,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setTalkingToEntityId(null);
                         setIsWorldTickPanelOpen(false);
                         setIsPlayModePanelOpen(false);
+                        setIsMapPanelOpen(false);
                       }
                     }}
                     aria-label="Toggle DM panel"
@@ -277,6 +281,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsInitiativePanelOpen(false);
                         setEncounterForLocationId(null);
                         setIsPlayModePanelOpen(false);
+                        setIsMapPanelOpen(false);
                       }
                     }}
                     aria-label="Toggle World Tick panel"
@@ -299,6 +304,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setEncounterForLocationId(null);
                         setIsDicePanelOpen(false);
                         setIsPlayModePanelOpen(false);
+                        setIsMapPanelOpen(false);
                       }
                     }}
                     aria-label="Переключить трекер инициативы"
@@ -322,6 +328,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setEncounterForLocationId(null);
                         setIsSessionsPanelOpen(false);
                         setIsPlayModePanelOpen(false);
+                        setIsMapPanelOpen(false);
                       }
                     }}
                     aria-label="Переключить панель кубиков"
@@ -345,6 +352,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                         setIsDicePanelOpen(false);
                         setEncounterForLocationId(null);
                         setIsPlayModePanelOpen(false);
+                        setIsMapPanelOpen(false);
                       }
                     }}
                     aria-label="Переключить панель сессий"
@@ -352,6 +360,32 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     <GiBookmarklet />
                   </Button>
                 </Tooltip>
+                {selectedTab === 'locations' && (
+                  <Tooltip content="Карта мира — создать в Azgaar и импортировать города" closeDelay={0}>
+                    <Button
+                      style={{ fontSize: 18, background: isMapPanelOpen ? '#7a1f1f' : undefined, color: isMapPanelOpen ? 'white' : undefined }}
+                      isIconOnly
+                      onClick={() => {
+                        const next = !isMapPanelOpen;
+                        setIsMapPanelOpen(next);
+                        if (next) {
+                          setIsNpcPanelOpen(false);
+                          setTalkingToEntityId(null);
+                          setIsDmPanelOpen(false);
+                          setIsWorldTickPanelOpen(false);
+                          setIsInitiativePanelOpen(false);
+                          setIsDicePanelOpen(false);
+                          setIsSessionsPanelOpen(false);
+                          setIsPlayModePanelOpen(false);
+                          setEncounterForLocationId(null);
+                        }
+                      }}
+                      aria-label="Открыть создание и импорт карты мира"
+                    >
+                      <GiWorld />
+                    </Button>
+                  </Tooltip>
+                )}
                 {selectedTab === 'entities' && selectedEntityId && (
                   <Tooltip content="Поговорить с этим персонажем (AI-агент)" closeDelay={0}>
                     <Button
@@ -366,6 +400,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsDmPanelOpen(false);
                           setIsWorldTickPanelOpen(false);
                           setIsPlayModePanelOpen(false);
+                          setIsMapPanelOpen(false);
                         }
                       }}
                       aria-label="Поговорить с выбранным персонажем"
@@ -388,6 +423,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsWorldTickPanelOpen(false);
                           setEncounterForLocationId(null);
                           setIsPlayModePanelOpen(false);
+                          setIsMapPanelOpen(false);
                         }
                       }}
                       aria-label="Toggle NPC generator"
@@ -411,6 +447,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                           setIsWorldTickPanelOpen(false);
                           setTalkingToEntityId(null);
                           setIsPlayModePanelOpen(false);
+                          setIsMapPanelOpen(false);
                         }
                       }}
                       aria-label="Переключить генератор энкаунтеров"
@@ -466,6 +503,15 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isPlayModePanelOpen && !isReadOnly && (
               <PlayModePanel onClose={() => setIsPlayModePanelOpen(false)} />
+            )}
+            {isMapPanelOpen && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
+              <MapWorkflowPanel
+                onClose={() => setIsMapPanelOpen(false)}
+                canvasCenter={{
+                  x: visualPanelRef.current.clientWidth / 2,
+                  y: visualPanelRef.current.clientHeight / 2,
+                }}
+              />
             )}
             {encounterForLocationId && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
               <EncounterGeneratorPanel

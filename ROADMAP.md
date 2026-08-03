@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-05-14** (slice 21 — автономный режим игры: оркестратор хода). Ветка: `main`. Remote: разархивирован 2026-05-13, push работает.
+Последнее обновление: **2026-08-03** (slice 23 — Azgaar world-map workflow). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,19 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 23 — Azgaar world-map workflow 🗺️
+*Отгружено 2026-08-03. Карта создаётся во внешнем специализированном редакторе, а кампания получает только проверенные location nodes.*
+
+- [x] **`src/model/dnd/azgaarImport.ts`** — чистый bounded adapter официального Full/Minimal JSON: лимит 8 МБ, проверка `pack.burgs`, finite coordinates/population, удаление control/bidi characters, collapse повторов внутри файла и детерминированный приоритет столиц/укреплений/портов/населения.
+- [x] **`src/view/dnd/MapWorkflowPanel.tsx`** — понятный трёхшаговый flow: скопировать campaign brief → открыть фиксированный официальный Azgaar URL → выбрать Minimal JSON и проверить preview до изменения кампании.
+- [x] **Безопасные дефолты** — 24 значимых места по умолчанию, расширенный предел 60, существующие location names не дублируются, `.map` не разбирается и upstream runtime/iframe/dependencies не добавляются.
+- [x] **Понятный результат** — preview показывает карту, версию, найденные места, дубли, пропуски и точное число новых узлов; повторный импорт того же файла добавляет 0 локаций.
+- [x] Исправлен соседний runtime-дефект `VisualWritingInterface`: `selectedNodes` теперь объявляется до вычисления `selectedLocationId`, поэтому locations view не попадает в temporal dead zone.
+- [x] Добавлен `.gitignore` для `node_modules`, build output, tsbuildinfo и локальных env-файлов.
+- [x] Deploy gate переведён с mutable `npm i`/action tags на lockfile-only `npm ci`, immutable action SHA и обязательные typecheck + importer tests + lint + production build до публикации.
+
+**Проверено локально:** synthetic importer suite (valid, duplicate, repeated, bounded modes, bidi-control, malformed, oversized и missing-schema JSON) зелёный на Node 24. Полный `npm ci` блокируется registry и не завершился за 300 секунд; typecheck/lint/build должны быть подтверждены CI до release.
 
 ### v0.1 slice 1 — D&D-ребрендинг точки входа
 *Коммиты: `856a022`, `5977879`, `5a2902c`, `7bee46d`.*
@@ -284,6 +297,7 @@
 Из изначального roadmap v0.3-v1.0, сохранено:
 
 - Процедурный генератор подземелий + hex-карта мира
+- Campaign Map Asset v1: versioned Azgaar metadata, selected burg ids, roads/states mapping и re-import diff
 - Fog of War для вида игрока
 - Temporal world states (древняя / разрушенная / текущая версия локации)
 - Upscale-пайплайн для портретов и карт

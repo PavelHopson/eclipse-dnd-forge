@@ -8,21 +8,35 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: dnd-pages-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 22
-      - run: npm i
-      - run: npm run build
+          cache: npm
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Build production bundle
+        run: npm run build
         env:
           BASE_URL: /
       - run: touch build/.nojekyll
       - name: Push
-        uses: s0/git-publish-subdir-action@develop
+        uses: s0/git-publish-subdir-action@ac113f6bfe8896e85a373534242c949a7ea74c98 # develop, pinned 2026-08-03
         env:
           REPO: self
           BRANCH: gh-pages
