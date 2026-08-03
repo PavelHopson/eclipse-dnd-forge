@@ -6,10 +6,11 @@ Eclipse AI Hub уже владеет production `ai.v1`: server-side provider cr
 model allowlist, service scopes, minute budgets, sanitized errors и aggregate-only
 telemetry. DnD Forge не должен создавать второй router.
 
-DnD BFF и browser consumer теперь реализованы в [`bff/`](../bff/README.md) и
-`src/model/auth/dndSession.ts`. Слой остаётся dark-by-default до настройки runtime,
-DNS/TLS, отдельных secrets и canary: production Pages не показывает managed provider
-без `VITE_DND_MANAGED_AI_ENABLED=true`.
+DnD BFF и browser consumer реализованы в [`bff/`](../bff/README.md) и
+`src/model/auth/dndSession.ts`. Public foundation активирован 2026-08-03: BFF доступен
+через `https://api.dnd.eclipse-forge.ru`, TLS и Chat Ed25519 JWKS проверены. Сам AI остаётся
+dark-by-default (`DND_BFF_AI_ENABLED=false`), а production Pages не показывает managed
+provider без `VITE_DND_MANAGED_AI_ENABLED=true`.
 
 Канонический межпроектный contract:
 [`eclipse-ai-hub/docs/dnd-forge-gateway-contract.md`](https://github.com/PavelHopson/eclipse-ai-hub/blob/master/docs/dnd-forge-gateway-contract.md).
@@ -51,13 +52,17 @@ DnD browser
 Ollama остаётся отдельным локальным режимом. Нельзя маскировать browser-direct вызов
 как production gateway.
 
-## Текущий blocker
+## Текущий production state
 
 Chat issuer, PKCE consumer, BFF sessions, JWKS validation, CSRF/origin boundary и
-атомарные single-process budgets реализованы и покрыты regression tests. До production
-остаются infrastructure gates: выделить `api.dnd.eclipse-forge.ru`, установить TLS,
-создать scoped AI Hub client, положить secrets в root-owned environment, выполнить
-rollback canary и 24-часовое SLO-наблюдение.
+атомарные single-process budgets реализованы и покрыты regression tests. DNS, TLS 1.2/1.3,
+Nginx, scoped AI Hub client и отдельный Chat signing key активированы; secret-файл Chat
+принадлежит `root:www-data` и доступен сервису только на чтение (`0640`). External smoke
+подтвердил HSTS, fixed HTTPS redirect, public-only Ed25519 JWKS, exact CORS и запрет TLS 1.1.
+
+До включения managed provider остаются authenticated PKCE canary реальным пользователем,
+AI rollback drill, 24-часовое SLO-наблюдение и отдельное решение server-owned campaign ACL.
+До этого `DND_BFF_AI_ENABLED=false`, frontend flag отсутствует, а BYOK остаётся demo-only.
 
 Известные ограничения до следующего security slice: single-process code/session/budget
 stores, отсутствие мгновенной cross-service revocation и server-owned campaign ACL.

@@ -3,9 +3,10 @@
 Server-side boundary between the public DnD browser, Eclipse Chat identity and
 the private Eclipse AI Hub `ai.v1` gateway.
 
-The BFF is implemented but dark by default. The GitHub Pages build does not show
-the managed provider until `VITE_DND_MANAGED_AI_ENABLED=true` is supplied after
-the runtime, DNS, TLS and service credentials pass the rollout gates.
+The public BFF foundation is active at `https://api.dnd.eclipse-forge.ru`, but AI is
+dark by default with `DND_BFF_AI_ENABLED=false`. The GitHub Pages build does not show
+the managed provider until `VITE_DND_MANAGED_AI_ENABLED=true` is supplied after the
+authenticated PKCE canary, rollback drill and 24-hour SLO gate.
 
 ## What it owns
 
@@ -43,7 +44,7 @@ DND_BFF_USER_REQUESTS_PER_15_MINUTES=60
 DND_BFF_USER_DAILY_TOKENS=250000
 DND_BFF_PRODUCT_DAILY_TOKENS=5000000
 DND_BFF_MAX_OUTPUT_TOKENS=2048
-DND_BFF_AI_ENABLED=true
+DND_BFF_AI_ENABLED=false
 ```
 
 The environment file must be `root:eclipse-dnd-bff`, mode `0640`. The dedicated
@@ -81,8 +82,8 @@ the BFF with the new token, verify traffic and then remove the old token.
 
 ## Browser activation
 
-Only after BFF/TLS smoke tests pass, build the static application with public,
-non-secret variables:
+Only after the authenticated PKCE, AI rollback and SLO gates pass, build the static
+application with public, non-secret variables:
 
 ```dotenv
 VITE_DND_MANAGED_AI_ENABLED=true
@@ -108,8 +109,10 @@ falls back to them.
 The first server rollout uses `deploy/scripts/bootstrap-dark.sh`. It installs one
 loopback-only Supervisor process, upserts only the scoped DnD gateway client,
 checks that DnD receives `403` from telemetry, confirms Chat still receives `200`,
-and restores both environment files if any smoke fails. It intentionally does
-not add Nginx, DNS, TLS, the Chat signing key or the frontend flag.
+and restores both environment files if any smoke fails. The later public foundation
+uses `audit-public-prereqs.sh`, `activate-public.sh` and `harden-chat-env.sh`: it adds
+TLS/Nginx and a VPS-generated Chat Ed25519 key with rollback, then makes the Chat env
+`root:www-data 0640`. It intentionally does not enable AI or the frontend flag.
 
 ## Current constraints
 

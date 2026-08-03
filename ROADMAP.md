@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 28 — Chat identity и dark-launched DnD AI BFF). Ветка: `main`.
+Последнее обновление: **2026-08-03** (slice 30 — public TLS и Chat identity foundation). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -48,6 +48,26 @@
 
 ## ✅ Сделано
 
+### v0.3 slice 30 — public TLS и Chat identity foundation
+*Активировано 2026-08-03 run `30821010733`; AI и managed provider UI намеренно остаются выключены.*
+
+- [x] `api.dnd.eclipse-forge.ru` резолвится в production VPS; Certbot выпустил отдельный
+  сертификат до 2026-11-01, HTTP фиксированно перенаправляет на HTTPS кодом `308`.
+- [x] Nginx публикует только `/health` и `/api/*`, проксирует в loopback `127.0.0.1:8820`,
+  очищает клиентский `X-Forwarded-For` и передаёт проверенный `X-Real-IP`.
+- [x] Разрешены TLS 1.2/1.3, TLS 1.1 отклоняется; включены HSTS, bounded body/timeouts и
+  security headers. Exact Origin получает CORS, чужой Origin получает `403` без allow header.
+- [x] Отдельный Ed25519 PKCS8 signing key сгенерирован только на VPS; public JWKS `200`
+  содержит один `OKP/Ed25519/EdDSA` ключ без private `d`, `jku` и `x5u`.
+- [x] Chat environment ужесточён до `root:www-data 0640`: service может читать, но не
+  менять secret-файл; parent-directory подтверждён как non-writable для `www-data`.
+- [x] Финальный read-only audit `30822005060` подтвердил оба Supervisor process, TLS site,
+  сертификат, Chat identity key, JWKS `200` и `aiEnabled=false`.
+
+**Следующий gate:** authenticated PKCE canary реальным пользователем, DnD AI rollback drill,
+24-часовое SLO-наблюдение и только затем frontend flag. Server-owned campaign ACL остаётся
+отдельным security slice; публичная инфраструктура не означает готовность paid AI.
+
 ### v0.3 slice 29 — loopback dark-launch runtime
 *Развёрнуто 2026-08-03 через Chat production trust path, run `30816478509`; публичный endpoint и managed UI остаются выключены.*
 
@@ -57,7 +77,8 @@
 - [x] Exchange rate limit больше не доверяет клиентскому `X-Forwarded-For`; `X-Real-IP` принимается только от loopback reverse proxy, regression проверяет 31 spoofed попытку.
 - [x] Production smoke подтвердил loopback health с `aiEnabled=false`, DnD models `200`, DnD telemetry `403`, Chat telemetry `200` и отклонение чужого Origin.
 
-**Остаётся закрыто:** DNS/TLS для `api.dnd.eclipse-forge.ru`, Nginx exposure, Chat identity signing key, synthetic canary и frontend flag.
+**Закрыто в slice 30:** DNS/TLS, Nginx exposure и Chat signing key. Остаются authenticated
+canary, AI rollback/SLO, server-owned campaign ACL и frontend flag.
 
 ### v0.3 slice 28 — Chat identity и dark-launched DnD AI BFF
 *Реализовано 2026-08-03; production activation намеренно закрыт инфраструктурными gates.*
@@ -78,8 +99,8 @@
   production UI и default provider не меняются.
 - [x] Добавлено 9 BFF/security tests; общий Node suite содержит 20 тестов.
 
-**Не заявлено production-ready:** нужны BFF runtime + DNS/TLS, отдельный AI Hub client,
-root-owned secrets, canary rollback и 24h SLO. Single-process session/code/budget stores,
+**Не заявлено production-ready для managed AI:** runtime, DNS/TLS, scoped client и
+root-owned secrets уже активированы, но нужны authenticated canary, AI rollback и 24h SLO. Single-process session/code/budget stores,
 revocation до одного часа и browser-local campaigns без server ACL остаются открытыми рисками.
 
 ### v0.3 slice 27 — изолированный GitHub Pages publisher
@@ -373,9 +394,9 @@ revocation до одного часа и browser-local campaigns без server A
 
 ### Открытые follow-ups
 
-- [ ] **P1 / M — активировать production AI gateway** — Chat issuer, DnD BFF и browser
-  consumer реализованы dark-by-default. Остались runtime/DNS/TLS, scoped AI Hub client,
-  root-owned secrets, rollback canary, 24h SLO и отдельный дизайн server-owned campaign ACL;
+- [ ] **P1 / M — завершить managed AI canary** — public BFF, Chat issuer, TLS и scoped
+  AI Hub client активны, но `DND_BFF_AI_ENABLED=false`, а managed provider скрыт. Остались
+  authenticated PKCE smoke, AI rollback drill, 24h SLO и отдельный дизайн server-owned campaign ACL;
   полный runbook — [`bff/README.md`](bff/README.md).
 - [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
 - [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
