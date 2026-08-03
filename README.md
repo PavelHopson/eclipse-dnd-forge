@@ -233,6 +233,8 @@ API-ключи OpenAI/Anthropic хранятся только в `sessionStorage
 
 Это уменьшает время и поверхность утечки, но не делает browser-direct cloud calls production-safe: XSS в том же origin всё ещё может прочитать session key. Перед paid SaaS или общедоступным production OpenAI/Anthropic нужно маршрутизировать через backend gateway с user auth, server-side secrets, rate limits, budgets и audit metadata без prompt/response logging. OpenAI client пока использует `dangerouslyAllowBrowser: true`, Anthropic — `anthropic-dangerous-direct-browser-access`; UI честно помечает этот режим как demo-only.
 
+Production topology уже выбрана: DnD BFF с Chat-issued identity вызывает существующий private `eclipse-ai-hub/ai.v1`; service token никогда не попадает в Vite/browser. Trust boundaries, budget policy и rollout gates описаны в [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md).
+
 Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
 
 GitHub Pages публикуется только после locked install без lifecycle scripts, typecheck, tests, lint и production build. Сборка выполняется с read-only token без сохранённых Git credentials; отдельный publisher получает проверенный immutable artifact и минимальный `contents: write`. Все используемые GitHub Actions зафиксированы полными commit SHA.

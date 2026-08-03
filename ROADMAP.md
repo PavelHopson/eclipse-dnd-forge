@@ -337,7 +337,7 @@
 
 ### Открытые follow-ups
 
-- [ ] **P1 / M — production AI gateway** — заменить browser-direct OpenAI/Anthropic на backend с user auth, server-side secrets, per-user budgets, rate limits и audit metadata без prompt/response logging. До этого cloud BYOK остаётся только demo-сценарием.
+- [ ] **P1 / M — production AI gateway** — runtime выбран: переиспользовать private `eclipse-ai-hub/ai.v1`, но только через DnD BFF. Chat владеет identity, DnD — campaign access и per-user budgets, AI Hub — provider credentials и service limits. Browser service token запрещён regression contract. Реализация BFF ждёт reviewed Chat-issued identity contract и чистое рабочее дерево Chat; полный план — [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md).
 - [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
 - [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
 

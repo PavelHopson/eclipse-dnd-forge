@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
+
+async function readSourceTree(directoryUrl) {
+    const entries = await readdir(directoryUrl, { withFileTypes: true });
+    const parts = await Promise.all(entries.map(async (entry) => {
+        const entryUrl = new URL(entry.name + (entry.isDirectory() ? "/" : ""), directoryUrl);
+        if (entry.isDirectory()) return readSourceTree(entryUrl);
+        if (!/\.(?:ts|tsx)$/.test(entry.name)) return "";
+        return readFile(entryUrl, "utf8");
+    }));
+    return parts.join("\n");
+}
 
 test("study messages do not render arbitrary HTML", async () => {
     const source = await readFile(new URL("../src/study/StudyMessage.tsx", import.meta.url), "utf8");
@@ -57,4 +68,19 @@ test("Pages deploy isolates the build from the write token", async () => {
     assert.match(publishJob, /test "\$\(cat build\/CNAME\)" = "dnd\.eclipse-forge\.ru"/);
     assert.match(publishJob, /-c "include\.path=\$\{credentials_config\}" push --force/);
     assert.doesNotMatch(publishJob, /config "http\..*extraheader"/);
+});
+
+test("browser code cannot receive an AI Hub service credential", async () => {
+    const [source, viteConfig, packageJson] = await Promise.all([
+        readSourceTree(new URL("../src/", import.meta.url)),
+        readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
+        readFile(new URL("../package.json", import.meta.url), "utf8"),
+    ]);
+    const browserSurface = `${source}\n${viteConfig}\n${packageJson}`;
+
+    assert.doesNotMatch(
+        browserSurface,
+        /AI_GATEWAY_SERVICE_TOKEN|ECLIPSE_AI_HUB_SERVICE_TOKEN|VITE_[A-Z0-9_]*SERVICE_TOKEN/,
+    );
+    assert.doesNotMatch(browserSurface, /\/v1\/telemetry/);
 });
