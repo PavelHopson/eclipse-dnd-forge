@@ -6,13 +6,15 @@ export default function AuthCallbackPage() {
     const started = useRef(false);
     const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
     const [message, setMessage] = useState("Подтверждаем безопасный вход…");
+    const [returnTo, setReturnTo] = useState<"/" | "/auth/canary">("/");
 
     useEffect(() => {
         if (started.current) return;
         started.current = true;
-        void completeEclipseSignIn().then(() => {
+        void completeEclipseSignIn().then((result) => {
+            setReturnTo(result.returnTo);
             setStatus("success");
-            setMessage("Готово. Eclipse AI подключён без передачи API-ключей в браузер.");
+            setMessage("Вход подтверждён. Пароль, токены и история чатов не передавались в DnD Forge.");
         }).catch((cause) => {
             setStatus("error");
             setMessage(cause instanceof Error ? cause.message : "Не удалось завершить вход");
@@ -27,8 +29,10 @@ export default function AuthCallbackPage() {
                     <h1>{status === "loading" ? "Подключаем DnD Forge" : status === "success" ? "Подключение готово" : "Вход не завершён"}</h1>
                     <p role={status === "error" ? "alert" : "status"}>{message}</p>
                     {status !== "loading" && (
-                        <Button color="primary" onPress={() => { window.location.hash = "/"; }}>
-                            {status === "success" ? "Перейти к кампании" : "Вернуться и попробовать снова"}
+                        <Button color="primary" onPress={() => { window.location.hash = returnTo; }}>
+                            {status === "success"
+                                ? returnTo === "/auth/canary" ? "Показать результат проверки" : "Перейти к кампании"
+                                : "Вернуться и попробовать снова"}
                         </Button>
                     )}
                 </CardBody>

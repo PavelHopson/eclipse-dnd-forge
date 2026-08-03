@@ -8,6 +8,10 @@ dark by default with `DND_BFF_AI_ENABLED=false`. The GitHub Pages build does not
 the managed provider until `VITE_DND_MANAGED_AI_ENABLED=true` is supplied after the
 authenticated PKCE canary, rollback drill and 24-hour SLO gate.
 
+Identity is a separate rollout gate. Production may set
+`VITE_DND_IDENTITY_CANARY_ENABLED=true` to expose `#/auth/canary`; this route creates and
+checks only the Chat-backed DnD session. It does not expose models or call the AI gateway.
+
 ## What it owns
 
 - Authorization Code + PKCE exchange with Eclipse Chat;
@@ -81,6 +85,15 @@ Do not grant `telemetry:read`. Rotate with a bounded two-token window, deploy
 the BFF with the new token, verify traffic and then remove the old token.
 
 ## Browser activation
+
+Run the authenticated identity check first at:
+
+```text
+https://dnd.eclipse-forge.ru/#/auth/canary
+```
+
+The Pages build may enable `VITE_DND_IDENTITY_CANARY_ENABLED=true` while both
+`VITE_DND_MANAGED_AI_ENABLED` and `DND_BFF_AI_ENABLED` remain false.
 
 Only after the authenticated PKCE, AI rollback and SLO gates pass, build the static
 application with public, non-secret variables:

@@ -387,3 +387,159 @@ a:hover {
   color: #5a4a3a;
   line-height: 1.55;
 }
+
+.identity-canary-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(122, 31, 31, 0.14), transparent 42%),
+    #201814;
+}
+
+.identity-canary-card {
+  width: min(560px, 100%);
+  border: 1px solid rgba(200, 183, 135, 0.55);
+  background: #fffaf0;
+  color: #2a1a1a;
+  box-shadow: 0 24px 60px rgba(19, 12, 9, 0.28);
+}
+
+.identity-canary-card [data-slot="base"] {
+  gap: 0;
+  padding: 28px;
+}
+
+.identity-canary-card h1 {
+  margin: 0 0 10px;
+  color: #2a1a1a;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(26px, 7vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.identity-canary-card p:not(.auth-callback-kicker) {
+  max-width: 58ch;
+  margin: 0 0 20px;
+  color: #5a4a3a;
+  line-height: 1.6;
+}
+
+.identity-canary-card .identity-error {
+  color: #9f1239;
+}
+
+.identity-canary-status {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin: 2px 0 18px;
+  border: 1px solid #7a8f62;
+  border-radius: 50%;
+  background: #eef3e8;
+}
+
+.identity-canary-status span {
+  width: 11px;
+  height: 19px;
+  border-right: 2px solid #365b33;
+  border-bottom: 2px solid #365b33;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.identity-canary-checks {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 24px;
+  padding: 16px 0;
+  border-top: 1px solid #dfd1ad;
+  border-bottom: 1px solid #dfd1ad;
+  list-style: none;
+  color: #3a2a2a;
+  font-size: 14px;
+}
+
+.identity-canary-checks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.identity-canary-checks li > span {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #5d774e;
+}
+
+.identity-canary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.identity-canary-actions button:active {
+  transform: translateY(1px);
+}
+
+.identity-canary-loading {
+  display: grid;
+  gap: 12px;
+  padding: 12px 0 4px;
+}
+
+.identity-canary-loading span {
+  height: 18px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #eadfc5 20%, #f8efd9 50%, #eadfc5 80%);
+  background-size: 220% 100%;
+  animation: identity-canary-shimmer 1.2s ease-in-out infinite;
+}
+
+.identity-canary-loading span:first-child {
+  width: 62%;
+  height: 38px;
+}
+
+.identity-canary-loading span:last-child {
+  width: 78%;
+}
+
+@keyframes identity-canary-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (max-width: 640px) {
+  .identity-canary-shell {
+    place-items: stretch;
+    padding: 12px;
+  }
+
+  .identity-canary-card {
+    align-self: center;
+  }
+
+  .identity-canary-card [data-slot="base"] {
+    padding: 22px 18px;
+  }
+
+  .identity-canary-actions {
+    display: grid;
+  }
+
+  .identity-canary-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .identity-canary-loading span {
+    animation: none;
+  }
+}

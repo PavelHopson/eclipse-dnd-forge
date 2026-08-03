@@ -8,6 +8,13 @@ export type DndSession = {
     user: { displayName: string };
 };
 
+export type EclipseSignInIntent = "managed" | "canary";
+
+export type EclipseSignInResult = {
+    session: DndSession;
+    returnTo: "/" | "/auth/canary";
+};
+
 export class DndApiError extends Error {
     constructor(
         message: string,
@@ -36,6 +43,7 @@ function publicEndpoint(value: string | undefined, fallback: string): string {
 
 export const DND_BFF_URL = publicEndpoint(import.meta.env.VITE_DND_BFF_URL, DEFAULT_BFF_URL);
 export const MANAGED_AI_ENABLED = import.meta.env.VITE_DND_MANAGED_AI_ENABLED === "true";
+export const IDENTITY_CANARY_ENABLED = import.meta.env.VITE_DND_IDENTITY_CANARY_ENABLED === "true";
 const CHAT_AUTHORIZE_URL = publicEndpoint(
     import.meta.env.VITE_ECLIPSE_CHAT_AUTHORIZE_URL,
     DEFAULT_CHAT_AUTHORIZE_URL,
@@ -83,14 +91,17 @@ async function parseResponse<T>(response: Response): Promise<T> {
     return body as T;
 }
 
-export async function beginEclipseSignIn(): Promise<void> {
-    if (!MANAGED_AI_ENABLED) {
+export async function beginEclipseSignIn(intent: EclipseSignInIntent = "managed"): Promise<void> {
+    if (intent === "managed" && !MANAGED_AI_ENABLED) {
         throw new DndApiError("Управляемый Eclipse AI ещё не включён оператором.", 503, "managed_ai_disabled");
+    }
+    if (intent === "canary" && !IDENTITY_CANARY_ENABLED) {
+        throw new DndApiError("Проверка безопасного входа сейчас недоступна.", 503, "identity_canary_disabled");
     }
     const verifier = randomBase64Url(48);
     const state = randomBase64Url(32);
     const codeChallenge = await sha256Base64Url(verifier);
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ verifier, state, createdAt: Date.now() }));
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ verifier, state, intent, createdAt: Date.now() }));
 
     const authorize = new URL(CHAT_AUTHORIZE_URL);
     authorize.searchParams.set("client_id", "eclipse-dnd-forge");
@@ -108,11 +119,11 @@ export function hasAuthorizationCallback(): boolean {
     return params.has("code") || params.has("state");
 }
 
-export async function completeEclipseSignIn(): Promise<DndSession> {
+export async function completeEclipseSignIn(): Promise<EclipseSignInResult> {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "";
     const returnedState = params.get("state") || "";
-    let stored: { verifier?: string; state?: string; createdAt?: number } = {};
+    let stored: { verifier?: string; state?: string; intent?: string; createdAt?: number } = {};
     try {
         stored = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || "{}");
     } catch {
@@ -138,7 +149,10 @@ export async function completeEclipseSignIn(): Promise<DndSession> {
     });
     const session = await parseResponse<DndSession>(response);
     cachedSession = session;
-    return session;
+    return {
+        session,
+        returnTo: stored.intent === "canary" ? "/auth/canary" : "/",
+    };
 }
 
 export async function getDndSession(force = false): Promise<DndSession | null> {

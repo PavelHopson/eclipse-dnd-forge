@@ -40,7 +40,7 @@ Eclipse DnD Forge — **операционная система мастера D
 
 При открытии нужно выбрать AI-провайдера. OpenAI/Anthropic key хранится только в `sessionStorage` текущей вкладки, не добавляется в URL и удаляется при закрытии вкладки. Он всё равно передаётся выбранному cloud provider, поэтому для demo нужен отдельный ограниченный key, а не основной production credential. Поддерживаются:
 
-- **Eclipse AI** (managed, инфраструктура активна, UI скрыт) — вход через Eclipse Chat, server-side secrets и per-user budgets; появится после authenticated canary, rollback и 24h SLO
+- **Eclipse AI** (managed, инфраструктура активна, UI скрыт) — вход через Eclipse Chat, server-side secrets и per-user budgets; отдельный `#/auth/canary` проверяет identity без включения моделей, а сам provider появится после authenticated canary, rollback и 24h SLO
 - **OpenAI** (cloud) — `gpt-4o` по умолчанию, нужен ключ с <https://platform.openai.com>
 - **Anthropic Claude** (cloud) — `claude-opus-4-7` по умолчанию, нужен ключ с <https://console.anthropic.com>
 - **Ollama** (self-hosted) — локальный daemon, ключ не нужен. Запускать с `OLLAMA_ORIGINS="*"` чтобы браузер мог достучаться
@@ -234,7 +234,7 @@ API-ключи OpenAI/Anthropic хранятся только в `sessionStorage
 
 Это уменьшает время и поверхность утечки, но не делает browser-direct cloud calls production-safe: XSS в том же origin всё ещё может прочитать session key. Перед paid SaaS или общедоступным production OpenAI/Anthropic нужно маршрутизировать через backend gateway с user auth, server-side secrets, rate limits, budgets и audit metadata без prompt/response logging. OpenAI client пока использует `dangerouslyAllowBrowser: true`, Anthropic — `anthropic-dangerous-direct-browser-access`; UI честно помечает этот режим как demo-only.
 
-Production foundation активирован dark-by-default: `api.dnd.eclipse-forge.ru` работает через TLS 1.2/1.3 и loopback BFF, Chat публикует отдельный Ed25519 JWKS, а scoped service token остаётся только на сервере. AI и managed UI всё ещё выключены до authenticated PKCE canary, rollback drill и 24h SLO. Trust boundaries и budget policy описаны в [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md), deployment gates — в [`bff/README.md`](bff/README.md).
+Production foundation активирован dark-by-default: `api.dnd.eclipse-forge.ru` работает через TLS 1.2/1.3 и loopback BFF, Chat публикует отдельный Ed25519 JWKS, а scoped service token остаётся только на сервере. Служебный `#/auth/canary` может проверить PKCE и защищённую DnD session независимо от AI. Сам AI и managed provider UI всё ещё выключены до authenticated canary, rollback drill и 24h SLO. Trust boundaries и budget policy описаны в [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md), deployment gates — в [`bff/README.md`](bff/README.md).
 
 Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
 

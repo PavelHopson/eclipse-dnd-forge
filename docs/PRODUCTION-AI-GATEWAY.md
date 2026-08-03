@@ -64,5 +64,10 @@ Nginx, scoped AI Hub client и отдельный Chat signing key активи�
 AI rollback drill, 24-часовое SLO-наблюдение и отдельное решение server-owned campaign ACL.
 До этого `DND_BFF_AI_ENABLED=false`, frontend flag отсутствует, а BYOK остаётся demo-only.
 
+Для canary выделен независимый build gate: `VITE_DND_IDENTITY_CANARY_ENABLED=true` открывает
+только `#/auth/canary` и PKCE/session flow. Он не включает `VITE_DND_MANAGED_AI_ENABLED`, не
+показывает managed provider и не выполняет AI-запросы. Это позволяет проверить реального
+пользователя до изменения AI traffic percentage.
+
 Известные ограничения до следующего security slice: single-process code/session/budget
 stores, отсутствие мгновенной cross-service revocation и server-owned campaign ACL.

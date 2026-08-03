@@ -107,3 +107,21 @@ test("managed sign-in uses PKCE and the BFF owns cookie, CSRF and service creden
     assert.match(bffConfig, /DND_AI_GATEWAY_SERVICE_TOKEN/);
     assert.doesNotMatch(bffConfig, /VITE_[A-Z0-9_]*SERVICE_TOKEN/);
 });
+
+test("identity canary can validate PKCE without enabling managed AI", async () => {
+    const [browserAuth, canaryPage, launcher, workflow] = await Promise.all([
+        readFile(new URL("../src/model/auth/dndSession.ts", import.meta.url), "utf8"),
+        readFile(new URL("../src/view/auth/IdentityCanaryPage.tsx", import.meta.url), "utf8"),
+        readFile(new URL("../src/view/Launcher.tsx", import.meta.url), "utf8"),
+        readFile(new URL("../.github/workflows/deploy.yml", import.meta.url), "utf8"),
+    ]);
+
+    assert.match(browserAuth, /intent === "managed" && !MANAGED_AI_ENABLED/);
+    assert.match(browserAuth, /intent === "canary" && !IDENTITY_CANARY_ENABLED/);
+    assert.match(canaryPage, /beginEclipseSignIn\("canary"\)/);
+    assert.match(canaryPage, /Managed AI остался выключен/);
+    assert.doesNotMatch(canaryPage, /dndApiJson|EclipseGatewayProvider|chat\/completions/);
+    assert.match(launcher, /\{MANAGED_AI_ENABLED && <Tab key="eclipse"/);
+    assert.match(workflow, /VITE_DND_IDENTITY_CANARY_ENABLED: true/);
+    assert.doesNotMatch(workflow, /VITE_DND_MANAGED_AI_ENABLED:\s*true/);
+});

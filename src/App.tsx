@@ -7,6 +7,7 @@ import { useStudyStore } from './study/StudyModel';
 import Launcher from './view/Launcher';
 import VisualWritingInterface from './view/VisualWritingInterface';
 import AuthCallbackPage from './view/auth/AuthCallbackPage';
+import IdentityCanaryPage from './view/auth/IdentityCanaryPage';
 
 
 
@@ -32,6 +33,10 @@ function App() {
     {
       path: 'auth/callback',
       element: <AuthCallbackPage />
+    },
+    {
+      path: 'auth/canary',
+      element: <IdentityCanaryPage />
     },
     {
       path: '/',

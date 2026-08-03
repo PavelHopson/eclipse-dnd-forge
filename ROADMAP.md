@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 30 — public TLS и Chat identity foundation). Ветка: `main`.
+Последнее обновление: **2026-08-03** (slice 31 — независимый identity canary gate). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,28 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 31 — независимый identity canary gate
+*Реализовано 2026-08-03; production canary должен быть подтверждён реальным пользователем после deploy.*
+
+- [x] Устранён rollout deadlock: PKCE вход больше не требует предварительно включать managed AI.
+  Отдельный `VITE_DND_IDENTITY_CANARY_ENABLED` разрешает только identity flow, тогда как
+  модели по-прежнему зависят от `VITE_DND_MANAGED_AI_ENABLED` и остаются скрыты.
+- [x] Добавлен служебный маршрут `#/auth/canary` с понятными loading, ready, error и success
+  состояниями, mobile CTA, keyboard focus через NextUI и `prefers-reduced-motion`.
+- [x] Authorization intent хранится рядом с PKCE verifier только в текущей tab session;
+  callback возвращает canary на экран результата, не ослабляя state/TTL/code validation.
+- [x] Сетевые ошибки нормализуются в понятный текст без вывода внутренних stack, token или URL.
+- [x] Regression contract подтверждает, что production Pages включает identity canary, но не
+  `VITE_DND_MANAGED_AI_ENABLED`; canary page не импортирует AI provider и не вызывает completions.
+
+**Проверено локально:** typecheck, lint, 25/25 tests и production build зелёные. Desktop и
+mobile 390×844 проверены в реальном браузере; локальный preview ожидаемо не проходит exact
+production CORS, поэтому полный authenticated результат проверяется только на production origin.
+
+**Следующий gate:** production deploy → authenticated PKCE canary реальным пользователем →
+AI rollback drill → 24-часовое SLO-наблюдение. `DND_BFF_AI_ENABLED=false`, managed provider
+в launcher отсутствует.
 
 ### v0.3 slice 30 — public TLS и Chat identity foundation
 *Активировано 2026-08-03 run `30821010733`; AI и managed provider UI намеренно остаются выключены.*
@@ -394,9 +416,9 @@ revocation до одного часа и browser-local campaigns без server A
 
 ### Открытые follow-ups
 
-- [ ] **P1 / M — завершить managed AI canary** — public BFF, Chat issuer, TLS и scoped
-  AI Hub client активны, но `DND_BFF_AI_ENABLED=false`, а managed provider скрыт. Остались
-  authenticated PKCE smoke, AI rollback drill, 24h SLO и отдельный дизайн server-owned campaign ACL;
+- [ ] **P1 / M — завершить managed AI canary** — public BFF, Chat issuer, TLS, scoped
+  AI Hub client и отдельный `#/auth/canary` активны, но `DND_BFF_AI_ENABLED=false`, а managed
+  provider скрыт. Остались authenticated PKCE smoke, AI rollback drill, 24h SLO и отдельный дизайн server-owned campaign ACL;
   полный runbook — [`bff/README.md`](bff/README.md).
 - [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
 - [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
