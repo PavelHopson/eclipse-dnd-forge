@@ -63,6 +63,8 @@
 
 **Диагностика release:** первый run `30805503338` безопасно остановился до изменения production, потому что checkout v7 хранит token в временном credential file, а не в local `extraheader`. Коммит `1b839c1` передаёт этот файл только одному `git push` через `-c include.path=...`; token не копируется в generated repository config и удаляется checkout post-step.
 
+**HTTPS:** после approved certificate включён GitHub Pages `https_enforced=true`. HTTPS production отвечает `200 OK`; API настройку подтверждает. HTTP edge сразу после изменения ещё отдавал кэшированный `200`, поэтому фактический redirect требует повторной проверки после propagation.
+
 ### v0.3 slice 26 — session-only BYOK и mobile workspace
 *Отгружено 2026-08-03 после security и responsive-аудита публичной demo.*
 
