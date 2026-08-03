@@ -17,6 +17,124 @@
   outline: 0;
 }
 
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.launcher-shell {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #1a0f1a 0%, #2a1a1a 50%, #1a0f0f 100%);
+}
+
+.launcher-provider-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.launcher-provider-fields {
+  display: flex;
+  gap: 8px;
+}
+
+.credential-boundary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #d7c69f;
+  border-radius: 8px;
+  background: #fff9e9;
+  color: #5a4a3a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.credential-boundary button {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.launcher-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dnd-workspace {
+  display: flex;
+  height: 100dvh;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dnd-workspace-main {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: row;
+}
+
+.dnd-session-editor {
+  position: relative;
+  width: 50%;
+  min-width: 0;
+  height: 100%;
+  overflow: auto;
+  padding: 60px 50px 20px;
+  border-radius: 2px;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.dnd-visual-column {
+  position: relative;
+  display: flex;
+  width: 50%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.dnd-visual-panel {
+  position: relative;
+  min-height: 280px;
+  flex: 1 1 auto;
+  border-bottom: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  background: #f3f4f6;
+}
+
+.dnd-mobile-view-switcher {
+  display: none;
+}
+
+.dnd-sync-actions {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+}
+
 :focus-visible {
   outline: 3px solid #7a1f1f;
   outline-offset: 3px;
@@ -40,6 +158,87 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .launcher-shell {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .launcher-provider-fields,
+  .credential-boundary,
+  .launcher-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .credential-boundary button {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .dnd-mobile-view-switcher {
+    display: grid;
+    z-index: 1100;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 6px;
+    border-bottom: 1px solid #d4c5a0;
+    background: #f7efd9;
+  }
+
+  .dnd-mobile-view-switcher button {
+    min-height: 40px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #665849;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .dnd-mobile-view-switcher button.is-active {
+    border-color: #c9b98f;
+    background: #fffdf7;
+    color: #2a1a1a;
+    box-shadow: 0 1px 4px rgba(42, 26, 26, 0.12);
+  }
+
+  .dnd-workspace-main {
+    position: relative;
+  }
+
+  .dnd-session-editor,
+  .dnd-visual-column {
+    width: 100%;
+  }
+
+  .dnd-session-editor {
+    padding: 58px 20px 24px;
+  }
+
+  .mobile-pane-story .dnd-visual-column,
+  .mobile-pane-world .dnd-session-editor {
+    display: none;
+  }
+
+  .dnd-sync-actions {
+    top: auto;
+    bottom: 350px;
+    left: 8px;
+    transform: none;
+  }
+
+  .dnd-overlay-panel {
+    top: 60px !important;
+    right: 12px !important;
+    width: calc(100vw - 24px) !important;
+    max-height: calc(100% - 72px) !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 

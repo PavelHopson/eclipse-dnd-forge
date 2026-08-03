@@ -21,7 +21,7 @@ D&D, где каждая сущность на визуальном графе �
 
 ЛОКАЛЬНЫЙ ПУТЬ:  E:\projects\eclipse-dnd-forge
 РЕПОЗИТОРИЙ:     https://github.com/PavelHopson/eclipse-dnd-forge  (ветка main)
-ДЕМО:            https://pavelhopson.github.io/eclipse-dnd-forge/
+ДЕМО:            https://dnd.eclipse-forge.ru/
 
 СТЕК
 React 19 · TypeScript · Vite 5 · Tailwind · @xyflow/react · Slate ·
@@ -53,8 +53,9 @@ Zustand (6 сторов) · Zod 3 · OpenAI / Anthropic / Ollama под един
   `npm run build` может быть недоступен. Деплойный CI билдит нормально.
   Поэтому: тщательный ручной TS-аудит каждого изменённого файла перед
   коммитом (strict mode, noUnusedLocals/Parameters включены в tsconfig).
-- Все ключи (OpenAI/Anthropic) — только в браузерном localStorage.
-  dangerouslyAllowBrowser — норм для прототипа, не для прода.
+- Все cloud keys (OpenAI/Anthropic) — только в sessionStorage текущей вкладки,
+  никогда не в URL/localStorage/Vite env. Browser-direct доступ остаётся demo-only;
+  production требует backend gateway.
 
 ЯЗЫК
 UI, README, ROADMAP — полностью на русском (slice 20). Намеренно на английском

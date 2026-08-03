@@ -145,7 +145,7 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
           useModelStore.getState().setFilteredActionsSegment(null, null);
           useModelStore.getState().setHighlightedActionsSegment(null, null);
         }
-      }} className={textIsBeingEdited ? "loading" : ""} style={{ position: 'relative', background: 'white', height: '100%', width: '50%', paddingTop: 60, paddingLeft: 50, paddingRight: 50, borderRadius: '2px', boxShadow: '0 0 10px rgba(0,0,0,0.1)', overflow: 'scroll' }}>
+      }} id="dnd-session-editor" className={`${textIsBeingEdited ? "loading " : ""}dnd-session-editor`}>
         <Slate onSelectionChange={(selection) => {
           if (!isReadOnly && selection) {
             const startPoint = selection?.anchor;

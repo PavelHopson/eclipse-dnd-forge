@@ -70,6 +70,7 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

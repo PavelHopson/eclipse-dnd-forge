@@ -86,6 +86,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

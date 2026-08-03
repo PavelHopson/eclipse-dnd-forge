@@ -125,6 +125,7 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

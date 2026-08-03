@@ -4,7 +4,7 @@
 
 ### AI Campaign Manager — настолка с ИИ-агентами и картой мира
 
-**🌐 Live demo: <https://pavelhopson.github.io/eclipse-dnd-forge/>**
+**🌐 Live demo: <https://dnd.eclipse-forge.ru/>**
 
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Статус:** ✅ v0.2 готова — 19 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). 4 типа AI-агентов, 3 провайдера, persistent living-world loop, полный набор DM-инструментов. Интерфейс полностью на русском.
+> **Статус:** ✅ v0.3 — 26 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Azgaar workflow и responsive workspace. Интерфейс полностью на русском.
 
 </div>
 
@@ -36,9 +36,9 @@ Eclipse DnD Forge — **операционная система мастера D
 
 ### Попробовать online
 
-**<https://pavelhopson.github.io/eclipse-dnd-forge/>**
+**<https://dnd.eclipse-forge.ru/>**
 
-При открытии нужно выбрать AI-провайдера (по умолчанию OpenAI) и ввести API-ключ. Ключ хранится **только в локальном localStorage**, никуда не уходит. Поддерживаются:
+При открытии нужно выбрать AI-провайдера. OpenAI/Anthropic key хранится только в `sessionStorage` текущей вкладки, не добавляется в URL и удаляется при закрытии вкладки. Он всё равно передаётся выбранному cloud provider, поэтому для demo нужен отдельный ограниченный key, а не основной production credential. Поддерживаются:
 
 - **OpenAI** (cloud) — `gpt-4o` по умолчанию, нужен ключ с <https://platform.openai.com>
 - **Anthropic Claude** (cloud) — `claude-opus-4-7` по умолчанию, нужен ключ с <https://console.anthropic.com>
@@ -55,7 +55,7 @@ npm install
 npm run dev
 ```
 
-Откроется на `http://localhost:5173`. Provider config переживает reload (localStorage).
+Откроется на `http://localhost:5173`. Несекретные provider settings переживают reload через `localStorage`; cloud keys переживают только reload текущей вкладки через `sessionStorage`.
 
 ---
 
@@ -156,7 +156,7 @@ JSONPrompt────→ │  generateStructured()       │
 | State | Zustand (6 store: model, agent, world-events, sessions, initiative, ai-config) |
 | AI | OpenAI / Anthropic / Ollama под единым `AiProvider` |
 | Validation | Zod 3.x + in-house `zodToJsonSchema` для cross-provider structured outputs |
-| Storage | localStorage (config, sessions, world events, initiative — всё persisted) |
+| Storage | `localStorage` для несекретного config/sessions/events/initiative; `sessionStorage` только для cloud API keys |
 
 ---
 
@@ -169,6 +169,7 @@ src/
 │   ├── dice.ts                — parser + roller для dice expressions
 │   ├── ai/
 │   │   ├── types.ts           — AiProvider interface (streamChat + generateStructured)
+│   │   ├── credentialStorage.ts — session-only cloud keys + fail-closed legacy migration
 │   │   ├── OpenAIProvider.ts  — response_format + zodResponseFormat
 │   │   ├── AnthropicProvider.ts — tool-use via input_schema
 │   │   ├── OllamaProvider.ts  — format: "json" + NDJSON streaming
@@ -228,7 +229,9 @@ src/
 
 ## Безопасность ключей
 
-API-ключи (OpenAI / Anthropic) хранятся **только в браузерном localStorage**. Этот демо — для локального прототипирования и личного использования. Перед любым публичным размещением (paid SaaS, прод-deploy) ключи нужно вынести в backend (OpenAI client сейчас работает с `dangerouslyAllowBrowser: true`, Anthropic с `anthropic-dangerous-direct-browser-access` header — это сигналы официальных SDK'ов о том же).
+API-ключи OpenAI/Anthropic хранятся только в `sessionStorage`: они не попадают в campaign URL, очищаются по кнопке или при закрытии вкладки. Старый Anthropic key автоматически удаляется из persistent config и однократно переносится в текущую session; старая ссылка с `?k=` очищается и возвращает пользователя в launcher для безопасного повторного ввода. `VITE_OPENAI_API_KEY` намеренно не поддерживается, потому что Vite встраивает такие значения в публичный bundle.
+
+Это уменьшает время и поверхность утечки, но не делает browser-direct cloud calls production-safe: XSS в том же origin всё ещё может прочитать session key. Перед paid SaaS или общедоступным production OpenAI/Anthropic нужно маршрутизировать через backend gateway с user auth, server-side secrets, rate limits, budgets и audit metadata без prompt/response logging. OpenAI client пока использует `dangerouslyAllowBrowser: true`, Anthropic — `anthropic-dangerous-direct-browser-access`; UI честно помечает этот режим как demo-only.
 
 Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
 

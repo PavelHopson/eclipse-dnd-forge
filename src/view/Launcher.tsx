@@ -1,5 +1,4 @@
 import { Button, Card, CardBody, CardHeader, Checkbox, Divider, Input, Tab, Tabs } from "@nextui-org/react";
-import { useState } from "react";
 import { GiCrossedSwords } from "react-icons/gi";
 import { useModelStore } from '../model/Model';
 import { CAMPAIGN_TEMPLATES, CampaignTemplate, seedToNodes } from "../model/dnd/campaignTemplates";
@@ -9,7 +8,6 @@ import { useAiConfigStore } from "../store/useAiConfigStore";
 import { AiProviderId } from "../model/ai/types";
 
 export default function Launcher() {
-  const [accessKey, setAccessKey] = useState('');
   const setOpenAIKey = useModelStore((state) => state.setOpenAIKey);
   const resetModel = useModelStore((state) => state.reset);
   const resetStudyModel = useStudyStore((state) => state.reset);
@@ -18,6 +16,7 @@ export default function Launcher() {
   const ollamaBaseUrl = useAiConfigStore((s) => s.ollamaBaseUrl);
   const ollamaModel = useAiConfigStore((s) => s.ollamaModel);
   const openaiModel = useAiConfigStore((s) => s.openaiModel);
+  const openaiApiKey = useAiConfigStore((s) => s.openaiApiKey);
   const anthropicApiKey = useAiConfigStore((s) => s.anthropicApiKey);
   const anthropicModel = useAiConfigStore((s) => s.anthropicModel);
   const useFallback = useAiConfigStore((s) => s.useFallback);
@@ -25,16 +24,18 @@ export default function Launcher() {
   const setOllamaBaseUrl = useAiConfigStore((s) => s.setOllamaBaseUrl);
   const setOllamaModel = useAiConfigStore((s) => s.setOllamaModel);
   const setOpenaiModel = useAiConfigStore((s) => s.setOpenaiModel);
+  const setOpenaiApiKey = useAiConfigStore((s) => s.setOpenaiApiKey);
   const setAnthropicApiKey = useAiConfigStore((s) => s.setAnthropicApiKey);
   const setAnthropicModel = useAiConfigStore((s) => s.setAnthropicModel);
   const setUseFallback = useAiConfigStore((s) => s.setUseFallback);
+  const clearCloudCredentials = useAiConfigStore((s) => s.clearCloudCredentials);
 
   // Campaign-start is gated differently per provider:
-  //  - openai: needs an API key (entered now or via VITE_OPENAI_API_KEY)
+  //  - openai: needs a key entered for the current browser tab
   //  - ollama: no key needed; local daemon is the dependency
   //  - anthropic: needs an Anthropic key
   const startGated =
-    (providerId === "openai" && accessKey.length === 0) ||
+    (providerId === "openai" && openaiApiKey.length === 0) ||
     (providerId === "anthropic" && anthropicApiKey.length === 0);
 
   function startCampaign(template: CampaignTemplate) {
@@ -53,20 +54,12 @@ export default function Launcher() {
     VisualRefresher.getInstance().previousText = useModelStore.getState().text;
     VisualRefresher.getInstance().onUpdate();
 
-    window.location.hash = '/free-form' + `?k=${btoa(accessKey)}`;
+    window.location.hash = '/free-form';
   }
 
   return (
     <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        padding: 24,
-        background: 'linear-gradient(135deg, #1a0f1a 0%, #2a1a1a 50%, #1a0f0f 100%)',
-      }}
+      className="launcher-shell"
     >
       <Card style={{ maxWidth: 920, width: '100%', background: '#fdf6e3' }}>
         <CardHeader style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '20px 24px 8px' }}>
@@ -90,6 +83,7 @@ export default function Launcher() {
               onSelectionChange={(k) => setProviderId(k as AiProviderId)}
               color="primary"
               variant="bordered"
+              className="launcher-provider-tabs"
               classNames={{ tabList: 'bg-white' }}
             >
               <Tab key="openai" title="OpenAI (облако)" />
@@ -104,7 +98,7 @@ export default function Launcher() {
                   <a href="https://platform.openai.com/account/api-keys" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>
                     platform.openai.com
                   </a>
-                  . Ключ хранится только в браузере.
+                  . Ключ хранится только до закрытия этой вкладки и не добавляется в URL.
                 </p>
                 <Input
                   size="sm"
@@ -112,9 +106,10 @@ export default function Launcher() {
                   label="API-ключ OpenAI"
                   placeholder="sk-..."
                   type="password"
-                  onChange={(e) => {
-                    setAccessKey(e.target.value);
-                    setOpenAIKey(e.target.value);
+                  value={openaiApiKey}
+                  onValueChange={(value) => {
+                    setOpenaiApiKey(value);
+                    setOpenAIKey(value);
                   }}
                 />
                 <Input
@@ -133,7 +128,7 @@ export default function Launcher() {
                   Общается с локальным <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — для диалогов NPC, нарратива DM, world tick и (через <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>format: "json"</code>) извлечения сущностей + генерации NPC. Качество структурированного вывода зависит от модели — instruction-tuned модели (llama 3.x, qwen) справляются хорошо.
                   Запускайте Ollama с <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="*"</code>, чтобы браузер мог достучаться.
                 </p>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="launcher-provider-fields">
                   <Input
                     size="sm"
                     variant="faded"
@@ -160,9 +155,10 @@ export default function Launcher() {
                   label="API-ключ OpenAI (опционально, для fallback chain)"
                   placeholder="sk-... — опционально"
                   type="password"
-                  onChange={(e) => {
-                    setAccessKey(e.target.value);
-                    setOpenAIKey(e.target.value);
+                  value={openaiApiKey}
+                  onValueChange={(value) => {
+                    setOpenaiApiKey(value);
+                    setOpenAIKey(value);
                   }}
                 />
               </div>
@@ -199,9 +195,10 @@ export default function Launcher() {
                   label="API-ключ OpenAI (опционально, для fallback chain)"
                   placeholder="sk-... — опционально"
                   type="password"
-                  onChange={(e) => {
-                    setAccessKey(e.target.value);
-                    setOpenAIKey(e.target.value);
+                  value={openaiApiKey}
+                  onValueChange={(value) => {
+                    setOpenaiApiKey(value);
+                    setOpenAIKey(value);
                   }}
                 />
               </div>
@@ -217,6 +214,22 @@ export default function Launcher() {
                 <strong>Включить fallback chain</strong> — если активный провайдер упадёт (rate-limit, daemon недоступен, ключ просрочен), запросы автоматически уйдут на следующий настроенный. Порядок: активный, затем остальные с валидной конфигурацией.
               </span>
             </Checkbox>
+            <div className="credential-boundary" role="note">
+              <strong>Ключи только на эту вкладку.</strong>
+              <span> Они удаляются при закрытии вкладки. Не используйте основной production key: публичная demo всё ещё обращается к cloud API прямо из браузера.</span>
+              {(openaiApiKey || anthropicApiKey) && (
+                <Button
+                  size="sm"
+                  variant="bordered"
+                  onClick={() => {
+                    clearCloudCredentials();
+                    setOpenAIKey("");
+                  }}
+                >
+                  Удалить облачные ключи
+                </Button>
+              )}
+            </div>
           </div>
         </CardBody>
         <Divider />
@@ -281,7 +294,7 @@ export default function Launcher() {
           </div>
         </CardBody>
         <Divider />
-        <CardBody style={{ padding: '12px 24px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <CardBody className="launcher-footer" style={{ padding: '12px 24px' }}>
           <span style={{ fontSize: 11, color: '#7a6a5a' }}>
             Форк VisualStoryWriting (MIT). Стек: React 19 · @xyflow/react · Slate · OpenAI · Anthropic · Ollama.
           </span>

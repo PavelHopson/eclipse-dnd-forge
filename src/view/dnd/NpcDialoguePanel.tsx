@@ -106,6 +106,7 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

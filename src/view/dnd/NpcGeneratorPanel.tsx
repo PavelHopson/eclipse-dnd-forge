@@ -59,6 +59,7 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

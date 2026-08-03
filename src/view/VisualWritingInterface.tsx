@@ -45,6 +45,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isSessionsPanelOpen, setIsSessionsPanelOpen] = useState(false);
   const [isPlayModePanelOpen, setIsPlayModePanelOpen] = useState(false);
   const [isMapPanelOpen, setIsMapPanelOpen] = useState(false);
+  const [mobilePane, setMobilePane] = useState<'story' | 'world'>('story');
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
   const selectedNodes = useModelStore(state => state.selectedNodes);
@@ -209,12 +210,34 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <div style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, height: '80%' }}>
+    <div className='dnd-workspace'>
+      <div className='dnd-mobile-view-switcher' role='tablist' aria-label='Рабочая область кампании'>
+        <button
+          type='button'
+          role='tab'
+          aria-selected={mobilePane === 'story'}
+          aria-controls='dnd-session-editor'
+          className={mobilePane === 'story' ? 'is-active' : ''}
+          onClick={() => setMobilePane('story')}
+        >
+          Текст сессии
+        </button>
+        <button
+          type='button'
+          role='tab'
+          aria-selected={mobilePane === 'world'}
+          aria-controls='dnd-world-panel'
+          className={mobilePane === 'world' ? 'is-active' : ''}
+          onClick={() => setMobilePane('world')}
+        >
+          Мир и инструменты
+        </button>
+      </div>
+      <div className={`dnd-workspace-main mobile-pane-${mobilePane}`}>
         {props.children}
         <TextEditor />
-        <div className='flex flex-col' style={{ position: 'relative' }}>
-          <div style={{ width: '50vw', height: '100%', background: '#F3F4F6', borderLeft: '1px solid #DDDDDF', borderBottom: '1px solid #DDDDDF' }} ref={visualPanelRef}>
+        <div className='dnd-visual-column'>
+          <div id='dnd-world-panel' className='dnd-visual-panel' ref={visualPanelRef}>
             {selectedTab === "entities" && <ReactFlowProvider><EntitiesEditor /></ReactFlowProvider>}
             {selectedTab === "locations" && <ReactFlowProvider><LocationsEditor /></ReactFlowProvider>}
             <Tabs keyboardActivation='manual' onSelectionChange={setSelectedTabLogged as any} selectedKey={selectedTab} color='primary' variant='bordered' className='dnd-canvas-tabs' classNames={{ tabList: 'bg-white', }}>
@@ -526,7 +549,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
           </div>
           <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
-          {!isReadOnly && <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'absolute', left: 0, top: '50%', transform: 'translate(-50%, -50%)', fontSize: 22 }}>
+          {!isReadOnly && <div className='dnd-sync-actions'>
             <Tooltip content="Обновить граф из текста" closeDelay={0}>
               <Button style={{ fontSize: 22 }} color={isStale ? "primary": "default"} isLoading={isExtracting} isIconOnly radius={'full'}
                 onClick={() => {

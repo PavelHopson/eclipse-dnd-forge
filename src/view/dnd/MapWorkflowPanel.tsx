@@ -115,6 +115,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
 
     return (
         <section
+            className="dnd-overlay-panel"
             aria-labelledby="map-workflow-title"
             style={{
                 position: "absolute",

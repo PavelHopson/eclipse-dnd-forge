@@ -55,6 +55,7 @@ export default function PlayModePanel({ onClose }: PlayModePanelProps) {
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

@@ -4,6 +4,12 @@ import { OpenAIProvider } from "../model/ai/OpenAIProvider";
 import { OllamaProvider } from "../model/ai/OllamaProvider";
 import { AnthropicProvider } from "../model/ai/AnthropicProvider";
 import { FallbackProvider } from "../model/ai/FallbackProvider";
+import {
+    clearSessionCredentials,
+    CloudCredentials,
+    loadSessionCredentials,
+    persistSessionCredentials,
+} from "../model/ai/credentialStorage";
 
 const STORAGE_KEY = "eclipse_dnd_ai_config_v2";
 
@@ -12,7 +18,6 @@ interface PersistedConfig {
     ollamaBaseUrl: string;
     ollamaModel: string;
     openaiModel: string;
-    anthropicApiKey: string;
     anthropicModel: string;
     /** When true, currentProvider() returns a FallbackProvider that tries
      *  the active provider first and then the remaining configured ones. */
@@ -24,7 +29,6 @@ const DEFAULT_CONFIG: PersistedConfig = {
     ollamaBaseUrl: "http://localhost:11434",
     ollamaModel: "llama3.2",
     openaiModel: "gpt-4o-2024-08-06",
-    anthropicApiKey: "",
     anthropicModel: "claude-opus-4-7",
     useFallback: false,
 };
@@ -41,7 +45,6 @@ function loadConfig(): PersistedConfig {
             ollamaBaseUrl: typeof parsed.ollamaBaseUrl === "string" ? parsed.ollamaBaseUrl : DEFAULT_CONFIG.ollamaBaseUrl,
             ollamaModel: typeof parsed.ollamaModel === "string" ? parsed.ollamaModel : DEFAULT_CONFIG.ollamaModel,
             openaiModel: typeof parsed.openaiModel === "string" ? parsed.openaiModel : DEFAULT_CONFIG.openaiModel,
-            anthropicApiKey: typeof parsed.anthropicApiKey === "string" ? parsed.anthropicApiKey : "",
             anthropicModel: typeof parsed.anthropicModel === "string" ? parsed.anthropicModel : DEFAULT_CONFIG.anthropicModel,
             useFallback: !!parsed.useFallback,
         };
@@ -58,14 +61,16 @@ function persist(config: PersistedConfig) {
     }
 }
 
-interface AiConfigState extends PersistedConfig {
+interface AiConfigState extends PersistedConfig, CloudCredentials {
     setProviderId: (id: AiProviderId) => void;
     setOllamaBaseUrl: (url: string) => void;
     setOllamaModel: (model: string) => void;
     setOpenaiModel: (model: string) => void;
+    setOpenaiApiKey: (key: string) => void;
     setAnthropicApiKey: (key: string) => void;
     setAnthropicModel: (model: string) => void;
     setUseFallback: (value: boolean) => void;
+    clearCloudCredentials: () => void;
     /** Build a fresh provider instance (or fallback chain) from current config. */
     getProvider: () => AiProvider;
 }
@@ -76,13 +81,12 @@ function snapshot(state: PersistedConfig): PersistedConfig {
         ollamaBaseUrl: state.ollamaBaseUrl,
         ollamaModel: state.ollamaModel,
         openaiModel: state.openaiModel,
-        anthropicApiKey: state.anthropicApiKey,
         anthropicModel: state.anthropicModel,
         useFallback: state.useFallback,
     };
 }
 
-function buildProviderFor(id: AiProviderId, state: PersistedConfig): AiProvider {
+function buildProviderFor(id: AiProviderId, state: PersistedConfig & CloudCredentials): AiProvider {
     if (id === "ollama") return new OllamaProvider(state.ollamaBaseUrl, state.ollamaModel);
     if (id === "anthropic") return new AnthropicProvider(state.anthropicApiKey, state.anthropicModel);
     return new OpenAIProvider();
@@ -90,6 +94,7 @@ function buildProviderFor(id: AiProviderId, state: PersistedConfig): AiProvider 
 
 export const useAiConfigStore = create<AiConfigState>((set, get) => {
     const initial = loadConfig();
+    const initialCredentials = loadSessionCredentials();
 
     const update = (patch: Partial<PersistedConfig>) => {
         const next = { ...snapshot(get()), ...patch };
@@ -97,16 +102,32 @@ export const useAiConfigStore = create<AiConfigState>((set, get) => {
         set(patch);
     };
 
+    const updateCredentials = (patch: Partial<CloudCredentials>) => {
+        const next = {
+            openaiApiKey: get().openaiApiKey,
+            anthropicApiKey: get().anthropicApiKey,
+            ...patch,
+        };
+        persistSessionCredentials(next);
+        set(patch);
+    };
+
     return {
         ...initial,
+        ...initialCredentials,
 
         setProviderId: (providerId) => update({ providerId }),
         setOllamaBaseUrl: (ollamaBaseUrl) => update({ ollamaBaseUrl }),
         setOllamaModel: (ollamaModel) => update({ ollamaModel }),
         setOpenaiModel: (openaiModel) => update({ openaiModel }),
-        setAnthropicApiKey: (anthropicApiKey) => update({ anthropicApiKey }),
+        setOpenaiApiKey: (openaiApiKey) => updateCredentials({ openaiApiKey }),
+        setAnthropicApiKey: (anthropicApiKey) => updateCredentials({ anthropicApiKey }),
         setAnthropicModel: (anthropicModel) => update({ anthropicModel }),
         setUseFallback: (useFallback) => update({ useFallback }),
+        clearCloudCredentials: () => {
+            clearSessionCredentials();
+            set({ openaiApiKey: "", anthropicApiKey: "" });
+        },
 
         getProvider: () => {
             const state = get();
@@ -120,7 +141,7 @@ export const useAiConfigStore = create<AiConfigState>((set, get) => {
             const others = order.filter((p) => p !== state.providerId);
 
             const eligible = others.filter((p) => {
-                if (p === "openai") return true; // openai key may be in env / hash, always try
+                if (p === "openai") return state.openaiApiKey.length > 0;
                 if (p === "ollama") return state.ollamaBaseUrl.length > 0;
                 if (p === "anthropic") return state.anthropicApiKey.length > 0;
                 return false;

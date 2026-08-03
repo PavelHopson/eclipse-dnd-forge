@@ -67,6 +67,7 @@ export default function InitiativePanel({ onClose }: InitiativePanelProps) {
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

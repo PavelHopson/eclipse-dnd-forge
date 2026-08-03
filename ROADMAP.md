@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 25 — доступная панель инструментов карты). Ветка: `main`.
+Последнее обновление: **2026-08-03** (slice 26 — session-only BYOK и mobile workspace). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,18 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 26 — session-only BYOK и mobile workspace
+*Отгружено 2026-08-03 после security и responsive-аудита публичной demo.*
+
+- [x] OpenAI/Anthropic keys вынесены из persistent config в `sessionStorage`; UI прямо сообщает срок хранения и даёт явную кнопку удаления обоих cloud credentials.
+- [x] Удалена передача OpenAI key через base64 hash `?k=` и поддержка `VITE_OPENAI_API_KEY`, которая могла встроить secret в публичный bundle. Старые credential hashes очищаются до запуска React и безопасно возвращают пользователя в launcher.
+- [x] Legacy Anthropic key fail-closed удаляется из `localStorage`: несекретные settings сохраняются, credential переносится только в текущую tab session.
+- [x] На viewport до 760px основной workspace показывает один понятный режим — «Текст сессии» или «Мир и инструменты»; desktop сохраняет двухпанельный layout.
+- [x] Launcher provider tabs прокручиваются горизонтально, парные поля складываются в колонку, а все десять tool panels ограничены шириной viewport и собственным scroll.
+- [x] Добавлены credential migration/hash cleanup, security и responsive contracts; общий suite содержит 11 тестов.
+
+**Ограничение:** `sessionStorage` снижает persistence, но не защищает от same-origin XSS. Browser-direct OpenAI/Anthropic остаются demo-only; production gateway с server-side secrets, budgets и rate limits — отдельный архитектурный слайс.
 
 ### v0.3 slice 25 — доступная панель инструментов карты
 *Отгружено 2026-08-03 после production QA сценария Azgaar.*
@@ -338,7 +350,7 @@
 
 - `src/study/*` — HCI study-каркас из VisualStoryWriting, нетронут. Не часть продуктовой поверхности, но всё ещё в бандле.
 - Тип `Action` всё ещё представляет generic narrative actions — нужен рефрейминг в «scene beats» внутри Session-контейнера.
-- `dangerouslyAllowBrowser: true` на OpenAI-клиенте — норм для локального прототипа, перед любым хостед-релизом нужно маршрутизировать через бэкенд.
+- `dangerouslyAllowBrowser: true` / Anthropic direct-browser header остаются только для demo. Keys теперь session-only и не попадают в URL, persistent storage или Vite env, но перед paid/public production всё равно нужен backend gateway.
 - Build-статус: `npm run build` не запускался локально с момента отгрузки v0.1-слайса из-за повторяющихся `ECONNRESET` к npm registry в dev-окружении. Деплой на GitHub Pages при этом работает (workflow билдит на своём CI). Прогнать локально и зафиксировать здесь, когда сеть позволит.
 
 ---

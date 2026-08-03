@@ -64,6 +64,7 @@ export default function DiceRollerPanel({ onClose }: DiceRollerPanelProps) {
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,

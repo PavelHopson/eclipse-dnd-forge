@@ -9,25 +9,12 @@ import { globalEditor } from '../view/TextEditor';
 import { useHistoryModelStore } from './HistoryModel';
 import { SlateUtils } from './SlateUtils';
 import { TextActionMatch, TextUtils } from './TextUtils';
+import { loadSessionCredentials } from './ai/credentialStorage';
 
-const hashSplitted = window.location.hash.split("?");
-const search = hashSplitted[hashSplitted.length-1]
-const params = new URLSearchParams(search);
-const key = params.get('k');
-
-let openaiKey = ""
-if (!key) {
-    if ("VITE_OPENAI_API_KEY" in import.meta.env) {
-        openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    } /*else {
-        throw new Error("No key provided in the URL parameters");
-    }*/
-} else {
-    openaiKey = atob(key)
-}
+const { openaiApiKey } = loadSessionCredentials();
 
 export const openai = new OpenAI({
-    apiKey: openaiKey,
+    apiKey: openaiApiKey,
     dangerouslyAllowBrowser: true
 });
 

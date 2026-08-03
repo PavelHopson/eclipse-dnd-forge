@@ -8,7 +8,7 @@
 - **Graphs:** @xyflow/react · d3-force · react-d3-tree
 - **Editor:** Slate (rich text)
 - **State:** Zustand
-- **AI:** OpenAI API (GPT-4o) — planned: Gemini, Claude, Ollama
+- **AI:** OpenAI · Anthropic Claude · Ollama под единым `AiProvider`
 
 ## Commands
 
@@ -17,6 +17,8 @@ npm install
 npm run dev        # Dev server on :5173
 npm run build      # Production build
 npm run lint       # ESLint
+npm run typecheck  # strict TypeScript gate
+npm test           # importer / security / UI contracts
 ```
 
 ## Project Structure
@@ -39,6 +41,7 @@ eclipse-dnd-forge/
 - @xyflow/react handles the interactive node graph (world map)
 - Slate editor for rich text story editing
 - Zustand for global state management
+- Cloud API keys are session-only and never belong in URL, localStorage, source, logs, or Vite public env
 
 ## D&D Domain Model (current)
 

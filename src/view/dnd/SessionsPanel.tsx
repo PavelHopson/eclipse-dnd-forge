@@ -84,6 +84,7 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
 
     return (
         <div
+            className="dnd-overlay-panel"
             style={{
                 position: "absolute",
                 top: 60,
