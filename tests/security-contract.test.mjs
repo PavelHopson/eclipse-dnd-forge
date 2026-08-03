@@ -55,4 +55,6 @@ test("Pages deploy isolates the build from the write token", async () => {
     assert.match(publishJob, /permissions:\s*\n\s+contents: write/);
     assert.match(publishJob, /digest-mismatch: error/);
     assert.match(publishJob, /test "\$\(cat build\/CNAME\)" = "dnd\.eclipse-forge\.ru"/);
+    assert.match(publishJob, /-c "include\.path=\$\{credentials_config\}" push --force/);
+    assert.doesNotMatch(publishJob, /config "http\..*extraheader"/);
 });

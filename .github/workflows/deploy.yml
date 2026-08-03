@@ -87,9 +87,9 @@ jobs:
             exit 1
           fi
 
-          auth_header="$(git config --local --get "http.${GITHUB_SERVER_URL}/.extraheader")"
-          if [[ -z "$auth_header" ]]; then
-            echo "::error::Repository authentication was not configured"
+          credentials_config="$(git config --local --get "includeIf.gitdir:${GITHUB_WORKSPACE}/.git.path")"
+          if [[ ! -f "$credentials_config" ]]; then
+            echo "::error::Checkout credential file was not configured"
             exit 1
           fi
 
@@ -99,8 +99,7 @@ jobs:
           git -C "$pages_dir" init --initial-branch=gh-pages
           git -C "$pages_dir" config user.name "github-actions[bot]"
           git -C "$pages_dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C "$pages_dir" config "http.${GITHUB_SERVER_URL}/.extraheader" "$auth_header"
           git -C "$pages_dir" remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
           git -C "$pages_dir" add --all
           git -C "$pages_dir" commit -m "Deploy ${GITHUB_SHA}"
-          git -C "$pages_dir" push --force origin gh-pages:gh-pages
+          git -C "$pages_dir" -c "include.path=${credentials_config}" push --force origin gh-pages:gh-pages
