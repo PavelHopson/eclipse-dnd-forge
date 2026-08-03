@@ -217,13 +217,13 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
           <div style={{ width: '50vw', height: '100%', background: '#F3F4F6', borderLeft: '1px solid #DDDDDF', borderBottom: '1px solid #DDDDDF' }} ref={visualPanelRef}>
             {selectedTab === "entities" && <ReactFlowProvider><EntitiesEditor /></ReactFlowProvider>}
             {selectedTab === "locations" && <ReactFlowProvider><LocationsEditor /></ReactFlowProvider>}
-            <Tabs keyboardActivation='manual' onSelectionChange={setSelectedTabLogged as any} selectedKey={selectedTab} color='primary' variant='bordered' style={{ position: 'absolute', left: '50%', top: 10, transform: 'translate(-50%, 0)' }} classNames={{ tabList: 'bg-white', }}>
+            <Tabs keyboardActivation='manual' onSelectionChange={setSelectedTabLogged as any} selectedKey={selectedTab} color='primary' variant='bordered' className='dnd-canvas-tabs' classNames={{ tabList: 'bg-white', }}>
               <Tab key={"entities"} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><GiCrossedSwords style={{ marginRight: 4, fontSize: 20 }} /> Герои и NPC</span>} />
               <Tab key={'locations'} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><GiCastle style={{ marginRight: 4, fontSize: 20 }} /> Мир и локации</span>} />
             </Tabs>            
 
             {!isReadOnly && (
-              <div style={{ position: 'absolute', right: 10, top: 10, display: 'flex', gap: 6 }}>
+              <div className='dnd-quick-actions' role='toolbar' aria-label='Инструменты кампании'>
                 <Tooltip content="Режим игры — автономный стол: Мастер и NPC ведут ход за вас" closeDelay={0}>
                   <Button
                     style={{ fontSize: 18, background: isPlayModePanelOpen ? '#7a1f1f' : undefined, color: isPlayModePanelOpen ? 'white' : undefined }}

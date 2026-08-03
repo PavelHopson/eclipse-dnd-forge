@@ -13,7 +13,34 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-:focus {outline:0;}
+:focus:not(:focus-visible) {
+  outline: 0;
+}
+
+:focus-visible {
+  outline: 3px solid #7a1f1f;
+  outline-offset: 3px;
+}
+
+.dnd-canvas-tabs {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  z-index: 10;
+  transform: translateX(-50%);
+}
+
+.dnd-quick-actions {
+  position: absolute;
+  top: 58px;
+  right: 10px;
+  z-index: 9;
+  display: flex;
+  max-width: calc(100% - 20px);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
 
 
 .suggest-addition {

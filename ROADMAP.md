@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 23 — Azgaar world-map workflow). Ветка: `main`.
+Последнее обновление: **2026-08-03** (slice 25 — доступная панель инструментов карты). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -48,6 +48,16 @@
 
 ## ✅ Сделано
 
+### v0.3 slice 25 — доступная панель инструментов карты
+*Отгружено 2026-08-03 после production QA сценария Azgaar.*
+
+- [x] Вкладки «Герои и NPC» / «Мир и локации» больше не перекрываются быстрыми действиями при промежуточной ширине viewport: toolbar вынесен на отдельный ряд и безопасно переносится.
+- [x] Группа действий получила семантику `toolbar` и понятное accessible name «Инструменты кампании».
+- [x] Возвращён заметный `:focus-visible` для keyboard-навигации без постоянной рамки при клике мышью.
+- [x] Добавлен UI regression contract; общий importer/security/UI suite содержит 6 тестов.
+
+**Quality gate:** каждый push в `main` обязан пройти locked install без lifecycle scripts, typecheck, 6 tests, lint и production build до публикации GitHub Pages.
+
 ### v0.3 slice 24 — CI type-safety baseline и безопасные study messages
 *Отгружено 2026-08-03 после первого полного lockfile/typecheck gate.*
 
@@ -58,7 +68,7 @@
 - [x] Добавлен security regression contract; общий importer/security suite содержит 5 тестов.
 - [x] Добавлен отсутствовавший ESLint config на уже зафиксированных TypeScript и React Hooks plugins; lint больше не является пустой package script. Legacy `any` и старые `@ts-ignore` вынесены из initial gate, но hooks order/dependencies, unused code и recommended correctness rules остаются blocking.
 
-**CI:** run `30795363770` остановил deploy на inherited TypeScript baseline; run `30795999089` подтвердил typecheck и tests, затем обнаружил отсутствовавший ESLint config. Следующий run должен пройти lint и build до публикации Pages.
+**CI:** run `30795363770` остановил deploy на inherited TypeScript baseline; run `30795999089` подтвердил typecheck и tests, затем обнаружил отсутствовавший ESLint config; run `30796727420` оставил только три несовместимости ESLint 8/9. После исправлений run `30796829029` успешно прошёл locked install, typecheck, 5 tests, lint, production build и публикацию GitHub Pages.
 
 ### v0.3 slice 23 — Azgaar world-map workflow 🗺️
 *Отгружено 2026-08-03. Карта создаётся во внешнем специализированном редакторе, а кампания получает только проверенные location nodes.*
