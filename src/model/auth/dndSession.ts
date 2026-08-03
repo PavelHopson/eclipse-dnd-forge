@@ -44,10 +44,10 @@ function publicEndpoint(value: string | undefined, fallback: string): string {
 export const DND_BFF_URL = publicEndpoint(import.meta.env.VITE_DND_BFF_URL, DEFAULT_BFF_URL);
 export const MANAGED_AI_ENABLED = import.meta.env.VITE_DND_MANAGED_AI_ENABLED === "true";
 export const IDENTITY_CANARY_ENABLED = import.meta.env.VITE_DND_IDENTITY_CANARY_ENABLED === "true";
-const CHAT_AUTHORIZE_URL = publicEndpoint(
+const CHAT_AUTHORIZE_URL = `${publicEndpoint(
     import.meta.env.VITE_ECLIPSE_CHAT_AUTHORIZE_URL,
     DEFAULT_CHAT_AUTHORIZE_URL,
-);
+)}/`;
 
 function randomBase64Url(bytes: number): string {
     const values = new Uint8Array(bytes);

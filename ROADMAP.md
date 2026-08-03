@@ -56,6 +56,8 @@
   модели по-прежнему зависят от `VITE_DND_MANAGED_AI_ENABLED` и остаются скрыты.
 - [x] Добавлен служебный маршрут `#/auth/canary` с понятными loading, ready, error и success
   состояниями, mobile CTA, keyboard focus через NextUI и `prefers-reduced-motion`.
+- [x] Chat authorize URL использует канонический `/eclipse-chat/`: Nginx больше не выполняет
+  `301`, который удалял PKCE query при переходе с path без завершающего `/`.
 - [x] Authorization intent хранится рядом с PKCE verifier только в текущей tab session;
   callback возвращает canary на экран результата, не ослабляя state/TTL/code validation.
 - [x] Сетевые ошибки нормализуются в понятный текст без вывода внутренних stack, token или URL.

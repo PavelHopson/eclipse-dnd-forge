@@ -94,6 +94,7 @@ test("managed sign-in uses PKCE and the BFF owns cookie, CSRF and service creden
     ]);
 
     assert.match(browserAuth, /code_challenge_method", "S256"/);
+    assert.match(browserAuth, /const CHAT_AUTHORIZE_URL = `\$\{publicEndpoint\([\s\S]+?\)\}\/`/);
     assert.match(browserAuth, /sessionStorage\.setItem\(SESSION_STORAGE_KEY/);
     assert.match(browserAuth, /sameState\(returnedState, stored\.state\)/);
     assert.match(browserAuth, /credentials: "include"/);
