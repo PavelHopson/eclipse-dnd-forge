@@ -6,6 +6,11 @@ Eclipse AI Hub уже владеет production `ai.v1`: server-side provider cr
 model allowlist, service scopes, minute budgets, sanitized errors и aggregate-only
 telemetry. DnD Forge не должен создавать второй router.
 
+DnD BFF и browser consumer теперь реализованы в [`bff/`](../bff/README.md) и
+`src/model/auth/dndSession.ts`. Слой остаётся dark-by-default до настройки runtime,
+DNS/TLS, отдельных secrets и canary: production Pages не показывает managed provider
+без `VITE_DND_MANAGED_AI_ENABLED=true`.
+
 Канонический межпроектный contract:
 [`eclipse-ai-hub/docs/dnd-forge-gateway-contract.md`](https://github.com/PavelHopson/eclipse-ai-hub/blob/master/docs/dnd-forge-gateway-contract.md).
 
@@ -48,8 +53,11 @@ Ollama остаётся отдельным локальным режимом. Н
 
 ## Текущий blocker
 
-В `eclipse-chat` уже есть нужные user sessions и production BFF, но нет безопасного
-межпродуктового identity issuer. Кроме того, его рабочее дерево сейчас содержит
-чужие незакоммиченные изменения, поэтому gateway-срез не должен менять Chat до их
-фиксации. Следующая реализация начинается с отдельного reviewed identity contract,
-а не с provider-кода в DnD frontend.
+Chat issuer, PKCE consumer, BFF sessions, JWKS validation, CSRF/origin boundary и
+атомарные single-process budgets реализованы и покрыты regression tests. До production
+остаются infrastructure gates: выделить `api.dnd.eclipse-forge.ru`, установить TLS,
+создать scoped AI Hub client, положить secrets в root-owned environment, выполнить
+rollback canary и 24-часовое SLO-наблюдение.
+
+Известные ограничения до следующего security slice: single-process code/session/budget
+stores, отсутствие мгновенной cross-service revocation и server-owned campaign ACL.

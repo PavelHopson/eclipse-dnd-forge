@@ -114,7 +114,8 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
     const provider = cfg.getProvider();
 
     const model = this.prompt.model
-      || (cfg.providerId === "ollama" ? cfg.ollamaModel
+      || (cfg.providerId === "eclipse" ? cfg.gatewayModel
+        : cfg.providerId === "ollama" ? cfg.ollamaModel
         : cfg.providerId === "anthropic" ? cfg.anthropicModel
         : cfg.openaiModel);
 

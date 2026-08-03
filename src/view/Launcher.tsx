@@ -6,8 +6,11 @@ import { VisualRefresher } from "../model/prompts/textExtractors/VisualRefresher
 import { useStudyStore } from "../study/StudyModel";
 import { useAiConfigStore } from "../store/useAiConfigStore";
 import { AiProviderId } from "../model/ai/types";
+import { useDndIdentity } from "../hooks/useDndIdentity";
+import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
 
 export default function Launcher() {
+  const identity = useDndIdentity(MANAGED_AI_ENABLED);
   const setOpenAIKey = useModelStore((state) => state.setOpenAIKey);
   const resetModel = useModelStore((state) => state.reset);
   const resetStudyModel = useStudyStore((state) => state.reset);
@@ -20,6 +23,7 @@ export default function Launcher() {
   const anthropicApiKey = useAiConfigStore((s) => s.anthropicApiKey);
   const anthropicModel = useAiConfigStore((s) => s.anthropicModel);
   const useFallback = useAiConfigStore((s) => s.useFallback);
+  const gatewayModel = useAiConfigStore((s) => s.gatewayModel);
   const setProviderId = useAiConfigStore((s) => s.setProviderId);
   const setOllamaBaseUrl = useAiConfigStore((s) => s.setOllamaBaseUrl);
   const setOllamaModel = useAiConfigStore((s) => s.setOllamaModel);
@@ -28,6 +32,7 @@ export default function Launcher() {
   const setAnthropicApiKey = useAiConfigStore((s) => s.setAnthropicApiKey);
   const setAnthropicModel = useAiConfigStore((s) => s.setAnthropicModel);
   const setUseFallback = useAiConfigStore((s) => s.setUseFallback);
+  const setGatewayModel = useAiConfigStore((s) => s.setGatewayModel);
   const clearCloudCredentials = useAiConfigStore((s) => s.clearCloudCredentials);
 
   // Campaign-start is gated differently per provider:
@@ -35,6 +40,7 @@ export default function Launcher() {
   //  - ollama: no key needed; local daemon is the dependency
   //  - anthropic: needs an Anthropic key
   const startGated =
+    (providerId === "eclipse" && !identity.session) ||
     (providerId === "openai" && openaiApiKey.length === 0) ||
     (providerId === "anthropic" && anthropicApiKey.length === 0);
 
@@ -86,10 +92,46 @@ export default function Launcher() {
               className="launcher-provider-tabs"
               classNames={{ tabList: 'bg-white' }}
             >
+              {MANAGED_AI_ENABLED && <Tab key="eclipse" title="Eclipse AI (без ключа)" />}
               <Tab key="openai" title="OpenAI (облако)" />
               <Tab key="ollama" title="Ollama (локально)" />
               <Tab key="anthropic" title="Anthropic Claude (облако)" />
             </Tabs>
+
+            {providerId === "eclipse" && (
+              <div className="eclipse-identity-card" aria-live="polite">
+                {identity.loading ? (
+                  <>
+                    <strong>Проверяем безопасный вход…</strong>
+                    <span>Это займёт несколько секунд.</span>
+                  </>
+                ) : identity.session ? (
+                  <>
+                    <strong>Подключено как {identity.session.user.displayName}</strong>
+                    <span>AI работает через Eclipse AI Hub. API-ключи и service token не попадают в браузер.</span>
+                    <Input
+                      size="sm"
+                      variant="faded"
+                      label="Модель Eclipse AI"
+                      value={gatewayModel}
+                      onValueChange={setGatewayModel}
+                    />
+                    <Button size="sm" variant="bordered" onPress={() => void identity.signOut()}>
+                      Отключить аккаунт
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <strong>Войдите один раз — ключи не нужны</strong>
+                    <span>Eclipse Chat подтвердит аккаунт и вернёт вас сюда. Пароль и история чатов не передаются.</span>
+                    {identity.error && <span className="identity-error" role="alert">{identity.error}</span>}
+                    <Button color="primary" size="sm" onPress={() => void identity.signIn()}>
+                      Войти через Eclipse Chat
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
 
             {providerId === "openai" && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -209,11 +251,13 @@ export default function Launcher() {
               size="sm"
               isSelected={useFallback}
               onValueChange={setUseFallback}
+              isDisabled={providerId === "eclipse"}
             >
               <span style={{ fontSize: 12, color: '#3a2a2a' }}>
-                <strong>Включить fallback chain</strong> — если активный провайдер упадёт (rate-limit, daemon недоступен, ключ просрочен), запросы автоматически уйдут на следующий настроенный. Порядок: активный, затем остальные с валидной конфигурацией.
+                <strong>Включить fallback chain</strong> — {providerId === "eclipse" ? "для Eclipse AI отключён: запросы не уходят скрытно на browser BYOK." : "если активный провайдер упадёт (rate-limit, daemon недоступен, ключ просрочен), запросы автоматически уйдут на следующий настроенный."}
               </span>
             </Checkbox>
+            {providerId !== "eclipse" && (
             <div className="credential-boundary" role="note">
               <strong>Ключи только на эту вкладку.</strong>
               <span> Они удаляются при закрытии вкладки. Не используйте основной production key: публичная demo всё ещё обращается к cloud API прямо из браузера.</span>
@@ -230,6 +274,7 @@ export default function Launcher() {
                 </Button>
               )}
             </div>
+            )}
           </div>
         </CardBody>
         <Divider />

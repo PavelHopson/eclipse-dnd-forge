@@ -29,7 +29,7 @@ export interface AiStreamResult {
 }
 
 /** User-facing provider choices. The fallback wrapper has its own internal id. */
-export type AiProviderId = "openai" | "ollama" | "anthropic";
+export type AiProviderId = "eclipse" | "openai" | "ollama" | "anthropic";
 
 /**
  * Spec for a structured-output call. Caller passes a zod schema; the provider

@@ -6,6 +6,7 @@ import StudyInterface from './study/StudyInterface';
 import { useStudyStore } from './study/StudyModel';
 import Launcher from './view/Launcher';
 import VisualWritingInterface from './view/VisualWritingInterface';
+import AuthCallbackPage from './view/auth/AuthCallbackPage';
 
 
 
@@ -27,6 +28,10 @@ function App() {
     {
       path: 'baseline',
       element: <BaselineInterface />
+    },
+    {
+      path: 'auth/callback',
+      element: <AuthCallbackPage />
     },
     {
       path: '/',

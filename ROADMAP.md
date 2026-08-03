@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 27 — изолированный GitHub Pages publisher). Ветка: `main`.
+Последнее обновление: **2026-08-03** (slice 28 — Chat identity и dark-launched DnD AI BFF). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,29 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 28 — Chat identity и dark-launched DnD AI BFF
+*Реализовано 2026-08-03; production activation намеренно закрыт инфраструктурными gates.*
+
+- [x] Chat Authorization Code + PKCE S256 consumer хранит verifier/state только в
+  текущей tab session, проверяет state до exchange и не получает основной JWT/refresh token Chat.
+- [x] BFF независимо проверяет Ed25519 JWT по фиксированным issuer/audience/JWKS,
+  запрещает algorithm/key confusion и повторное использование `jti`.
+- [x] Browser получает только opaque `HttpOnly; Secure; SameSite=Lax` session; exact
+  Origin, CSRF, bounded JSON, normalized errors и no-content audit закрыты тестами.
+- [x] AI Hub service token остаётся только в BFF environment; public surface содержит
+  только models и non-streaming chat completion, telemetry не проксируется.
+- [x] Per-user 15-minute rate и UTC-day token budgets резервируются последовательно
+  до upstream-вызова и сохраняются atomic rename в single-writer data file.
+- [x] Launcher получил простой managed-provider flow «Войти через Eclipse Chat»,
+  loading/success/error/logout states и явный запрет silent fallback в browser BYOK.
+- [x] Managed provider dark-by-default: без `VITE_DND_MANAGED_AI_ENABLED=true` текущий
+  production UI и default provider не меняются.
+- [x] Добавлено 9 BFF/security tests; общий Node suite содержит 20 тестов.
+
+**Не заявлено production-ready:** нужны BFF runtime + DNS/TLS, отдельный AI Hub client,
+root-owned secrets, canary rollback и 24h SLO. Single-process session/code/budget stores,
+revocation до одного часа и browser-local campaigns без server ACL остаются открытыми рисками.
 
 ### v0.3 slice 27 — изолированный GitHub Pages publisher
 *Отгружено 2026-08-03; первый успешный production run — `30805647033`.*
@@ -339,7 +362,10 @@
 
 ### Открытые follow-ups
 
-- [ ] **P1 / M — production AI gateway** — runtime выбран: переиспользовать private `eclipse-ai-hub/ai.v1`, но только через DnD BFF. Chat владеет identity, DnD — campaign access и per-user budgets, AI Hub — provider credentials и service limits. Browser service token запрещён regression contract. Реализация BFF ждёт reviewed Chat-issued identity contract и чистое рабочее дерево Chat; полный план — [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md).
+- [ ] **P1 / M — активировать production AI gateway** — Chat issuer, DnD BFF и browser
+  consumer реализованы dark-by-default. Остались runtime/DNS/TLS, scoped AI Hub client,
+  root-owned secrets, rollback canary, 24h SLO и отдельный дизайн server-owned campaign ACL;
+  полный runbook — [`bff/README.md`](bff/README.md).
 - [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
 - [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
 

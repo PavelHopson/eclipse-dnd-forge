@@ -40,6 +40,7 @@ Eclipse DnD Forge — **операционная система мастера D
 
 При открытии нужно выбрать AI-провайдера. OpenAI/Anthropic key хранится только в `sessionStorage` текущей вкладки, не добавляется в URL и удаляется при закрытии вкладки. Он всё равно передаётся выбранному cloud provider, поэтому для demo нужен отдельный ограниченный key, а не основной production credential. Поддерживаются:
 
+- **Eclipse AI** (managed, dark launch) — вход через Eclipse Chat, server-side secrets и per-user budgets; появляется только после production activation BFF
 - **OpenAI** (cloud) — `gpt-4o` по умолчанию, нужен ключ с <https://platform.openai.com>
 - **Anthropic Claude** (cloud) — `claude-opus-4-7` по умолчанию, нужен ключ с <https://console.anthropic.com>
 - **Ollama** (self-hosted) — локальный daemon, ключ не нужен. Запускать с `OLLAMA_ORIGINS="*"` чтобы браузер мог достучаться
@@ -233,7 +234,7 @@ API-ключи OpenAI/Anthropic хранятся только в `sessionStorage
 
 Это уменьшает время и поверхность утечки, но не делает browser-direct cloud calls production-safe: XSS в том же origin всё ещё может прочитать session key. Перед paid SaaS или общедоступным production OpenAI/Anthropic нужно маршрутизировать через backend gateway с user auth, server-side secrets, rate limits, budgets и audit metadata без prompt/response logging. OpenAI client пока использует `dangerouslyAllowBrowser: true`, Anthropic — `anthropic-dangerous-direct-browser-access`; UI честно помечает этот режим как demo-only.
 
-Production topology уже выбрана: DnD BFF с Chat-issued identity вызывает существующий private `eclipse-ai-hub/ai.v1`; service token никогда не попадает в Vite/browser. Trust boundaries, budget policy и rollout gates описаны в [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md).
+Production topology реализована dark-by-default: DnD BFF с Chat-issued Ed25519 identity вызывает существующий private `eclipse-ai-hub/ai.v1`; service token никогда не попадает в Vite/browser. Runtime, DNS/TLS, scoped client и canary ещё не активированы. Trust boundaries и budget policy описаны в [`docs/PRODUCTION-AI-GATEWAY.md`](docs/PRODUCTION-AI-GATEWAY.md), deployment gates — в [`bff/README.md`](bff/README.md).
 
 Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
 

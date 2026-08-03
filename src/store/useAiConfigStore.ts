@@ -4,6 +4,8 @@ import { OpenAIProvider } from "../model/ai/OpenAIProvider";
 import { OllamaProvider } from "../model/ai/OllamaProvider";
 import { AnthropicProvider } from "../model/ai/AnthropicProvider";
 import { FallbackProvider } from "../model/ai/FallbackProvider";
+import { EclipseGatewayProvider } from "../model/ai/EclipseGatewayProvider";
+import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
 import {
     clearSessionCredentials,
     CloudCredentials,
@@ -19,13 +21,15 @@ interface PersistedConfig {
     ollamaModel: string;
     openaiModel: string;
     anthropicModel: string;
+    gatewayModel: string;
     /** When true, currentProvider() returns a FallbackProvider that tries
      *  the active provider first and then the remaining configured ones. */
     useFallback: boolean;
 }
 
 const DEFAULT_CONFIG: PersistedConfig = {
-    providerId: "openai",
+    providerId: MANAGED_AI_ENABLED ? "eclipse" : "openai",
+    gatewayModel: "auto/best-chat",
     ollamaBaseUrl: "http://localhost:11434",
     ollamaModel: "llama3.2",
     openaiModel: "gpt-4o-2024-08-06",
@@ -39,9 +43,12 @@ function loadConfig(): PersistedConfig {
         if (!raw) return DEFAULT_CONFIG;
         const parsed = JSON.parse(raw);
         const providerId: AiProviderId =
-            parsed.providerId === "ollama" || parsed.providerId === "anthropic" ? parsed.providerId : "openai";
+            ["openai", "ollama", "anthropic", ...(MANAGED_AI_ENABLED ? ["eclipse"] : [])].includes(parsed.providerId)
+                ? parsed.providerId
+                : DEFAULT_CONFIG.providerId;
         return {
             providerId,
+            gatewayModel: typeof parsed.gatewayModel === "string" ? parsed.gatewayModel : DEFAULT_CONFIG.gatewayModel,
             ollamaBaseUrl: typeof parsed.ollamaBaseUrl === "string" ? parsed.ollamaBaseUrl : DEFAULT_CONFIG.ollamaBaseUrl,
             ollamaModel: typeof parsed.ollamaModel === "string" ? parsed.ollamaModel : DEFAULT_CONFIG.ollamaModel,
             openaiModel: typeof parsed.openaiModel === "string" ? parsed.openaiModel : DEFAULT_CONFIG.openaiModel,
@@ -69,6 +76,7 @@ interface AiConfigState extends PersistedConfig, CloudCredentials {
     setOpenaiApiKey: (key: string) => void;
     setAnthropicApiKey: (key: string) => void;
     setAnthropicModel: (model: string) => void;
+    setGatewayModel: (model: string) => void;
     setUseFallback: (value: boolean) => void;
     clearCloudCredentials: () => void;
     /** Build a fresh provider instance (or fallback chain) from current config. */
@@ -78,6 +86,7 @@ interface AiConfigState extends PersistedConfig, CloudCredentials {
 function snapshot(state: PersistedConfig): PersistedConfig {
     return {
         providerId: state.providerId,
+        gatewayModel: state.gatewayModel,
         ollamaBaseUrl: state.ollamaBaseUrl,
         ollamaModel: state.ollamaModel,
         openaiModel: state.openaiModel,
@@ -87,6 +96,7 @@ function snapshot(state: PersistedConfig): PersistedConfig {
 }
 
 function buildProviderFor(id: AiProviderId, state: PersistedConfig & CloudCredentials): AiProvider {
+    if (id === "eclipse") return new EclipseGatewayProvider(state.gatewayModel);
     if (id === "ollama") return new OllamaProvider(state.ollamaBaseUrl, state.ollamaModel);
     if (id === "anthropic") return new AnthropicProvider(state.anthropicApiKey, state.anthropicModel);
     return new OpenAIProvider();
@@ -117,6 +127,7 @@ export const useAiConfigStore = create<AiConfigState>((set, get) => {
         ...initialCredentials,
 
         setProviderId: (providerId) => update({ providerId }),
+        setGatewayModel: (gatewayModel) => update({ gatewayModel }),
         setOllamaBaseUrl: (ollamaBaseUrl) => update({ ollamaBaseUrl }),
         setOllamaModel: (ollamaModel) => update({ ollamaModel }),
         setOpenaiModel: (openaiModel) => update({ openaiModel }),
@@ -133,14 +144,17 @@ export const useAiConfigStore = create<AiConfigState>((set, get) => {
             const state = get();
             const primary = buildProviderFor(state.providerId, state);
 
-            if (!state.useFallback) return primary;
+            // The managed gateway never silently falls back to browser BYOK.
+            // This keeps billing, privacy and audit expectations explicit.
+            if (!state.useFallback || state.providerId === "eclipse") return primary;
 
             // Build the chain: primary first, then the remaining real providers
             // for which we have enough config to attempt a call.
-            const order: AiProviderId[] = ["openai", "ollama", "anthropic"];
+            const order: AiProviderId[] = ["eclipse", "openai", "ollama", "anthropic"];
             const others = order.filter((p) => p !== state.providerId);
 
             const eligible = others.filter((p) => {
+                if (p === "eclipse") return false;
                 if (p === "openai") return state.openaiApiKey.length > 0;
                 if (p === "ollama") return state.ollamaBaseUrl.length > 0;
                 if (p === "anthropic") return state.anthropicApiKey.length > 0;
@@ -159,6 +173,7 @@ export function currentProvider(): AiProvider {
 
 export function currentModel(): string {
     const s = useAiConfigStore.getState();
+    if (s.providerId === "eclipse") return s.gatewayModel;
     if (s.providerId === "ollama") return s.ollamaModel;
     if (s.providerId === "anthropic") return s.anthropicModel;
     return s.openaiModel;

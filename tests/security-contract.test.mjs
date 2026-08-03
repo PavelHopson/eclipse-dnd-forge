@@ -84,3 +84,26 @@ test("browser code cannot receive an AI Hub service credential", async () => {
     );
     assert.doesNotMatch(browserSurface, /\/v1\/telemetry/);
 });
+
+test("managed sign-in uses PKCE and the BFF owns cookie, CSRF and service credentials", async () => {
+    const [browserAuth, bffServer, bffConfig, html] = await Promise.all([
+        readFile(new URL("../src/model/auth/dndSession.ts", import.meta.url), "utf8"),
+        readFile(new URL("../bff/src/server.mjs", import.meta.url), "utf8"),
+        readFile(new URL("../bff/src/config.mjs", import.meta.url), "utf8"),
+        readFile(new URL("../index.html", import.meta.url), "utf8"),
+    ]);
+
+    assert.match(browserAuth, /code_challenge_method", "S256"/);
+    assert.match(browserAuth, /sessionStorage\.setItem\(SESSION_STORAGE_KEY/);
+    assert.match(browserAuth, /sameState\(returnedState, stored\.state\)/);
+    assert.match(browserAuth, /credentials: "include"/);
+    assert.doesNotMatch(browserAuth, /localStorage|SERVICE_TOKEN|Authorization:\s*`Bearer/);
+    assert.match(html, /<meta name="referrer" content="no-referrer"/);
+
+    assert.match(bffServer, /requestOrigin !== config\.publicOrigin/);
+    assert.match(bffServer, /X-CSRF-Token/);
+    assert.match(bffServer, /HttpOnly; SameSite=Lax/);
+    assert.match(bffServer, /Authorization: `Bearer \$\{config\.aiGatewayServiceToken\}`/);
+    assert.match(bffConfig, /DND_AI_GATEWAY_SERVICE_TOKEN/);
+    assert.doesNotMatch(bffConfig, /VITE_[A-Z0-9_]*SERVICE_TOKEN/);
+});

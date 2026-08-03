@@ -325,3 +325,65 @@ a:hover {
   border-radius: 3px;
   font-size: 0.92em;
 }
+/* Managed Eclipse identity / AI gateway states. The primary action remains
+   obvious on mobile without turning the operational launcher into a promo. */
+.eclipse-identity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #c8b787;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #3a2a2a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.eclipse-identity-card > strong {
+  color: #2a1a1a;
+  font-size: 14px;
+}
+
+.identity-error {
+  color: #9f1239;
+}
+
+.auth-callback-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #201814;
+}
+
+.auth-callback-card {
+  width: min(460px, 100%);
+  background: #fffaf0;
+  color: #2a1a1a;
+}
+
+.auth-callback-card [data-slot="base"] {
+  align-self: flex-start;
+}
+
+.auth-callback-kicker {
+  margin: 0 0 8px;
+  color: #7a1f1f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.auth-callback-card h1 {
+  margin: 0 0 8px;
+  font-family: serif;
+  font-size: clamp(24px, 6vw, 34px);
+}
+
+.auth-callback-card p:not(.auth-callback-kicker) {
+  margin: 0 0 18px;
+  color: #5a4a3a;
+  line-height: 1.55;
+}
