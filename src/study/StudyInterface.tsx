@@ -17,7 +17,7 @@ export default function StudyInterface() {
   const nextStep = useStudyStore(state => state.nextStep);
   const [showSlider, setShowSlider] = useState(false);
   let participantId = useStudyStore(state => state.participantId);
-  let steps = useStudyStore(state => state.steps);
+  const steps = useStudyStore(state => state.steps);
   let stepId = useStudyStore(state => state.stepId);
   const setSteps = useStudyStore(state => state.setSteps);
   const setParticipantId = useStudyStore(state => state.setParticipantId);

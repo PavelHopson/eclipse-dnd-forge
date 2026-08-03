@@ -56,7 +56,7 @@ export class ReorderActionPrompt extends TextEditPrompt {
         } else {
             const actionToMove = actionEdges[this.previousPosition];
             actionEdges.splice(this.newPosition, 0, actionToMove);
-            actionEdges.splice(this.previousPosition, 1)[0];
+            actionEdges.splice(this.previousPosition, 1);
         }
         const newActionOrder = actionEdges.map((actionEdge, index) => `${(index+1)}) ` + this.getActionDescription(actionEdge)).join("\n");
 

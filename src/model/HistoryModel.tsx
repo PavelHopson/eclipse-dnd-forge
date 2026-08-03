@@ -71,7 +71,7 @@ export const useHistoryModelStore = create<HistoryModelState & HistoryModelActio
         let parent = null;
         let node = get().historyTree as any as HistoryNodeDatum;
     
-        for (let index of position) {
+        for (const index of position) {
             if (node?.children && node.children[index]) {
                 parent = node;
                 node = node.children[index];

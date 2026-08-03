@@ -26,12 +26,13 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
     const [error, setError] = useState<string | null>(null);
     const [lastMirrored, setLastMirrored] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const latestMessageContent = history[history.length - 1]?.content;
 
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [history.length, streaming, history[history.length - 1]?.content]);
+    }, [history.length, streaming, latestMessageContent]);
 
     const send = async () => {
         const trimmed = input.trim();

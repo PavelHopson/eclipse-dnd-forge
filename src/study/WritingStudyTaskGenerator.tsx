@@ -35,7 +35,7 @@ export interface StudyStep {
 export class WritingStudyTaskGenerator {
 
     static generateSteps(participantId: number): StudyStep[] {
-        let steps : StudyStep[] = [];
+        const steps : StudyStep[] = [];
 
         // First, add the opening message with the link to complete the demographic survey
         steps.push({

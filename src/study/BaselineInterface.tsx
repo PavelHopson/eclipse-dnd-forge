@@ -20,6 +20,7 @@ export default function BaselineInterface(props: { children?: React.ReactNode })
   const [gptMessages, setGptMessages] = useState<MessageGPT[]>([
   ]);
   const messageDivRef = React.createRef<HTMLDivElement>();
+  const textState = useModelStore(state => state.textState);
 
   const editor = useMemo(() => {
     const instance = withReact(withHistory(createEditor()))
@@ -83,9 +84,9 @@ export default function BaselineInterface(props: { children?: React.ReactNode })
 
 
   useEffect(() => {
-    editor.children = useModelStore.getState().textState;
+    editor.children = textState;
     editor.onChange();
-  }, [useModelStore.getState().textState]);
+  }, [editor, textState]);
 
 
   return (

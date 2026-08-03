@@ -251,7 +251,7 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
         set({ suggestModeUntilTimestamp: Date.now() + 200 });
     },
     acceptSuggestions: () => {
-        let newState = (JSON.parse(JSON.stringify(get().textState))[0] as any)
+        const newState = (JSON.parse(JSON.stringify(get().textState))[0] as any)
         newState.children = newState.children.filter((node: any) => node.removed === undefined);
         newState.children = newState.children.map((node: any) => ({ text: node.text }));
         set({ textState: [newState]});
@@ -259,7 +259,7 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
         globalEditor.onChange();
     },
     rejectSuggestions: () => {
-        let newState = (JSON.parse(JSON.stringify(get().textState))[0] as any)
+        const newState = (JSON.parse(JSON.stringify(get().textState))[0] as any)
         newState.children = newState.children.filter((node: any) => node.added === undefined);
         newState.children = newState.children.map((node: any) => ({ text: node.text }));
         set({ textState: [newState]});

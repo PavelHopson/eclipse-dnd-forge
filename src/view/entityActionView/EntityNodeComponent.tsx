@@ -64,9 +64,8 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
                                                           || highlightedEntities.includes(edge.target) && edge.source === props.id).length === 0;
   }
 
-  if (!isReadOnly) {
-    useEffect(() => {
-      if (deletePressed && useModelStore.getState().selectedNodes.includes(props.id)) {
+  useEffect(() => {
+      if (!isReadOnly && deletePressed && useModelStore.getState().selectedNodes.includes(props.id)) {
         // Also remove the edges that had this node as a source or target
         setEdges((edges) => edges.filter((edge) => edge.source !== props.id && edge.target !== props.id));
   
@@ -76,8 +75,7 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
         // Modify the story accordingly by executing a prompt
         new RemoveEntityPrompt(props.data).execute()
       }
-    }, [deletePressed])
-  }
+  }, [deletePressed, isReadOnly, props.data, props.id, setEdges, setNodes])
 
 
   const onPropertySliderChanged = useCallback((property: string, newValue: number, triggerPrompt: boolean = false) => {
@@ -98,7 +96,7 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
         new ChangePropertyPrompt(nodeToModify.data, property, previousValue, newValue).execute()
       }
     }
-  }, [entityNodes, setEntityNodes])
+  }, [entityNodes, props.id, setEntityNodes])
 
 
   const propertySliders = props.data.properties.map(property => {

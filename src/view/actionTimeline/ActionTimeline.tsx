@@ -149,7 +149,7 @@ export default function ActionTimeline() {
 
     setEntityTimelines(newEntityTimelines);
     setActionLinks(newActionLinks);
-  }, [entityNodes, actionEdges]);
+  }, [entityNodes, actionEdges, isReadOnly, maxLength]);
 
 
 

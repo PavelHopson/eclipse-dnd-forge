@@ -27,7 +27,7 @@ export default function HistoryTree() {
 
   const findPositionFromHieararchyPointNode = useCallback((nodeData: HierarchyPointNode<TreeNodeDatum>) => {
     // Climb up the tree until the root to figure out the position of the node
-    let nodePosition : number[] = [];
+    const nodePosition : number[] = [];
     let parent = nodeData.parent;
     let currentNode = nodeData;
 

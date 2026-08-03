@@ -134,7 +134,7 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
 
       return ranges;
     },
-    [textActionMatches, filteredActionsSegment, highlightedActionsSegment, selectedEdges, selectedNodes, highlightedEntities]
+    [actionEdges, textActionMatches, filteredActionsSegment, highlightedActionsSegment, selectedEdges, selectedNodes, highlightedEntities]
   )
 
 

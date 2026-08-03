@@ -54,7 +54,7 @@ export class TextUtils {
         // Most naive solution, we first match all the passages to the text
         let matches : TextActionMatch[] = [];
         for (const action of actions) {
-            let passage = TextUtils.prepareStringForMatching(action.passage);
+            const passage = TextUtils.prepareStringForMatching(action.passage);
 
             const start = text.indexOf(passage);
             if (start !== -1) {

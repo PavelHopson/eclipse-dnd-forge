@@ -1,6 +1,5 @@
 import { Slider } from '@nextui-org/react';
-import { NodeProps, useKeyPress } from '@xyflow/react';
-import { useEffect } from 'react';
+import { NodeProps } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
 import { Location, LocationNode, useModelStore } from '../../model/Model';
@@ -23,14 +22,13 @@ export function CreateLocatioNode(location: Location, index: number): LocationNo
 }
 
 export default function LocationNodeComponent(props: NodeProps<LocationNode>) {
-  const deletePressed = useKeyPress(["Delete", "Backspace"]);
   const getFilteredLocationNodes = useModelStore(state => state.getFilteredLocationNodes);
   const isSelected = useModelStore(state => state.selectedNodes.includes(props.id));
   const isReadOnly = useModelStore(state => state.isReadOnly);
 
   const hoveredLocation = useViewModelStore(state => state.hoveredLocation);
 
-  let isHovered = hoveredLocation === props.data.name;
+  const isHovered = hoveredLocation === props.data.name;
 
   const highlightedActionsSegment = useModelStore(state => state.highlightedActionsSegment);
 
@@ -40,14 +38,6 @@ export default function LocationNodeComponent(props: NodeProps<LocationNode>) {
     const filteredLocations = getFilteredLocationNodes(highlightedActionsSegment);
     isFaded = !filteredLocations.map(l => l.id).includes(props.id);
   }
-
-  useEffect(() => {
-    if (deletePressed && useModelStore.getState().selectedNodes.includes(props.id)) {
-      // TODO
-    }
-  }, [deletePressed])
-
-
 
   const danger = props.data.danger;
   const dangerRingColor = typeof danger === 'number' && danger >= 7

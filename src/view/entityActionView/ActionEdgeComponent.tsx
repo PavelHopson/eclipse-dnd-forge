@@ -1,5 +1,5 @@
 import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath, useInternalNode, useKeyPress, useReactFlow } from '@xyflow/react';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import '@xyflow/react/dist/style.css';
 import { GrFormNext, GrFormPrevious } from 'react-icons/gr';
@@ -32,7 +32,7 @@ export default function ActionEdgeComponent(props: EdgeProps<ActionEdge>) {
   const [isBeingEdited, setIsBeingEdited] = useState(false);
   const [temproraryName, setTemporaryName] = useState(props.data!.name);
   const [shouldSelectText, setShouldSelectText] = useState(false);
-  const inputFieldRef = React.createRef<HTMLInputElement>();
+  const inputFieldRef = useRef<HTMLInputElement>(null);
   const { setEdges } = useReactFlow();
   const deletePressed = useKeyPress(["Delete", "Backspace"]);
 
@@ -75,7 +75,7 @@ export default function ActionEdgeComponent(props: EdgeProps<ActionEdge>) {
         new RemoveActionPrompt(sourceNode.data, targetNode.data, props.data!).execute()
       }
     }
-  }, [deletePressed])
+  }, [deletePressed, props.data, props.id, props.source, props.target, setEdges])
 
   if (props.source === props.target) {
     // This is a self-loop, need to render the path differently

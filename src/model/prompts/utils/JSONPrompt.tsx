@@ -48,7 +48,7 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
       } else if (emptyObject[key] instanceof z.ZodArray) {
         acc[key] = (partialResponse[key] || []).map((item: any) => this.addMissingFields(item, emptyObject[key].element));
       } else {
-        acc[key] = partialResponse.hasOwnProperty(key) ? partialResponse[key] : this.getDefaultValue(emptyObject[key]);
+        acc[key] = Object.prototype.hasOwnProperty.call(partialResponse, key) ? partialResponse[key] : this.getDefaultValue(emptyObject[key]);
       }
       return acc;
     }, {} as Record<string, z.ZodTypeAny>);
@@ -60,10 +60,10 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
   partialParse(response: string): T | null {
     try {
       // Partial parse
-      let partialResponse = parse(response, ~Allow.STR);
+      const partialResponse = parse(response, ~Allow.STR);
       // Try adding missing values to the partial response using sensible defaults
       return this.schema.parse(this.addMissingFields(partialResponse, this.schema)); // Should add the missing fields
-    } catch (e) {
+    } catch {
       // Do nothing if we could not parse the partial response
     }
     return null;

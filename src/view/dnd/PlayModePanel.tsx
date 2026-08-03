@@ -35,6 +35,7 @@ export default function PlayModePanel({ onClose }: PlayModePanelProps) {
 
     const [input, setInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
+    const latestTurnContent = turnLog[turnLog.length - 1]?.content;
 
     const isBusy = phase === "dm-narrating" || phase === "npc-reacting";
     const canSend = phase === "awaiting-player";
@@ -43,7 +44,7 @@ export default function PlayModePanel({ onClose }: PlayModePanelProps) {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [turnLog.length, activeStreamId, turnLog[turnLog.length - 1]?.content]);
+    }, [turnLog.length, activeStreamId, latestTurnContent]);
 
     const send = async () => {
         const trimmed = input.trim();

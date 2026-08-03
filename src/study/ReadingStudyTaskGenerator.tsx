@@ -14,7 +14,7 @@ import { StudyStep } from './WritingStudyTaskGenerator';
 export class ReadingStudyTaskGenerator {
 
     static generateSteps(participantId: number): StudyStep[] {
-        let steps : StudyStep[] = [];
+        const steps : StudyStep[] = [];
 
 
         const link = ``

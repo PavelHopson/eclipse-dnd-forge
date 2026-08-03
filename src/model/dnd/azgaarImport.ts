@@ -32,6 +32,8 @@ export type AzgaarImportPlan = {
 
 const IMPORTANT_PLACE_LIMIT = 24;
 const EXPANDED_PLACE_LIMIT = 60;
+// eslint-disable-next-line no-control-regex -- imported labels must remove C0/C1 controls before preview
+const MISLEADING_TEXT_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -47,7 +49,7 @@ function cleanText(value: unknown, maxLength: number): string | null {
     // Control and bidi override characters make file previews misleading. They are
     // not useful in map names, so remove them before rendering or de-duplicating.
     const clean = value
-        .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, " ")
+        .replace(MISLEADING_TEXT_CHARACTERS, " ")
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, maxLength)

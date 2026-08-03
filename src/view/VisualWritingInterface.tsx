@@ -1,6 +1,6 @@
 import { Button, Tab, Tabs, Tooltip } from '@nextui-org/react';
 import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
 import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiMeeple, GiSandsOfTime, GiSpellBook, GiSwordman, GiWorld } from 'react-icons/gi';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
@@ -146,7 +146,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
     };
   }, [autoTickInterval, isReadOnly]);
 
-  const visualPanelRef = React.createRef<HTMLDivElement>();
+  const visualPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -179,7 +179,8 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
 
 
   useEffect(() => {
-    const center = { x: visualPanelRef.current!.clientWidth / 2, y: visualPanelRef.current!.clientHeight / 2 };
+    if (!visualPanelRef.current) return;
+    const center = { x: visualPanelRef.current.clientWidth / 2, y: visualPanelRef.current.clientHeight / 2 };
 
     LayoutUtils.optimizeNodeLayout("entity", useModelStore.getState().entityNodes, useModelStore.getState().setEntityNodes, center, 120, 100);
     LayoutUtils.optimizeNodeLayout("location", useModelStore.getState().locationNodes, useModelStore.getState().setLocationNodes, center, 120);

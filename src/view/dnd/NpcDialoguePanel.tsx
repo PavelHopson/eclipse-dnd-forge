@@ -32,13 +32,14 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
     const [tactic, setTactic] = useState<string>("");
     const [tacticStreaming, setTacticStreaming] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const latestMessageContent = history[history.length - 1]?.content;
 
     // Auto-scroll the chat log to the bottom on new content.
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [history.length, streaming, history[history.length - 1]?.content]);
+    }, [history.length, streaming, latestMessageContent]);
 
     if (!entityNode) {
         return null;

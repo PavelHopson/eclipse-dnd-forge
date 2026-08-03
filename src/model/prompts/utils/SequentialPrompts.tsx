@@ -11,9 +11,9 @@ export class SequentialPrompts<O> extends BasePrompt<O[]> {
 
     execute(): Promise<O[]> {
         return new Promise<O[]>((resolve) => {
-            let results: O[] = [];
+            const results: O[] = [];
             let i = 0;
-            let next = () => {
+            const next = () => {
                 if (i < this.prompts.length) {
                     this.prompts[i].execute().then((result) => {
                         results.push(result);

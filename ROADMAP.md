@@ -56,8 +56,9 @@
 - [x] `clearEvents` сохраняет полный persisted auto-tick contract, а location node changes остаются типизированы как location nodes.
 - [x] Study messages больше не используют `dangerouslySetInnerHTML`: текст React-escaped, а ссылка появляется только для валидного `https:` URL с `noopener noreferrer`.
 - [x] Добавлен security regression contract; общий importer/security suite содержит 5 тестов.
+- [x] Добавлен отсутствовавший ESLint config на уже зафиксированных TypeScript и React Hooks plugins; lint больше не является пустой package script. Legacy `any` и старые `@ts-ignore` вынесены из initial gate, но hooks order/dependencies, unused code и recommended correctness rules остаются blocking.
 
-**CI:** первый run `30795363770` намеренно остановил deploy на inherited TypeScript baseline. Исправления должны пройти повторный typecheck, lint, tests и build до публикации Pages.
+**CI:** run `30795363770` остановил deploy на inherited TypeScript baseline; run `30795999089` подтвердил typecheck и tests, затем обнаружил отсутствовавший ESLint config. Следующий run должен пройти lint и build до публикации Pages.
 
 ### v0.3 slice 23 — Azgaar world-map workflow 🗺️
 *Отгружено 2026-08-03. Карта создаётся во внешнем специализированном редакторе, а кампания получает только проверенные location nodes.*

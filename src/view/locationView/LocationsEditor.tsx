@@ -22,11 +22,11 @@ function SpatialEntityNodeComponent(props: NodeProps<SpatialEntityNode>) {
   const filteredActionsSegment = useModelStore(state => state.filteredActionsSegment);
   const highlightedActionsSegment = useModelStore(state => state.highlightedActionsSegment);
 
-  let filter = filteredActionsSegment || highlightedActionsSegment;
+  const filter = filteredActionsSegment || highlightedActionsSegment;
 
   const filteredEntities = useModelStore.getState().getFilteredEntityNodes(filter);
 
-  let isFaded = !filteredEntities.map(entity => entity.data.name).includes(props.data.name);
+  const isFaded = !filteredEntities.map(entity => entity.data.name).includes(props.data.name);
   
   return <>
     <div className='custom-drag-handle' style={{position: 'relative', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px solid ${isSelected ? 'blue' : 'white'}`, width: 50, height: 50, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px', padding: 10, background: 'white', borderRadius: 999, opacity: isFaded ? '0.3' : 1 }}>
@@ -61,7 +61,7 @@ export default function LocationsEditor() {
   }
 
 
-  useMemo(() => {
+  useEffect(() => {
     if (!canSimulateForce) {
       LayoutUtils.stopSimulation('spatial-nodes');
       return;
@@ -160,9 +160,9 @@ export default function LocationsEditor() {
       if (spatialEntityNodes.length === nodes.length) {
         stable = true;
         nodes.forEach((node, i) => {
-          let dx = node.x - spatialEntityNodes[i].position.x;
-          let dy = node.y - spatialEntityNodes[i].position.y;
-          let movement = Math.sqrt(dx * dx + dy * dy);
+          const dx = node.x - spatialEntityNodes[i].position.x;
+          const dy = node.y - spatialEntityNodes[i].position.y;
+          const movement = Math.sqrt(dx * dx + dy * dy);
   
           if (Math.abs(movement) > 0.08) {
               stable = false;
@@ -180,7 +180,7 @@ export default function LocationsEditor() {
         LayoutUtils.stopSimulation('spatial-nodes');
       }
     }, 100);
-  }, [filteredActionsSegment, highlightedActionsSegment, spatialEntityNodes, locationNodes, canSimulateForce]);
+  }, [canSimulateForce, entityNodes, filteredActionsSegment, getFilteredActionEdges, highlightedActionsSegment, isReadOnly, locationNodes, spatialEntityNodes]);
 
 
   useEffect(() => {
