@@ -3,9 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("canvas tabs stay clear of campaign actions", async () => {
-    const [view, timeline, styles] = await Promise.all([
+    const [view, timeline, history, styles] = await Promise.all([
         readFile(new URL("../src/view/VisualWritingInterface.tsx", import.meta.url), "utf8"),
         readFile(new URL("../src/view/actionTimeline/ActionTimeline.tsx", import.meta.url), "utf8"),
+        readFile(new URL("../src/view/HistoryTree.tsx", import.meta.url), "utf8"),
         readFile(new URL("../src/index.css", import.meta.url), "utf8"),
     ]);
 
@@ -19,6 +20,8 @@ test("canvas tabs stay clear of campaign actions", async () => {
     assert.match(view, /aria-label="Переписать текст из графа"/);
     assert.match(timeline, /aria-label="Прокрутить таймлайн влево"/);
     assert.match(timeline, /aria-label="Прокрутить таймлайн вправо"/);
+    assert.match(history, /aria-label="Отменить последнее изменение"/);
+    assert.match(history, /aria-label="Вернуть отменённое изменение"/);
 });
 
 test("mobile workspace exposes one obvious pane and bounded overlays", async () => {
