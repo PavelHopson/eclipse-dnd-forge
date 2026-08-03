@@ -120,6 +120,8 @@ test("identity canary can validate PKCE without enabling managed AI", async () =
     assert.match(browserAuth, /intent === "managed" && !MANAGED_AI_ENABLED/);
     assert.match(browserAuth, /intent === "canary" && !IDENTITY_CANARY_ENABLED/);
     assert.match(canaryPage, /beginEclipseSignIn\("canary"\)/);
+    assert.match(canaryPage, /searchParams\.get\("from"\) === "eclipse-chat"/);
+    assert.match(canaryPage, /fromChat && !autoStartAttempted\.current/);
     assert.match(canaryPage, /Managed AI остался выключен/);
     assert.doesNotMatch(canaryPage, /dndApiJson|EclipseGatewayProvider|chat\/completions/);
     assert.match(launcher, /\{MANAGED_AI_ENABLED && <Tab key="eclipse"/);

@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Статус:** ✅ v0.3 — 27 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Azgaar workflow и responsive workspace. Интерфейс полностью на русском.
+> **Статус:** ✅ v0.3 — 32 продуктовых слайса поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Azgaar workflow, Eclipse identity canary и responsive workspace. Интерфейс полностью на русском.
 
 </div>
 
@@ -37,6 +37,11 @@ Eclipse DnD Forge — **операционная система мастера D
 ### Попробовать online
 
 **<https://dnd.eclipse-forge.ru/>**
+
+Если у пользователя уже открыт Eclipse Chat, самый короткий путь — меню профиля
+**DnD Forge** или **Настройки → Данные и связи → Подключить DnD Forge**. DnD автоматически
+откроет безопасный PKCE S256 вход, а после подтверждения получит только публичное имя и
+внутренний ID. Email, пароль, Chat-токены и история сообщений не передаются.
 
 При открытии нужно выбрать AI-провайдера. OpenAI/Anthropic key хранится только в `sessionStorage` текущей вкладки, не добавляется в URL и удаляется при закрытии вкладки. Он всё равно передаётся выбранному cloud provider, поэтому для demo нужен отдельный ограниченный key, а не основной production credential. Поддерживаются:
 

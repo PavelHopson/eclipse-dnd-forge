@@ -1,5 +1,6 @@
 import { Button, Card, CardBody } from "@nextui-org/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     beginEclipseSignIn,
     DndApiError,
@@ -16,6 +17,9 @@ function readableError(cause: unknown, fallback: string): string {
 }
 
 export default function IdentityCanaryPage() {
+    const [searchParams] = useSearchParams();
+    const fromChat = searchParams.get("from") === "eclipse-chat";
+    const autoStartAttempted = useRef(false);
     const [state, setState] = useState<CanaryState>(IDENTITY_CANARY_ENABLED ? "loading" : "disabled");
     const [session, setSession] = useState<DndSession | null>(null);
     const [message, setMessage] = useState<string | null>(null);
@@ -23,10 +27,25 @@ export default function IdentityCanaryPage() {
     useEffect(() => {
         if (!IDENTITY_CANARY_ENABLED) return;
         let cancelled = false;
-        void getDndSession(true).then((current) => {
+        void getDndSession(true).then(async (current) => {
             if (cancelled) return;
             setSession(current);
-            setState(current ? "success" : "ready");
+            if (current) {
+                setState("success");
+                return;
+            }
+            if (fromChat && !autoStartAttempted.current) {
+                autoStartAttempted.current = true;
+                try {
+                    await beginEclipseSignIn("canary");
+                } catch (cause) {
+                    if (cancelled) return;
+                    setMessage(readableError(cause, "Не удалось открыть Eclipse Chat. Повторите попытку через минуту."));
+                    setState("error");
+                }
+                return;
+            }
+            setState("ready");
         }).catch((cause) => {
             if (cancelled) return;
             setMessage(readableError(
@@ -36,7 +55,7 @@ export default function IdentityCanaryPage() {
             setState("error");
         });
         return () => { cancelled = true; };
-    }, []);
+    }, [fromChat]);
 
     async function startCanary() {
         setMessage(null);
@@ -66,7 +85,9 @@ export default function IdentityCanaryPage() {
         <main className="identity-canary-shell">
             <Card className="identity-canary-card">
                 <CardBody>
-                    <p className="auth-callback-kicker">ECLIPSE IDENTITY · CANARY</p>
+                    <p className="auth-callback-kicker">
+                        {fromChat ? "ECLIPSE CHAT · DND FORGE" : "ECLIPSE IDENTITY · CANARY"}
+                    </p>
                     {state === "loading" ? (
                         <div className="identity-canary-loading" role="status" aria-label="Проверяем безопасный вход">
                             <span />
@@ -84,7 +105,7 @@ export default function IdentityCanaryPage() {
                     ) : state === "success" && session ? (
                         <>
                             <div className="identity-canary-status" aria-hidden="true"><span /></div>
-                            <h1>Безопасный вход работает</h1>
+                            <h1>{fromChat ? "DnD Forge подключён" : "Безопасный вход работает"}</h1>
                             <p>
                                 Eclipse Chat подтвердил аккаунт <strong>{session.user.displayName}</strong>.
                                 DnD Forge получил только имя и внутренний ID.
@@ -95,9 +116,15 @@ export default function IdentityCanaryPage() {
                                 <li><span aria-hidden="true" />Managed AI остался выключен</li>
                             </ul>
                             <div className="identity-canary-actions">
-                                <Button color="primary" onPress={() => void startCanary()}>
-                                    Повторить проверку входа
-                                </Button>
+                                {fromChat ? (
+                                    <Button color="primary" onPress={() => { window.location.hash = "/"; }}>
+                                        Открыть DnD Forge
+                                    </Button>
+                                ) : (
+                                    <Button color="primary" onPress={() => void startCanary()}>
+                                        Повторить проверку входа
+                                    </Button>
+                                )}
                                 <Button variant="bordered" onPress={() => void clearSession()}>
                                     Завершить DnD-сессию
                                 </Button>
