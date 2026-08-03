@@ -29,3 +29,30 @@ test("cloud keys are not bundled from env or carried in the campaign URL", async
     );
     assert.doesNotMatch(persistentSnapshot, /ApiKey/);
 });
+
+test("Pages deploy isolates the build from the write token", async () => {
+    const workflow = await readFile(
+        new URL("../.github/workflows/deploy.yml", import.meta.url),
+        "utf8",
+    );
+    const buildJob = workflow.slice(workflow.indexOf("  build:"), workflow.indexOf("  publish:"));
+    const publishJob = workflow.slice(workflow.indexOf("  publish:"));
+    const actions = [...workflow.matchAll(/^\s+(?:-\s+)?uses:\s+(\S+)/gm)].map((match) => match[1]);
+
+    assert.match(workflow, /^permissions: \{\}$/m);
+    assert.doesNotMatch(workflow, /s0\/git-publish-subdir-action|\bnode20\b/i);
+    assert.ok(actions.length >= 5);
+    for (const action of actions) {
+        assert.match(action, /^actions\/[a-z-]+@[0-9a-f]{40}$/);
+    }
+
+    assert.match(buildJob, /permissions:\s*\n\s+contents: read/);
+    assert.match(buildJob, /persist-credentials: false/);
+    assert.doesNotMatch(buildJob, /contents: write/);
+    assert.match(buildJob, /npm ci --ignore-scripts --no-audit/);
+
+    assert.match(publishJob, /needs: build/);
+    assert.match(publishJob, /permissions:\s*\n\s+contents: write/);
+    assert.match(publishJob, /digest-mismatch: error/);
+    assert.match(publishJob, /test "\$\(cat build\/CNAME\)" = "dnd\.eclipse-forge\.ru"/);
+});

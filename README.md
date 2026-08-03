@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Статус:** ✅ v0.3 — 26 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Azgaar workflow и responsive workspace. Интерфейс полностью на русском.
+> **Статус:** ✅ v0.3 — 27 продуктовых слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Azgaar workflow и responsive workspace. Интерфейс полностью на русском.
 
 </div>
 
@@ -51,7 +51,7 @@ Eclipse DnD Forge — **операционная система мастера D
 ```bash
 git clone https://github.com/PavelHopson/eclipse-dnd-forge.git
 cd eclipse-dnd-forge
-npm install
+npm ci --ignore-scripts --no-audit
 npm run dev
 ```
 
@@ -129,7 +129,7 @@ JSONPrompt────→ │  generateStructured()       │
 
 ## 🎬 Полный gameplay loop
 
-1. Открыть [демо](https://pavelhopson.github.io/eclipse-dnd-forge/) → выбрать провайдера → ввести ключ → запустить **Фандалин**
+1. Открыть [демо](https://dnd.eclipse-forge.ru/) → выбрать провайдера → ввести ключ → запустить **Фандалин**
 2. 👑 **DM** → «Опиши открывающую сцену» → стримит описание таверны → `**Toblen:** «...»` авто-зеркалится в чат-историю Toblen
 3. 📜 **Вставить в сессию** → нарратив встаёт в нужное место текста сессии
 4. 💬 Кликнуть Toblen → **Поговорить** → диалог с памятью DM-сцены
@@ -149,7 +149,7 @@ JSONPrompt────→ │  generateStructured()       │
 
 | Слой | Технология |
 |---|---|
-| UI | React 19 + TypeScript + Tailwind CSS |
+| UI | React 18 + TypeScript + Tailwind CSS |
 | Bundler | Vite 5 |
 | Граф | `@xyflow/react` + `d3-force` |
 | Текст | Slate (rich text), `react-markdown` |
@@ -218,7 +218,7 @@ src/
 
 ## Roadmap
 
-Полная дорожная карта — **[`ROADMAP.md`](ROADMAP.md)**. Список 19 шипнутых слайсов хранится там с commit SHA и техническими нотами. Открытые follow-ups:
+Полная дорожная карта — **[`ROADMAP.md`](ROADMAP.md)**. Список 27 шипнутых слайсов хранится там с техническими нотами и результатами проверок. Открытые follow-ups:
 
 - ActionEdge → SceneBeat (связать timeline с Session model)
 - Auto-suggest end-session по word-count эвристике
@@ -234,6 +234,8 @@ API-ключи OpenAI/Anthropic хранятся только в `sessionStorage
 Это уменьшает время и поверхность утечки, но не делает browser-direct cloud calls production-safe: XSS в том же origin всё ещё может прочитать session key. Перед paid SaaS или общедоступным production OpenAI/Anthropic нужно маршрутизировать через backend gateway с user auth, server-side secrets, rate limits, budgets и audit metadata без prompt/response logging. OpenAI client пока использует `dangerouslyAllowBrowser: true`, Anthropic — `anthropic-dangerous-direct-browser-access`; UI честно помечает этот режим как demo-only.
 
 Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
+
+GitHub Pages публикуется только после locked install без lifecycle scripts, typecheck, tests, lint и production build. Сборка выполняется с read-only token без сохранённых Git credentials; отдельный publisher получает проверенный immutable artifact и минимальный `contents: write`. Все используемые GitHub Actions зафиксированы полными commit SHA.
 
 ---
 

@@ -13,7 +13,7 @@
 ## Commands
 
 ```bash
-npm install
+npm ci --ignore-scripts --no-audit
 npm run dev        # Dev server on :5173
 npm run build      # Production build
 npm run lint       # ESLint

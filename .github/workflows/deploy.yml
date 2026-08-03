@@ -5,19 +5,22 @@ on:
       - main
   workflow_dispatch: {}
 
-permissions:
-  contents: write
+permissions: {}
 
 concurrency:
   group: dnd-pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 22
@@ -34,13 +37,70 @@ jobs:
         run: npm run build
         env:
           BASE_URL: /
-      - run: touch build/.nojekyll
-      - name: Push
-        uses: s0/git-publish-subdir-action@ac113f6bfe8896e85a373534242c949a7ea74c98 # develop, pinned 2026-08-03
-        env:
-          REPO: self
-          BRANCH: gh-pages
-          FOLDER: build
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MESSAGE: "Build: ({sha}) {msg}"
-          SQUASH_HISTORY: true
+      - name: Validate Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f build/index.html
+          test -f build/CNAME
+          test "$(cat build/CNAME)" = "dnd.eclipse-forge.ru"
+          if find build -type l -print -quit | grep -q .; then
+            echo "::error::Pages artifact contains a symbolic link"
+            exit 1
+          fi
+          touch build/.nojekyll
+      - name: Upload immutable Pages artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dnd-pages-${{ github.sha }}
+          path: build
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Configure repository authentication
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Download verified Pages artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dnd-pages-${{ github.sha }}
+          path: build
+          digest-mismatch: error
+      - name: Publish generated gh-pages snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f build/index.html
+          test -f build/.nojekyll
+          test "$(cat build/CNAME)" = "dnd.eclipse-forge.ru"
+          if find build -type l -print -quit | grep -q .; then
+            echo "::error::Downloaded artifact contains a symbolic link"
+            exit 1
+          fi
+
+          auth_header="$(git config --local --get "http.${GITHUB_SERVER_URL}/.extraheader")"
+          if [[ -z "$auth_header" ]]; then
+            echo "::error::Repository authentication was not configured"
+            exit 1
+          fi
+
+          pages_dir="$(mktemp -d)"
+          trap 'rm -rf "$pages_dir"' EXIT
+          cp -a build/. "$pages_dir/"
+          git -C "$pages_dir" init --initial-branch=gh-pages
+          git -C "$pages_dir" config user.name "github-actions[bot]"
+          git -C "$pages_dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$pages_dir" config "http.${GITHUB_SERVER_URL}/.extraheader" "$auth_header"
+          git -C "$pages_dir" remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git -C "$pages_dir" add --all
+          git -C "$pages_dir" commit -m "Deploy ${GITHUB_SHA}"
+          git -C "$pages_dir" push --force origin gh-pages:gh-pages

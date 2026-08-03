@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 26 — session-only BYOK и mobile workspace). Ветка: `main`.
+Последнее обновление: **2026-08-03** (slice 27 — изолированный GitHub Pages publisher). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,19 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 27 — изолированный GitHub Pages publisher
+*Подготовлено 2026-08-03; production run фиксируется после push.*
+
+- [x] Удалён community publisher `s0/git-publish-subdir-action` с устаревшим Node.js 20 runtime.
+- [x] Pipeline разделён на `build` с `contents: read` и `persist-credentials: false` и короткий `publish` с необходимым `contents: write`: npm dependencies и project scripts больше не выполняются рядом с write-token.
+- [x] Между jobs передаётся immutable GitHub artifact через официальные Node.js 24 actions, зафиксированные полными commit SHA; digest mismatch останавливает публикацию.
+- [x] До upload и после download проверяются `index.html`, точный `CNAME`, отсутствие symlink и `.nojekyll`; `gh-pages` получает только одноразовый generated snapshot.
+- [x] Добавлен regression contract для permissions, immutable action pins, `npm ci --ignore-scripts` и custom-domain gate; общий suite содержит 12 тестов.
+
+**Rollback:** предыдущий snapshot остаётся доступен в истории удалённой `gh-pages`; при сбое workflow production не меняется. Принудительная запись разрешена только для generated deploy branch.
+
+**Локально:** 12/12 Node tests зелёные. Две попытки locked install зависли на registry и вторая завершилась по timeout 300 секунд, поэтому typecheck/lint/build этого слайса должен подтвердить чистый GitHub Actions runner до публикации.
 
 ### v0.3 slice 26 — session-only BYOK и mobile workspace
 *Отгружено 2026-08-03 после security и responsive-аудита публичной demo.*
@@ -323,7 +336,6 @@
 ### Открытые follow-ups
 
 - [ ] **P1 / M — production AI gateway** — заменить browser-direct OpenAI/Anthropic на backend с user auth, server-side secrets, per-user budgets, rate limits и audit metadata без prompt/response logging. До этого cloud BYOK остаётся только demo-сценарием.
-- [ ] **P3 / S — обновить GitHub Pages publisher** — заменить `s0/git-publish-subdir-action`, который всё ещё объявляет Node.js 20 и запускается runner'ом в compatibility mode с Node.js 24. Текущий deploy зелёный, но annotation нужно убрать до принудительного отключения совместимости.
 - [ ] **ActionEdge → SceneBeat** — исторический Action-таймлайн всё ещё чисто нарративный; Session-aware тип scene-beat связал бы рёбра таймлайна с новой моделью Session, чтобы таймлайн мог показывать разделители глав.
 - [ ] **Авто-завершение сессии по эвристике** — ненавязчивая подсказка «вы написали 2000+ слов с последней архивированной сессии, заархивировать сейчас?»
 
@@ -354,7 +366,7 @@
 - `src/study/*` — HCI study-каркас из VisualStoryWriting, нетронут. Не часть продуктовой поверхности, но всё ещё в бандле.
 - Тип `Action` всё ещё представляет generic narrative actions — нужен рефрейминг в «scene beats» внутри Session-контейнера.
 - `dangerouslyAllowBrowser: true` / Anthropic direct-browser header остаются только для demo. Keys теперь session-only и не попадают в URL, persistent storage или Vite env, но перед paid/public production всё равно нужен backend gateway.
-- Build-статус: `npm run build` не запускался локально с момента отгрузки v0.1-слайса из-за повторяющихся `ECONNRESET` к npm registry в dev-окружении. Деплой на GitHub Pages при этом работает (workflow билдит на своём CI). Прогнать локально и зафиксировать здесь, когда сеть позволит.
+- Production gateway пока отсутствует: cloud BYOK остаётся demo-only, а Ollama — локальным вариантом без передачи ключа приложению.
 
 ---
 
