@@ -63,7 +63,7 @@ export class OllamaProvider implements AiProvider {
         let buffer = "";
         let text = "";
 
-        while (true) {
+        for (;;) {
             const { value, done } = await reader.read();
             if (done) break;
 

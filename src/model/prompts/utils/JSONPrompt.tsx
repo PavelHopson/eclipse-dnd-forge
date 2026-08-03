@@ -36,7 +36,7 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
       // Default fallback for other types (e.g., ZodUnion)
       return null;
     }
-  };
+  }
 
 
   addMissingFields(partialResponse: any, schema: z.ZodType): any {
