@@ -64,14 +64,12 @@ export default function Launcher() {
   }
 
   return (
-    <div
-      className="launcher-shell"
-    >
-      <Card style={{ maxWidth: 920, width: '100%', background: '#fdf6e3' }}>
+    <div className="launcher-shell" data-visual-profile="product">
+      <Card className="launcher-card" style={{ maxWidth: 920, width: '100%', background: '#fdf6e3' }}>
         <CardHeader style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '20px 24px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 32, color: '#7a1f1f' }}><GiCrossedSwords /></span>
-            <span style={{ fontSize: 26, fontWeight: 800, color: '#2a1a1a', fontFamily: 'serif' }}>
+            <span className="launcher-brand" style={{ fontSize: 26, fontWeight: 800, color: '#2a1a1a' }}>
               Eclipse DnD Forge
             </span>
           </div>

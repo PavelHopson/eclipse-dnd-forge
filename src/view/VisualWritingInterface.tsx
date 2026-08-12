@@ -210,7 +210,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   }
 
   return (
-    <div className='dnd-workspace'>
+    <div className='dnd-workspace' data-visual-profile='product'>
       <div className='dnd-mobile-view-switcher' role='tablist' aria-label='Рабочая область кампании'>
         <button
           type='button'

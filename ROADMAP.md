@@ -484,3 +484,9 @@ revocation до одного часа и browser-local campaigns без server A
 2. Подними один пункт из **Следующее** в **Активный слайс**, если слот свободен.
 3. Обнови дату «Последнее обновление» сверху.
 4. Держи файл осмысленным — пункты бэклога это указатели, не спеки.
+## Visual contract pilot — slice 33 (2026-08-12)
+
+- [x] Add the local versioned token snapshot and self-hosted Outfit/Inter assets.
+- [x] Reframe the launcher with the Eclipse deep-black grid, one gold/blue ambient anchor and a reduced-motion-safe presence reveal.
+- [x] Keep the parchment writing workspace and campaign controls readable instead of turning them into a marketing surface.
+- [x] Pass TypeScript, 25 tests and production build; compatible lockfile remediation clears critical/high production advisories. Four moderate router/uuid findings and the existing 1.69 MB bundle warning remain for separate non-breaking remediation.

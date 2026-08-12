@@ -266,3 +266,6 @@ GitHub Pages публикуется только после locked install бе�
 <div align="center">
 <sub>Eclipse Forge · Сделано для мастеров подземелий</sub>
 </div>
+## Eclipse Forge visual contract
+
+DnD Forge uses the local `eclipse-forge.visual-system.v1` `product` profile for the launcher and app shell. The shared signal-blue/warm-gold stage, Outfit/Inter typography and reduced-motion behavior frame the product while the parchment editor remains optimized for long-form campaign reading.
