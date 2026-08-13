@@ -269,3 +269,5 @@ GitHub Pages публикуется только после locked install бе�
 ## Eclipse Forge visual contract
 
 DnD Forge uses the local `eclipse-forge.visual-system.v1` `product` profile for the launcher and app shell. The shared signal-blue/warm-gold stage, Outfit/Inter typography and reduced-motion behavior frame the product while the parchment editor remains optimized for long-form campaign reading.
+
+The initial launcher no longer downloads the full campaign editor or legacy study surfaces. They load on demand with a visible, accessible transition, reducing first-visit JavaScript without removing the preserved research routes. The production build now emits separate editor and study chunks; the largest remaining chunk is 1.24 MB and stays queued for vendor-level splitting.

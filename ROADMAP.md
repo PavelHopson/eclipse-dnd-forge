@@ -490,3 +490,10 @@ revocation до одного часа и browser-local campaigns без server A
 - [x] Reframe the launcher with the Eclipse deep-black grid, one gold/blue ambient anchor and a reduced-motion-safe presence reveal.
 - [x] Keep the parchment writing workspace and campaign controls readable instead of turning them into a marketing surface.
 - [x] Pass TypeScript, 25 tests and production build; compatible lockfile remediation clears critical/high production advisories. Four moderate router/uuid findings and the existing 1.69 MB bundle warning remain for separate non-breaking remediation.
+
+## Performance and dependency hardening — 2026-08-13
+
+- [x] Defer the campaign workspace and legacy study routes with React lazy loading while keeping the launcher and auth callback immediately available.
+- [x] Add an accessible, reduced-motion-safe route loading state instead of a blank transition.
+- [x] Upgrade the build/router toolchain to patched releases and pin the legacy tree transitive UUID implementation to a fixed version.
+- [x] Verify 26 tests, typecheck, lint, production build and a zero-advisory npm audit; retain the 1.24 MB main-chunk warning for the next vendor split.
