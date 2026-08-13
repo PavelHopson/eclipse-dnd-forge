@@ -36,7 +36,7 @@ test("cloud keys are not bundled from env or carried in the campaign URL", async
 
     const persistentSnapshot = store.slice(
         store.indexOf("function snapshot"),
-        store.indexOf("function buildProviderFor"),
+        store.indexOf("export const useAiConfigStore"),
     );
     assert.doesNotMatch(persistentSnapshot, /ApiKey/);
 });

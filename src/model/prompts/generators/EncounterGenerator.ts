@@ -95,7 +95,7 @@ export function buildEncounterPrompt(criteria: EncounterCriteria): string {
 /** Generate the encounter without yet committing to the model. */
 export async function generateEncounter(criteria: EncounterCriteria): Promise<GeneratedEncounter> {
     const prompt = buildEncounterPrompt(criteria);
-    return currentProvider().generateStructured(
+    return (await currentProvider()).generateStructured(
         [{ role: "user", content: prompt }],
         { schema: ENCOUNTER_SCHEMA, schemaName: "encounter" },
         { model: currentModel(), temperature: 0.7 },

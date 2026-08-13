@@ -1,7 +1,6 @@
 import { NextUIProvider } from '@nextui-org/react';
 import { lazy, StrictMode, Suspense, type ReactNode } from 'react';
 import { RouterProvider, createHashRouter } from 'react-router-dom';
-import { useStudyStore } from './study/StudyModel';
 import Launcher from './view/Launcher';
 import AuthCallbackPage from './view/auth/AuthCallbackPage';
 import IdentityCanaryPage from './view/auth/IdentityCanaryPage';
@@ -26,7 +25,8 @@ function deferred(element: ReactNode) {
 const router = createHashRouter([
   {
     path: 'free-form',
-    loader: () => {
+    loader: async () => {
+      const { useStudyStore } = await import('./study/StudyModel');
       useStudyStore.getState().setIsDataSaved(false);
       return null;
     },

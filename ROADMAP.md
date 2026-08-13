@@ -497,3 +497,13 @@ revocation до одного часа и browser-local campaigns без server A
 - [x] Add an accessible, reduced-motion-safe route loading state instead of a blank transition.
 - [x] Upgrade the build/router toolchain to patched releases and pin the legacy tree transitive UUID implementation to a fixed version.
 - [x] Verify 26 tests, typecheck, lint, production build and a zero-advisory npm audit; retain the 1.24 MB main-chunk warning for the next vendor split.
+
+## Initial bundle hardening — 2026-08-13
+
+- [x] Campaign templates remain lightweight data; Slate, React Flow, study state and the legacy OpenAI client load only after a campaign is selected.
+- [x] AI provider implementations load on the first AI request instead of being bundled into the launcher.
+- [x] Launcher preserves the campaign icon locally, exposes a visible loading label, disables duplicate starts and reports a recoverable error.
+- [x] Removed the redundant Google Fonts request; Inter and Outfit now come only from the existing local font assets.
+- [x] Added route-splitting regression coverage and a CI budget capped at 650 KiB for the initial JavaScript entry.
+- [x] Initial JavaScript dropped from 1,242.91 kB to 593.52 kB (−52.2%); 27 tests, typecheck, lint, production build, bundle budget and zero-advisory npm audit pass.
+- [ ] Desktop/mobile screenshot, keyboard and reduced-motion QA remain blocked by the Codex Windows browser sandbox setup failure (helper_unknown_error); rollout stays a performance-ready pilot until that gate can run.

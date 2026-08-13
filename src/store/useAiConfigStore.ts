@@ -1,10 +1,5 @@
 import { create } from "zustand";
-import { AiProvider, AiProviderId } from "../model/ai/types";
-import { OpenAIProvider } from "../model/ai/OpenAIProvider";
-import { OllamaProvider } from "../model/ai/OllamaProvider";
-import { AnthropicProvider } from "../model/ai/AnthropicProvider";
-import { FallbackProvider } from "../model/ai/FallbackProvider";
-import { EclipseGatewayProvider } from "../model/ai/EclipseGatewayProvider";
+import type { AiProvider, AiProviderId } from "../model/ai/types";
 import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
 import {
     clearSessionCredentials,
@@ -80,7 +75,7 @@ interface AiConfigState extends PersistedConfig, CloudCredentials {
     setUseFallback: (value: boolean) => void;
     clearCloudCredentials: () => void;
     /** Build a fresh provider instance (or fallback chain) from current config. */
-    getProvider: () => AiProvider;
+    getProvider: () => Promise<AiProvider>;
 }
 
 function snapshot(state: PersistedConfig): PersistedConfig {
@@ -95,12 +90,6 @@ function snapshot(state: PersistedConfig): PersistedConfig {
     };
 }
 
-function buildProviderFor(id: AiProviderId, state: PersistedConfig & CloudCredentials): AiProvider {
-    if (id === "eclipse") return new EclipseGatewayProvider(state.gatewayModel);
-    if (id === "ollama") return new OllamaProvider(state.ollamaBaseUrl, state.ollamaModel);
-    if (id === "anthropic") return new AnthropicProvider(state.anthropicApiKey, state.anthropicModel);
-    return new OpenAIProvider();
-}
 
 export const useAiConfigStore = create<AiConfigState>((set, get) => {
     const initial = loadConfig();
@@ -140,34 +129,14 @@ export const useAiConfigStore = create<AiConfigState>((set, get) => {
             set({ openaiApiKey: "", anthropicApiKey: "" });
         },
 
-        getProvider: () => {
-            const state = get();
-            const primary = buildProviderFor(state.providerId, state);
-
-            // The managed gateway never silently falls back to browser BYOK.
-            // This keeps billing, privacy and audit expectations explicit.
-            if (!state.useFallback || state.providerId === "eclipse") return primary;
-
-            // Build the chain: primary first, then the remaining real providers
-            // for which we have enough config to attempt a call.
-            const order: AiProviderId[] = ["eclipse", "openai", "ollama", "anthropic"];
-            const others = order.filter((p) => p !== state.providerId);
-
-            const eligible = others.filter((p) => {
-                if (p === "eclipse") return false;
-                if (p === "openai") return state.openaiApiKey.length > 0;
-                if (p === "ollama") return state.ollamaBaseUrl.length > 0;
-                if (p === "anthropic") return state.anthropicApiKey.length > 0;
-                return false;
-            });
-
-            const chain: AiProvider[] = [primary, ...eligible.map((p) => buildProviderFor(p, state))];
-            return new FallbackProvider(chain);
+        getProvider: async () => {
+            const { buildProvider } = await import("../model/ai/providerFactory");
+            return buildProvider(get());
         },
     };
 });
 
-export function currentProvider(): AiProvider {
+export async function currentProvider(): Promise<AiProvider> {
     return useAiConfigStore.getState().getProvider();
 }
 

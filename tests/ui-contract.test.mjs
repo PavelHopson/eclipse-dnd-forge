@@ -54,3 +54,14 @@ test("mobile workspace exposes one obvious pane and bounded overlays", async () 
         assert.match(panel, /className="dnd-overlay-panel"/, `${panelFiles[index]} must use the bounded mobile overlay`);
     });
 });
+
+test("visual contract uses only self-hosted fonts", async () => {
+    const [html, styles] = await Promise.all([
+        readFile(new URL("../index.html", import.meta.url), "utf8"),
+        readFile(new URL("../src/index.css", import.meta.url), "utf8"),
+    ]);
+
+    assert.doesNotMatch(html, /fonts[.]googleapis[.]com|fonts[.]gstatic[.]com/);
+    assert.match(styles, /src: url\('\/fonts\/inter-cyrillic[.]woff2'\)/);
+    assert.match(styles, /src: url\('\/fonts\/outfit-latin[.]woff2'\)/);
+});

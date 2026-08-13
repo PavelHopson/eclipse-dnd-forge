@@ -32,7 +32,7 @@ export async function generateSessionRecap(sessionText: string, sessionName?: st
         `Write the recap.`,
     ].filter(Boolean).join("\n");
 
-    const { text } = await currentProvider().streamChat(
+    const { text } = await (await currentProvider()).streamChat(
         [
             { role: "system", content: sysPrompt },
             { role: "user", content: userPrompt },

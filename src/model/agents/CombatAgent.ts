@@ -99,7 +99,7 @@ export async function suggestCombatTactic(
 
     // Single-turn structure: system + one user message ("Propose this creature's next move.").
     // The agent's job is reasoning over the world snapshot, not a long dialogue.
-    const { text } = await currentProvider().streamChat(
+    const { text } = await (await currentProvider()).streamChat(
         [
             { role: "system", content: systemPrompt },
             { role: "user", content: `Propose ${monster.name}'s next action this turn.` },

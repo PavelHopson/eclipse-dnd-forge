@@ -40,6 +40,8 @@ jobs:
         env:
           BASE_URL: /
           VITE_DND_IDENTITY_CANARY_ENABLED: true
+      - name: Enforce initial bundle budget
+        run: npm run bundle:check
       - name: Validate Pages artifact
         shell: bash
         run: |

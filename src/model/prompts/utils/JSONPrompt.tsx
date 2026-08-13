@@ -111,7 +111,7 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
   private async executeViaProvider(): Promise<PromptResult<T>> {
     useStudyStore.getState().logEvent("PROMPT_TO_EXECUTE", { prompt: this.prompt.prompt });
     const cfg = useAiConfigStore.getState();
-    const provider = cfg.getProvider();
+    const provider = await cfg.getProvider();
 
     const model = this.prompt.model
       || (cfg.providerId === "eclipse" ? cfg.gatewayModel

@@ -102,6 +102,16 @@ body,
   pointer-events: none;
 }
 .launcher-card { position: relative; z-index: 1; border: 1px solid rgba(212,175,55,.28); box-shadow: 0 28px 90px rgba(0,0,0,.45), 0 0 0 1px rgba(107,163,255,.08); animation: launcherEnter .7s var(--ef-presence) both; }
+.campaign-start-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(160, 45, 45, .36);
+  border-radius: 8px;
+  background: rgba(160, 45, 45, .08);
+  color: #7a1f1f;
+  font-size: 12px;
+  font-weight: 700;
+}
 .launcher-brand { font-family: Outfit, Inter, sans-serif; letter-spacing: -.025em; }
 @keyframes launcherEnter { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
 

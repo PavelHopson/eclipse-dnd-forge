@@ -1,6 +1,4 @@
-import { Entity, EntityNode, Location, LocationNode } from "../Model";
-import { CreateEntityNode } from "../../view/entityActionView/EntityNodeComponent";
-import { CreateLocatioNode } from "../../view/locationView/LocationNodeComponent";
+import type { Entity, Location } from "../Model";
 
 export type CampaignSeed = {
     entities: Entity[]
@@ -252,12 +250,3 @@ Sheriff Doral Vance has posted a fifty-gold bounty for any party willing to esco
         }
     },
 ];
-
-export function seedToNodes(seed: CampaignSeed): {
-    entityNodes: EntityNode[]
-    locationNodes: LocationNode[]
-} {
-    const entityNodes = seed.entities.map((e, i) => CreateEntityNode(e, i));
-    const locationNodes = seed.locations.map((l, i) => CreateLocatioNode(l, i));
-    return { entityNodes, locationNodes };
-}

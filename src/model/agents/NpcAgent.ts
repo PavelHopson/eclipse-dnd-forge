@@ -140,7 +140,7 @@ export async function runNpcDialogue(
 
     const messages = buildMessages(ctx, newPlayerMessage);
 
-    const { text } = await currentProvider().streamChat(messages, {
+    const { text } = await (await currentProvider()).streamChat(messages, {
         model: currentModel(),
         temperature: 0.8,
         onPartial,

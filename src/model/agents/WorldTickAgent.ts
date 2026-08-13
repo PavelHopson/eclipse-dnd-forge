@@ -123,7 +123,7 @@ export async function tickEntity(entity: Entity, entityId: string, tickId: strin
         others,
     });
 
-    const { text } = await currentProvider().streamChat(
+    const { text } = await (await currentProvider()).streamChat(
         [
             { role: "system", content: systemPrompt },
             { role: "user", content: `Simulate one off-screen tick for ${entity.name}.` },
