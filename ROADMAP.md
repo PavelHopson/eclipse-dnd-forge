@@ -505,5 +505,5 @@ revocation до одного часа и browser-local campaigns без server A
 - [x] Launcher preserves the campaign icon locally, exposes a visible loading label, disables duplicate starts and reports a recoverable error.
 - [x] Removed the redundant Google Fonts request; Inter and Outfit now come only from the existing local font assets.
 - [x] Added route-splitting regression coverage and a CI budget capped at 650 KiB for the initial JavaScript entry.
-- [x] Initial JavaScript dropped from 1,242.91 kB to 593.52 kB (−52.2%); 27 tests, typecheck, lint, production build, bundle budget and zero-advisory npm audit pass.
+- [x] Initial JavaScript dropped from 1,242.91 kB to 593.52 kB (−52.2%); 28 tests, typecheck, lint, production build, bundle budget and zero-advisory npm audit pass.
 - [ ] Desktop/mobile screenshot, keyboard and reduced-motion QA remain blocked by the Codex Windows browser sandbox setup failure (helper_unknown_error); rollout stays a performance-ready pilot until that gate can run.
