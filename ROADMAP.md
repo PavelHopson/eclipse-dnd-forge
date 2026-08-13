@@ -48,6 +48,17 @@
 
 ## ✅ Сделано
 
+### v0.3 slice 33 ? versioned Campaign Map Asset import
+
+*Implemented 2026-08-13 as the first Eclipse Spec Gate contract pilot.*
+
+- [x] Added strict `eclipse.campaign-map-asset.v1` parsing with exact root, map and place fields.
+- [x] Reused the existing local preview and explicit import confirmation; no hidden network request or automatic campaign mutation.
+- [x] Rejected URL/path extensions, duplicate names, invalid flags and collections above 60 places.
+- [x] Added round-trip and fail-closed regression tests; typecheck and the 30-test suite pass.
+
+**Current boundary:** the UI imports and downloads a versioned asset after preview. Roads/states, cloud storage and automatic world mutation remain out of scope.
+
 ### v0.3 slice 32 — встроенное подключение из Eclipse Chat
 *Реализовано 2026-08-03; managed AI остаётся выключен до отдельного rollout gate.*
 

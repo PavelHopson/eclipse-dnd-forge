@@ -1,9 +1,10 @@
 import { Button } from "@nextui-org/react";
 import { ChangeEvent, useMemo, useRef, useState } from "react";
 import { GiWorld } from "react-icons/gi";
-import { IoCheckmarkCircle, IoClose, IoCopyOutline, IoDocumentTextOutline, IoOpenOutline } from "react-icons/io5";
+import { IoCheckmarkCircle, IoClose, IoCopyOutline, IoDocumentTextOutline, IoDownloadOutline, IoOpenOutline } from "react-icons/io5";
 import { LayoutUtils } from "../../model/LayoutUtils";
 import { useModelStore } from "../../model/Model";
+import { buildCampaignMapAsset, readMapImport, serializeCampaignMapAsset } from "../../model/dnd/campaignMapContract";
 import {
     AZGAAR_MAP_URL,
     MAX_AZGAAR_JSON_BYTES,
@@ -12,7 +13,6 @@ import {
     azgaarPlaceToLocation,
     buildAzgaarCampaignBrief,
     planAzgaarImport,
-    readAzgaarExport,
 } from "../../model/dnd/azgaarImport";
 import { CreateLocatioNode } from "../locationView/LocationNodeComponent";
 
@@ -32,6 +32,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
     const campaignText = useModelStore((state) => state.text);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [summary, setSummary] = useState<AzgaarExportSummary | null>(null);
+    const [inputKind, setInputKind] = useState<"azgaar" | "campaign-map-asset" | null>(null);
     const [fileName, setFileName] = useState("");
     const [mode, setMode] = useState<AzgaarImportMode>("important");
     const [isReading, setIsReading] = useState(false);
@@ -67,6 +68,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
         setError(null);
         setFeedback(null);
         setSummary(null);
+        setInputKind(null);
         setFileName(file.name);
 
         if (!file.name.toLocaleLowerCase("en").endsWith(".json")) {
@@ -80,7 +82,9 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
 
         setIsReading(true);
         try {
-            setSummary(readAzgaarExport(await file.text()));
+            const result = readMapImport(await file.text());
+            setSummary(result.summary);
+            setInputKind(result.inputKind);
         } catch (reason) {
             setError(reason instanceof Error ? reason.message : "Не удалось проверить JSON-файл.");
         } finally {
@@ -112,6 +116,21 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
         );
         setFeedback(`Добавлено ${imported.length} локаций. Повторный импорт этого файла не создаст дубли.`);
     };
+    const downloadCampaignMapAsset = () => {
+        if (!summary || !plan || plan.selected.length === 0) return;
+        const blob = new Blob(
+            [serializeCampaignMapAsset(buildCampaignMapAsset(summary, plan.selected))],
+            { type: "application/json" },
+        );
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "campaign-map.asset.json";
+        anchor.click();
+        URL.revokeObjectURL(url);
+        setFeedback("Campaign Map Asset downloaded. Re-import it through the same preview.");
+    };
+
 
     return (
         <section
@@ -218,6 +237,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
                     <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
                         <div style={{ borderRadius: 9, background: "#f3ead5", padding: 10 }}>
                             <strong>{summary.mapName}</strong>
+                            <p style={{ margin: "3px 0 0", color: "#6b5c4c" }}>{inputKind === "campaign-map-asset" ? "Campaign Map Asset" : "Azgaar JSON"}</p>
                             <div style={{ color: "#6b5c4c", marginTop: 3 }}>
                                 Найдено мест: {summary.places.length} · дублей: {plan.duplicates.length} · пропущено или объединено: {summary.skippedPlaceCount}
                                 {summary.version ? ` · Azgaar ${summary.version}` : ""}
@@ -270,6 +290,14 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
                             {plan.selected.length > 0
                                 ? `Добавить ${plan.selected.length} локаций`
                                 : "Новых локаций нет"}
+                        </Button>
+                        <Button
+                            variant="bordered"
+                            startContent={<IoDownloadOutline />}
+                            isDisabled={plan.selected.length === 0}
+                            onClick={downloadCampaignMapAsset}
+                        >
+                            Download Campaign Map Asset
                         </Button>
                     </div>
                 )}
