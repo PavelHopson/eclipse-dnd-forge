@@ -13,5 +13,26 @@ export default defineConfig({
     sourcemap: false,
     outDir: 'build',
     minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        onlyExplicitManualChunks: true,
+        manualChunks(id) {
+          const moduleId = id.split('\\').join('/')
+
+          if (!moduleId.includes('/node_modules/')) return undefined
+          if (moduleId.includes('/openai/')) return 'ai-openai'
+          if (moduleId.includes('/slate')) return 'editor'
+          if (
+            moduleId.includes('/@xyflow/') ||
+            moduleId.includes('/react-d3-tree/') ||
+            moduleId.includes('/d3-')
+          ) {
+            return 'graph'
+          }
+          if (moduleId.includes('/react-icons/')) return 'icons'
+          return undefined
+        },
+      },
+    },
   }
 })

@@ -507,3 +507,10 @@ revocation до одного часа и browser-local campaigns без server A
 - [x] Added route-splitting regression coverage and a CI budget capped at 650 KiB for the initial JavaScript entry.
 - [x] Initial JavaScript dropped from 1,242.91 kB to 593.52 kB (−52.2%); 28 tests, typecheck, lint, production build, bundle budget and zero-advisory npm audit pass.
 - [ ] Desktop/mobile screenshot, keyboard and reduced-motion QA remain blocked by the Codex Windows browser sandbox setup failure (helper_unknown_error); rollout stays a performance-ready pilot until that gate can run.
+## Deferred workspace chunk boundaries — 2026-08-13
+
+- [x] Split the campaign-only OpenAI SDK, Slate editor, graph runtime and icon set into explicit deferred package boundaries without preloading them on the launcher.
+- [x] Keep Rollup dependencies with their dynamic importers via `onlyExplicitManualChunks`, avoiding eager graph/editor execution and cross-chunk cycles.
+- [x] Replace the single-entry size check with a complete initial `script` + `modulepreload` graph budget (650 KiB) and a separate 500 KiB ceiling for every deferred JavaScript chunk.
+- [x] Initial graph now measures 578.1 KiB; the largest deferred chunk is 205.2 KiB. Production build emits no oversized-chunk or circular-chunk warning.
+- [ ] Desktop/mobile screenshot, keyboard and reduced-motion QA remain blocked by the Codex Windows browser sandbox setup failure (`helper_unknown_error`); do not mark visual QA complete until a real browser run succeeds.
