@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-03** (slice 32 — встроенное подключение из Eclipse Chat). Ветка: `main`.
+Последнее обновление: **2026-08-20** (slice 34 — Reference Board Wizard). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,25 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 34 — Reference Board Wizard
+
+*Реализовано 2026-08-20 как bounded vertical slice для campaign assets.*
+
+- [x] В campaign toolbar встроена одна Reference Board для character, creature, location,
+  object, pose и shot; wizard ведёт через type → stable traits → preview → provenance/status.
+- [x] Project bible фиксирует visual direction, palette, camera language, continuity rules
+  и avoid list; данные сохраняются локально и экспортируются как versioned JSON.
+- [x] Preview ограничен 256 КБ и локальными PNG/JPEG/WebP с проверкой magic bytes; внешние
+  image URL, SVG, неизвестные поля и доски больше 24 assets отклоняются fail-closed.
+- [x] Реальные лица по умолчанию выключены; approved недоступен без полного provenance,
+  а узнаваемое лицо без явного consent evidence получает blocked status.
+- [x] Добавлены empty/loading/error/success/disabled/focus states, mobile layout и
+  `prefers-reduced-motion` contract.
+
+**Проверено локально:** lint, typecheck, production build и 46/46 Node tests проходят.
+Интерактивный browser smoke не запустился из-за локального Windows sandbox helper; mobile,
+focus и reduced-motion покрыты статическими UI contract tests.
 
 ### v0.3 slice 33 ? versioned Campaign Map Asset import
 

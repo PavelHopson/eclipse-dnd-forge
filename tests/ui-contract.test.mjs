@@ -34,6 +34,7 @@ test("mobile workspace exposes one obvious pane and bounded overlays", async () 
         "NpcDialoguePanel.tsx",
         "NpcGeneratorPanel.tsx",
         "PlayModePanel.tsx",
+        "ReferenceBoardPanel.tsx",
         "SessionsPanel.tsx",
         "WorldTickPanel.tsx",
     ];
@@ -51,7 +52,7 @@ test("mobile workspace exposes one obvious pane and bounded overlays", async () 
     assert.match(styles, /\.mobile-pane-story \.dnd-visual-column/);
     assert.match(styles, /\.dnd-overlay-panel\s*\{[^}]*width: calc\(100vw - 24px\) !important;/s);
     panels.forEach((panel, index) => {
-        assert.match(panel, /className="dnd-overlay-panel"/, `${panelFiles[index]} must use the bounded mobile overlay`);
+        assert.match(panel, /className="[^"]*\bdnd-overlay-panel\b[^"]*"/, `${panelFiles[index]} must use the bounded mobile overlay`);
     });
 });
 

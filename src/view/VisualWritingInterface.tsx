@@ -3,6 +3,7 @@ import { ReactFlowProvider, useKeyPress } from '@xyflow/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
 import { GiBattleAxe, GiBookmarklet, GiCastle, GiChatBubble, GiCrossedSwords, GiCrown, GiDiceTwentyFacesTwenty, GiMeeple, GiSandsOfTime, GiSpellBook, GiSwordman, GiWorld } from 'react-icons/gi';
+import { IoImagesOutline } from 'react-icons/io5';
 import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-icons/tb';
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
@@ -26,6 +27,7 @@ import MapWorkflowPanel from './dnd/MapWorkflowPanel';
 import NpcDialoguePanel from './dnd/NpcDialoguePanel';
 import NpcGeneratorPanel from './dnd/NpcGeneratorPanel';
 import PlayModePanel from './dnd/PlayModePanel';
+import ReferenceBoardPanel from './dnd/ReferenceBoardPanel';
 import SessionsPanel from './dnd/SessionsPanel';
 import WorldTickPanel from './dnd/WorldTickPanel';
 import EntitiesEditor from './entityActionView/EntitiesEditor';
@@ -45,6 +47,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isSessionsPanelOpen, setIsSessionsPanelOpen] = useState(false);
   const [isPlayModePanelOpen, setIsPlayModePanelOpen] = useState(false);
   const [isMapPanelOpen, setIsMapPanelOpen] = useState(false);
+  const [isReferenceBoardOpen, setIsReferenceBoardOpen] = useState(false);
   const [mobilePane, setMobilePane] = useState<'story' | 'world'>('story');
   const autoTickInterval = useWorldEventStore((s) => s.autoTickInterval);
   const locationNodes = useModelStore(state => state.locationNodes);
@@ -177,6 +180,16 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
       useModelStore.getState().setFilteredActionsSegment(null, null);
     }
   }, [escapePressed]);
+
+  useEffect(() => {
+    if (isNpcPanelOpen || talkingToEntityId || isDmPanelOpen || isWorldTickPanelOpen
+      || encounterForLocationId || isInitiativePanelOpen || isDicePanelOpen
+      || isSessionsPanelOpen || isPlayModePanelOpen || isMapPanelOpen) {
+      setIsReferenceBoardOpen(false);
+    }
+  }, [encounterForLocationId, isDicePanelOpen, isDmPanelOpen, isInitiativePanelOpen,
+    isMapPanelOpen, isNpcPanelOpen, isPlayModePanelOpen, isSessionsPanelOpen,
+    isWorldTickPanelOpen, talkingToEntityId]);
 
 
   useEffect(() => {
@@ -384,6 +397,31 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     <GiBookmarklet />
                   </Button>
                 </Tooltip>
+                <Tooltip content="Reference Board — project bible, stable traits и provenance assets" closeDelay={0}>
+                  <Button
+                    style={{ fontSize: 18, background: isReferenceBoardOpen ? '#7a1f1f' : undefined, color: isReferenceBoardOpen ? 'white' : undefined }}
+                    isIconOnly
+                    onClick={() => {
+                      const next = !isReferenceBoardOpen;
+                      setIsReferenceBoardOpen(next);
+                      if (next) {
+                        setIsNpcPanelOpen(false);
+                        setTalkingToEntityId(null);
+                        setIsDmPanelOpen(false);
+                        setIsWorldTickPanelOpen(false);
+                        setEncounterForLocationId(null);
+                        setIsInitiativePanelOpen(false);
+                        setIsDicePanelOpen(false);
+                        setIsSessionsPanelOpen(false);
+                        setIsPlayModePanelOpen(false);
+                        setIsMapPanelOpen(false);
+                      }
+                    }}
+                    aria-label="Открыть Reference Board кампании"
+                  >
+                    <IoImagesOutline />
+                  </Button>
+                </Tooltip>
                 {selectedTab === 'locations' && (
                   <Tooltip content="Карта мира — создать в Azgaar и импортировать города" closeDelay={0}>
                     <Button
@@ -527,6 +565,9 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             )}
             {isPlayModePanelOpen && !isReadOnly && (
               <PlayModePanel onClose={() => setIsPlayModePanelOpen(false)} />
+            )}
+            {isReferenceBoardOpen && !isReadOnly && (
+              <ReferenceBoardPanel onClose={() => setIsReferenceBoardOpen(false)} />
             )}
             {isMapPanelOpen && selectedTab === 'locations' && !isReadOnly && visualPanelRef.current && (
               <MapWorkflowPanel
