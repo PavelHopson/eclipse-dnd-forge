@@ -2,7 +2,7 @@
 
 > Единый источник правды. README ссылается сюда. Обновляется на каждом отгруженном слайсе.
 
-Последнее обновление: **2026-08-20** (slice 34 — Reference Board Wizard). Ветка: `main`.
+Последнее обновление: **2026-08-20** (slice 35 — Reference Board legal/safety gate). Ветка: `main`.
 
 > 🎯 **Стратегический вектор (зафиксирован 2026-05-12):** Eclipse DnD Forge — это не «набор помощников для мастера», а **настолка с ИИ-агентами**. Каждая сущность на визуальном графе — обращаемый агент (NPC / монстр / фракция / герой / DM). Agent-слой — это ядро архитектуры; генераторы энкаунтеров, кубики, трекеры инициативы — второстепенные инструменты, висящие на нём. Старые пункты «DM-tools» остаются в **Бэклоге**, но больше не определяют направление.
 
@@ -47,6 +47,25 @@
 ---
 
 ## ✅ Сделано
+
+### v0.3 slice 35 — Reference Board legal/safety gate
+
+*Реализовано 2026-08-20 как отдельный policy/enforcement слой без изменений Living World UI.*
+
+- [x] Зафиксирована policy для source rights, real-person consent, biometric likeness,
+  derivative/trademark risk, provenance, retention, takedown и commercial use.
+- [x] Добавлен строгий `eclipse.reference-media-policy.v1` envelope с состояниями
+  `allowed`, `review-required` и `blocked`; unknown fields и неполные evidence records
+  отклоняются fail-closed.
+- [x] Commercial gate требует rights scope, asset approval и отдельный product trademark
+  clearance; `Eclipse DnD Forge` не считается cleared для billing автоматически.
+- [x] Reference Board V1 явно остаётся internal/non-commercial gate: generated/public media
+  требует отдельного policy decision с exact output/prompt digests.
+- [x] Focused tests покрывают существующий provenance gate, consent, minors/public figures,
+  derivative/trademark review, retention, takedown и commercial approval.
+
+**Security boundary:** policy regression guard не является юридической гарантией. Biometric
+media остаётся human-review-only, а public figures не считаются consent-free.
 
 ### v0.3 slice 34 — Reference Board Wizard
 
