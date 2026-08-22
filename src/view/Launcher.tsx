@@ -65,7 +65,7 @@ export default function Launcher() {
   }
 
   return (
-    <div className="launcher-shell" data-visual-profile="product">
+    <div className="launcher-shell" data-visual-profile="editorial-world">
       <Card className="launcher-card" style={{ maxWidth: 920, width: '100%', background: '#fdf6e3' }}>
         <CardHeader style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '20px 24px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

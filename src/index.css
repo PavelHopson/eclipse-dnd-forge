@@ -656,3 +656,29 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .dnd-route-loading__signal { animation: none; }
 }
+
+/* Visual profile: editorial fantasy + lightweight depth. */
+.launcher-shell[data-visual-profile="editorial-world"] {
+  --dnd-editorial-ink: #211913;
+  --dnd-editorial-paper: #f6ecd5;
+  background:
+    radial-gradient(circle at 24% 12%, rgba(212,175,55,.14), transparent 24rem),
+    linear-gradient(135deg, #07090d, #111017 54%, #080a0e);
+  perspective: 1200px;
+}
+.launcher-shell[data-visual-profile="editorial-world"] .launcher-card {
+  border: 1px solid rgba(212,175,55,.38);
+  box-shadow: 0 36px 90px rgba(0,0,0,.58), 0 1px 0 rgba(255,255,255,.48) inset;
+  transform: translateZ(0);
+}
+.launcher-shell[data-visual-profile="editorial-world"] .launcher-brand {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: -.025em;
+}
+.launcher-shell[data-visual-profile="editorial-world"] :focus-visible { outline: 3px solid #6ba3ff; outline-offset: 3px; }
+@media (hover:hover) and (pointer:fine) {
+  .launcher-shell[data-visual-profile="editorial-world"] .launcher-card:hover { transform: translateY(-3px) rotateX(.35deg); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .launcher-shell[data-visual-profile="editorial-world"] .launcher-card { transform: none !important; }
+}

@@ -563,3 +563,9 @@ revocation до одного часа и browser-local campaigns без server A
 - [x] Replace the single-entry size check with a complete initial `script` + `modulepreload` graph budget (650 KiB) and a separate 500 KiB ceiling for every deferred JavaScript chunk.
 - [x] Initial graph now measures 578.1 KiB; the largest deferred chunk is 205.2 KiB. Production build emits no oversized-chunk or circular-chunk warning.
 - [ ] Desktop/mobile screenshot, keyboard and reduced-motion QA remain blocked by the Codex Windows browser sandbox setup failure (`helper_unknown_error`); do not mark visual QA complete until a real browser run succeeds.
+
+## Editorial world profile — 2026-08-22
+
+- [x] Assign the `editorial-world` profile to the launcher with parchment-aware typography, restrained gold atmosphere and pointer-only spatial depth.
+- [x] Keep campaign controls, auth flow and writing workspaces behaviorally unchanged; reduced motion removes all added transforms.
+- [x] Pass typecheck, production build and the initial/deferred bundle budget.
