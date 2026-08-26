@@ -37,3 +37,19 @@ test("deleting a saved map also removes its local story pins", () => {
     assert.match(workshop, /removePinsForMap\(mapId\)/);
     assert.match(workshop, /<MapStoryPins key=\{activeMap\.id\} map=\{activeMap\}/);
 });
+
+test("player handout renderer uses the redacted plan and local canvas only", () => {
+    assert.match(pins, /prepareMapPlayerHandout\(map, pins\)/);
+    assert.match(pins, /for \(const pin of plan\.pins\)/);
+    assert.match(pins, /canvas\.toBlob/);
+    assert.match(pins, /URL\.createObjectURL/);
+    assert.match(pins, /URL\.revokeObjectURL/);
+    assert.match(pins, /без GM-меток и заметок/);
+    assert.doesNotMatch(pins, /\bfetch\s*\(/);
+});
+
+test("handout download remains closed until rights are allowed", () => {
+    assert.match(pins, /handoutPlan\.state === "ready"/);
+    assert.match(pins, /права карты требуют ручной проверки/);
+    assert.match(pins, /карта заблокирована rights gate/);
+});

@@ -1,7 +1,8 @@
 import { Button } from "@nextui-org/react";
 import { MouseEvent, useState } from "react";
-import { IoAddCircleOutline, IoEyeOffOutline, IoEyeOutline, IoSaveOutline, IoTrashOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoDownloadOutline, IoEyeOffOutline, IoEyeOutline, IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { LocationMapAsset } from "../../model/dnd/locationMap";
+import { MapPlayerHandoutPlan, prepareMapPlayerHandout } from "../../model/dnd/mapPlayerHandout";
 import {
     MAX_MAP_STORY_PINS_PER_MAP,
     MapStoryPin,
@@ -35,6 +36,84 @@ const kindMeta: Record<MapStoryPinKind, { emoji: string; label: string; color: s
     loot: { emoji: "◆", label: "Находка", color: "#8a6518" },
     portal: { emoji: "↗", label: "Переход", color: "#287052" },
 };
+
+const handoutSymbol: Record<MapStoryPinKind, string> = {
+    scene: "✦",
+    clue: "?",
+    danger: "!",
+    loot: "◆",
+    portal: "↗",
+};
+
+async function renderPlayerHandout(plan: Extract<MapPlayerHandoutPlan, { state: "ready" }>): Promise<Blob> {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = plan.previewDataUrl;
+    await image.decode();
+
+    const ratio = Math.min(1, 1800 / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("Браузер не смог подготовить player handout.");
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    if (plan.grid.type === "square") {
+        context.save();
+        context.strokeStyle = "rgba(255, 255, 255, 0.26)";
+        context.lineWidth = Math.max(0.5, Math.min(canvas.width, canvas.height) / 1200);
+        for (let column = 0; column <= plan.grid.widthCells; column += 1) {
+            const x = (column / plan.grid.widthCells) * canvas.width;
+            context.beginPath();
+            context.moveTo(x, 0);
+            context.lineTo(x, canvas.height);
+            context.stroke();
+        }
+        for (let row = 0; row <= plan.grid.heightCells; row += 1) {
+            const y = (row / plan.grid.heightCells) * canvas.height;
+            context.beginPath();
+            context.moveTo(0, y);
+            context.lineTo(canvas.width, y);
+            context.stroke();
+        }
+        context.restore();
+    }
+
+    const markerRadius = Math.max(12, Math.min(24, Math.min(canvas.width, canvas.height) * 0.025));
+    const fontSize = Math.max(13, Math.round(markerRadius * 0.9));
+    context.font = `700 ${fontSize}px sans-serif`;
+    context.textBaseline = "middle";
+    for (const pin of plan.pins) {
+        const x = (pin.x / 10000) * canvas.width;
+        const y = (pin.y / 10000) * canvas.height;
+        context.beginPath();
+        context.arc(x, y, markerRadius, 0, Math.PI * 2);
+        context.fillStyle = kindMeta[pin.kind].color;
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = "#ffffff";
+        context.stroke();
+        context.fillStyle = "#ffffff";
+        context.textAlign = "center";
+        context.fillText(handoutSymbol[pin.kind], x, y + 1);
+
+        const padding = 6;
+        const maxLabelWidth = canvas.width * 0.34;
+        const labelWidth = Math.min(context.measureText(pin.label).width, maxLabelWidth);
+        const labelX = Math.min(canvas.width - labelWidth - padding * 2, x + markerRadius + 5);
+        const labelY = Math.max(fontSize, Math.min(canvas.height - fontSize, y));
+        context.fillStyle = "rgba(23, 19, 15, 0.82)";
+        context.fillRect(labelX, labelY - fontSize, labelWidth + padding * 2, fontSize * 2);
+        context.fillStyle = "#ffffff";
+        context.textAlign = "left";
+        context.fillText(pin.label, labelX + padding, labelY, maxLabelWidth);
+    }
+
+    return await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Не удалось создать PNG handout.")), "image/png");
+    });
+}
 
 function createPinId(): string {
     const randomPart = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -103,11 +182,15 @@ export default function MapStoryPins({ map }: MapStoryPinsProps) {
     const storageError = useMapStoryPinStore((state) => state.storageError);
     const [viewMode, setViewMode] = useState<"gm" | "table">("gm");
     const [selectedPinId, setSelectedPinId] = useState("");
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportError, setExportError] = useState<string | null>(null);
+    const [exportFeedback, setExportFeedback] = useState<string | null>(null);
     const pins = library.pins.filter((pin) => pin.mapId === map.id);
     const visiblePins = viewMode === "gm" ? pins : pins.filter((pin) => pin.visibility === "table");
     const selectedPin = visiblePins.find((pin) => pin.id === selectedPinId);
     const atLimit = pins.length >= MAX_MAP_STORY_PINS_PER_MAP;
     const canEdit = viewMode === "gm" && map.rightsState !== "blocked";
+    const handoutPlan = prepareMapPlayerHandout(map, pins);
 
     const addPin = (x: number, y: number) => {
         if (!canEdit || atLimit) return;
@@ -130,6 +213,30 @@ export default function MapStoryPins({ map }: MapStoryPinsProps) {
         const x = Math.max(0, Math.min(10000, Math.round(((event.clientX - rect.left) / rect.width) * 10000)));
         const y = Math.max(0, Math.min(10000, Math.round(((event.clientY - rect.top) / rect.height) * 10000)));
         addPin(x, y);
+    };
+
+    const exportPlayerHandout = async () => {
+        if (handoutPlan.state !== "ready") return;
+        setIsExporting(true);
+        setExportError(null);
+        setExportFeedback(null);
+        try {
+            const blob = await renderPlayerHandout(handoutPlan);
+            const objectUrl = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = objectUrl;
+            anchor.download = handoutPlan.fileName;
+            anchor.rel = "noopener";
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+            setExportFeedback(`PNG сохранён без GM-меток и заметок: ${handoutPlan.fileName}`);
+        } catch (reason) {
+            setExportError(reason instanceof Error ? reason.message : "Не удалось создать player handout.");
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const gridStyle = map.grid.type === "square" ? {
@@ -211,9 +318,22 @@ export default function MapStoryPins({ map }: MapStoryPinsProps) {
             )}
 
             {viewMode === "table" && (
-                <p style={{ margin: 0, color: "#6b5c4c", fontSize: 12 }}>
-                    Показаны только table-safe метки. Это локальный preview, а не защита доступа или отдельная игровая сессия.
-                </p>
+                <div style={{ display: "grid", gap: 8 }}>
+                    <p style={{ margin: 0, color: "#6b5c4c", fontSize: 12 }}>
+                        Показаны только table-safe метки. Это локальный preview, а не защита доступа или отдельная игровая сессия.
+                    </p>
+                    {handoutPlan.state === "ready" ? (
+                        <Button color="primary" startContent={isExporting ? undefined : <IoDownloadOutline />} isLoading={isExporting} onClick={() => void exportPlayerHandout()}>
+                            Скачать PNG для игроков
+                        </Button>
+                    ) : (
+                        <p role="status" style={{ margin: 0, padding: "9px 10px", borderRadius: 8, background: handoutPlan.reason === "rights-blocked" ? "#fee2e2" : "#fef3c7", color: handoutPlan.reason === "rights-blocked" ? "#991b1b" : "#8a5a17" }}>
+                            Экспорт закрыт: {handoutPlan.reason === "rights-blocked" ? "карта заблокирована rights gate" : "права карты требуют ручной проверки"}.
+                        </p>
+                    )}
+                    {exportError && <p role="alert" style={{ margin: 0, color: "#991b1b" }}>{exportError}</p>}
+                    {exportFeedback && <p aria-live="polite" style={{ margin: 0, color: "#166534" }}>{exportFeedback}</p>}
+                </div>
             )}
 
             {visiblePins.length === 0 && (

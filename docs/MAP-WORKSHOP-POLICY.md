@@ -48,6 +48,18 @@ DevTools или browser storage технически может прочитат
 На карте со статусом `blocked` UI не позволяет создавать или редактировать метки, потому что
 это может быть новым производным материалом. Удаление карты удаляет связанные локальные метки.
 
+## Player handout export
+
+PNG handout создаётся локально только для карты с `rightsState=allowed`. Перед canvas-render
+отдельный pure plan оставляет метки текущей карты с `visibility=table` и переносит только
+координаты, тип и название. GM-метки, тексты всех заметок, timestamps и внутренние pin ids в
+export plan не входят. `review-required` и `blocked` закрывают кнопку до разрешения rights gate.
+
+Renderer читает bounded raster preview из data URL, рисует квадратную сетку и безопасные
+подписи через Canvas API, создаёт временный object URL и отзывает его после скачивания. Network
+request, iframe, HTML rendering и remote image URL не используются. Получившийся PNG больше не
+контролируется приложением: это не DRM, не ACL и не отзываемая player session.
+
 ## Dungeon Scrawl и другие внешние редакторы
 
 Dungeon Scrawl рассматривается только как внешний research/reference provider. Проект:

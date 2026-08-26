@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Статус:** ✅ v0.3 — 38 ограниченных продуктовых и safety-слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Map Workshop со Story Pins, Azgaar workflow, Eclipse identity canary и responsive workspace. Интерфейс полностью на русском.
+> **Статус:** ✅ v0.3 — 39 ограниченных продуктовых и safety-слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Map Workshop со Story Pins и player handouts, Azgaar workflow, Eclipse identity canary и responsive workspace. Интерфейс полностью на русском.
 
 </div>
 
@@ -123,6 +123,7 @@ JSONPrompt────→ │  generateStructured()       │
 - **Карта мира через Azgaar** — DnD Forge собирает бриф из кампании, открывает официальный редактор и безопасно импортирует значимые города из `Export → JSON → Minimal`. До подтверждения показываются preview, дубли и точное число новых локаций
 - **Map Workshop для локаций** — локально импортирует PNG/JPEG/WebP, создаёт bounded preview, фиксирует сетку/масштаб и provenance. Состояния `allowed`, `review-required`, `blocked` не дают ошибочно считать внешний или коммерческий use разрешённым
 - **Сюжетные метки** — сцены, улики, опасности, находки и переходы ставятся прямо поверх сохранённой карты; GM-метки скрываются в локальном player-safe preview
+- **Player handout PNG** — локально рисует карту, сетку и только открытые table-метки; GM-метки и все заметки исключаются до canvas-render
 
 ### Стартовые кампании
 
@@ -201,7 +202,8 @@ src/
 │       ├── campaignTemplates.ts — 4 seed кампании
 │       ├── azgaarImport.ts      — bounded parser, preview plan, duplicate guard
 │       ├── locationMap.ts       — versioned local map library + provenance/rights gate
-│       └── mapStoryPins.ts      — bounded narrative overlay with GM/table visibility
+│       ├── mapStoryPins.ts      — bounded narrative overlay with GM/table visibility
+│       └── mapPlayerHandout.ts  — redacted export plan + rights gate
 ├── store/
 │   ├── useAgentStore.ts       — per-entity chat histories
 │   ├── useAiConfigStore.ts    — provider config + fallback flag
@@ -257,7 +259,8 @@ Map Workshop принимает только локальные PNG/JPEG/WebP д
 описан в [`docs/MAP-WORKSHOP-POLICY.md`](docs/MAP-WORKSHOP-POLICY.md); его denylist и
 metadata-проверки являются regression guard, а не юридической гарантией. Story Pins хранят
 только bounded plain text и нормализованные координаты; режим «Игроки» скрывает GM-метки в UI,
-но не является отдельным security boundary или ACL.
+но не является отдельным security boundary или ACL. Player handout создаётся локально без
+network request только для карты `allowed`; в PNG не попадают GM-метки и тексты заметок.
 
 GitHub Pages публикуется только после locked install без lifecycle scripts, typecheck, tests, lint и production build. Сборка выполняется с read-only token без сохранённых Git credentials; отдельный publisher получает проверенный immutable artifact и минимальный `contents: write`. Все используемые GitHub Actions зафиксированы полными commit SHA.
 
