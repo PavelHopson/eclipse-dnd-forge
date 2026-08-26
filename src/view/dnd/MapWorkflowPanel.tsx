@@ -15,6 +15,7 @@ import {
     planAzgaarImport,
 } from "../../model/dnd/azgaarImport";
 import { CreateLocatioNode } from "../locationView/LocationNodeComponent";
+import LocationMapWorkshop from "./LocationMapWorkshop";
 
 interface MapWorkflowPanelProps {
     onClose: () => void;
@@ -38,6 +39,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
     const [isReading, setIsReading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
+    const [workspaceMode, setWorkspaceMode] = useState<"location" | "world">("location");
 
     const brief = useMemo(
         () => buildAzgaarCampaignBrief(campaignText, locationNodes.map((node) => node.data)),
@@ -141,7 +143,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
                 top: 60,
                 right: 16,
                 zIndex: 1000,
-                width: "min(480px, calc(100vw - 32px))",
+                width: "min(580px, calc(100vw - 32px))",
                 maxHeight: "calc(100% - 76px)",
                 overflowY: "auto",
                 overscrollBehavior: "contain",
@@ -161,9 +163,9 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
                 <div style={{ display: "flex", gap: 10 }}>
                     <GiWorld aria-hidden="true" style={{ flex: "0 0 auto", fontSize: 28, color: "#7a1f1f" }} />
                     <div>
-                        <h2 id="map-workflow-title" style={{ margin: 0, fontSize: 17, lineHeight: 1.2 }}>Карта мира</h2>
+                        <h2 id="map-workflow-title" style={{ margin: 0, fontSize: 17, lineHeight: 1.2 }}>Карты кампании</h2>
                         <p style={{ margin: "4px 0 0", color: "#6b5c4c", lineHeight: 1.4 }}>
-                            Создайте карту в Azgaar, затем перенесите подтверждённые города в кампанию.
+                            Привяжите карту к локации или синхронизируйте структуру мира.
                         </p>
                     </div>
                 </div>
@@ -172,6 +174,30 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
                 </Button>
             </header>
 
+            <div role="tablist" aria-label="Режим работы с картами" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <Button
+                    size="sm"
+                    color={workspaceMode === "location" ? "primary" : "default"}
+                    variant={workspaceMode === "location" ? "solid" : "bordered"}
+                    role="tab"
+                    aria-selected={workspaceMode === "location"}
+                    onClick={() => setWorkspaceMode("location")}
+                >
+                    Карта локации
+                </Button>
+                <Button
+                    size="sm"
+                    color={workspaceMode === "world" ? "primary" : "default"}
+                    variant={workspaceMode === "world" ? "solid" : "bordered"}
+                    role="tab"
+                    aria-selected={workspaceMode === "world"}
+                    onClick={() => setWorkspaceMode("world")}
+                >
+                    Карта мира
+                </Button>
+            </div>
+
+            {workspaceMode === "location" ? <LocationMapWorkshop /> : <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10 }}>
                 <div style={{ border: "1px solid #e2d7bd", borderRadius: 10, padding: 12, background: "#fffdf7" }}>
                     <strong style={{ display: "block", marginBottom: 5 }}>1. Подготовьте мир</strong>
@@ -317,6 +343,7 @@ export default function MapWorkflowPanel({ onClose, canvasCenter }: MapWorkflowP
             <p style={{ margin: 0, color: "#786957", fontSize: 11, lineHeight: 1.45 }}>
                 DnD Forge не загружает файл на сервер. `.map` не поддерживается: храните его как резервную рабочую копию.
             </p>
+            </>}
         </section>
     );
 }

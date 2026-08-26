@@ -12,7 +12,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-> **Статус:** ✅ v0.3 — 32 продуктовых слайса поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Azgaar workflow, Eclipse identity canary и responsive workspace. Интерфейс полностью на русском.
+> **Статус:** ✅ v0.3 — 38 ограниченных продуктовых и safety-слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Map Workshop со Story Pins, Azgaar workflow, Eclipse identity canary и responsive workspace. Интерфейс полностью на русском.
 
 </div>
 
@@ -121,6 +121,8 @@ JSONPrompt────→ │  generateStructured()       │
 - **Ability sliders** STR/DEX/CON/INT/WIS/CHA → AI rewrite поведения персонажа при tier-change (skipped когда cosmetic)
 - **Insert-at-cursor** на каждом AI-output → реплика/нарратив/тактика/event/roll прыгает в Slate в позицию курсора
 - **Карта мира через Azgaar** — DnD Forge собирает бриф из кампании, открывает официальный редактор и безопасно импортирует значимые города из `Export → JSON → Minimal`. До подтверждения показываются preview, дубли и точное число новых локаций
+- **Map Workshop для локаций** — локально импортирует PNG/JPEG/WebP, создаёт bounded preview, фиксирует сетку/масштаб и provenance. Состояния `allowed`, `review-required`, `blocked` не дают ошибочно считать внешний или коммерческий use разрешённым
+- **Сюжетные метки** — сцены, улики, опасности, находки и переходы ставятся прямо поверх сохранённой карты; GM-метки скрываются в локальном player-safe preview
 
 ### Стартовые кампании
 
@@ -142,12 +144,13 @@ JSONPrompt────→ │  generateStructured()       │
 5. ⏳ Поставить **Авто-тик: Каждые 15 минут** → каждые 15 мин тики → «🌍 N событий ждёт» в DM
 6. На вкладке «Мир и локации» выбрать **логово Cragmaw** → 🪓 **Сгенерировать энкаунтер** → 4 группы монстров с тактикой
 7. 🌍 **Карта мира** → Скопировать бриф → Открыть Azgaar → `Export → JSON → Minimal` → проверить preview → добавить города без дублей
-8. На вкладке «Герои и NPC» выбрать монстра → ⚔️ **Предложить тактику** → «Кларг бросается на жреца...» → Вставить
-9. 🗡️ **Трекер инициативы** → добавить партию + Кларга → Начать бой → Следующий ход
-10. 🎲 **Кубики** → `2d6+3` → 11 → Вставить как бросок
-11. Тянуть HP Кларга 30→8 → AI переписывает сцену: «Кларг качается, плюётся кровью...»
-12. Тянуть опасность Фандалина 3→7 → AI переписывает: «Улицы непривычно пусты, тревога в воздухе...»
-13. 📖 **Завершить сессию** → AI генерирует recap → следующий ход DM знает «Ранее в этой кампании...»
+8. 🗺️ **Карта локации** → выбрать PNG/JPEG/WebP → задать сетку и provenance → сохранить локальный preview с rights state
+9. На вкладке «Герои и NPC» выбрать монстра → ⚔️ **Предложить тактику** → вставить результат в сессию
+10. 🗡️ **Трекер инициативы** → добавить партию и противников → Начать бой → Следующий ход
+11. 🎲 **Кубики** → `2d6+3` → 11 → Вставить как бросок
+12. Изменить HP → AI переписывает сцену с учётом тяжести ранения
+13. Изменить опасность локации → AI переписывает атмосферу
+14. 📖 **Завершить сессию** → AI генерирует recap → следующий ход DM получает блок «Ранее в этой кампании...»
 
 ---
 
@@ -159,10 +162,10 @@ JSONPrompt────→ │  generateStructured()       │
 | Bundler | Vite 5 |
 | Граф | `@xyflow/react` + `d3-force` |
 | Текст | Slate (rich text), `react-markdown` |
-| State | Zustand (6 store: model, agent, world-events, sessions, initiative, ai-config) |
+| State | Zustand stores для model, agents, sessions, world-events, initiative, AI config, Reference Board и location maps |
 | AI | OpenAI / Anthropic / Ollama под единым `AiProvider` |
 | Validation | Zod 3.x + in-house `zodToJsonSchema` для cross-provider structured outputs |
-| Storage | `localStorage` для несекретного config/sessions/events/initiative; `sessionStorage` только для cloud API keys |
+| Storage | `localStorage` для несекретного config/sessions/events/initiative/reference/map previews/story pins; `sessionStorage` только для cloud API keys |
 
 ---
 
@@ -196,13 +199,17 @@ src/
 │   │   └── utils/             — JSONPrompt (cross-provider) + TextPrompt
 │   └── dnd/
 │       ├── campaignTemplates.ts — 4 seed кампании
-│       └── azgaarImport.ts      — bounded parser, preview plan, duplicate guard
+│       ├── azgaarImport.ts      — bounded parser, preview plan, duplicate guard
+│       ├── locationMap.ts       — versioned local map library + provenance/rights gate
+│       └── mapStoryPins.ts      — bounded narrative overlay with GM/table visibility
 ├── store/
 │   ├── useAgentStore.ts       — per-entity chat histories
 │   ├── useAiConfigStore.ts    — provider config + fallback flag
 │   ├── useWorldEventStore.ts  — tick events + auto-interval + DM watermark
 │   ├── useInitiativeStore.ts  — combat tracker
-│   └── useSessionStore.ts     — archived sessions with recaps
+│   ├── useSessionStore.ts     — archived sessions with recaps
+│   ├── useLocationMapStore.ts — bounded local map previews
+│   └── useMapStoryPinStore.ts — local story-pin library
 └── view/
     ├── Launcher.tsx           — campaign picker + provider settings
     ├── VisualWritingInterface.tsx — main canvas + 7-button toolbar
@@ -215,6 +222,8 @@ src/
     │   ├── InitiativePanel.tsx
     │   ├── DiceRollerPanel.tsx
     │   ├── MapWorkflowPanel.tsx
+    │   ├── LocationMapWorkshop.tsx
+    │   ├── MapStoryPins.tsx
     │   └── SessionsPanel.tsx
     ├── entityActionView/      — entity node + sliders (HP, abilities, properties)
     └── locationView/          — location node + danger ring + slider
@@ -224,12 +233,12 @@ src/
 
 ## Roadmap
 
-Полная дорожная карта — **[`ROADMAP.md`](ROADMAP.md)**. Список 27 шипнутых слайсов хранится там с техническими нотами и результатами проверок. Открытые follow-ups:
+Полная дорожная карта — **[`ROADMAP.md`](ROADMAP.md)**. Список 37 слайсов хранится там с техническими нотами, границами и результатами проверок. Открытые follow-ups:
 
 - ActionEdge → SceneBeat (связать timeline с Session model)
 - Auto-suggest end-session по word-count эвристике
 - 🏰 **Backlog** (R&D, не запланировано): процедурный dungeon-gen, hex world-map, fog of war, temporal world states, character sheets, PDF export, multiplayer, autonomous AI DM mode, cinematic NPC briefings, voice profiles, ambient audio per scene
-- 🗺️ **Следующий map-этап:** Campaign Map Asset v1 — хранить metadata Azgaar, выбранные burg ids и безопасный re-import diff; roads/states и fog-of-war не входят в первый срез
+- 🗺️ **Следующий map-этап:** интерактивная геометрия комнат/стен/дверей, fog of war и отдельная защищённая player session; cloud persistence, ACL и VTT export требуют production gates
 
 ---
 
@@ -243,6 +252,13 @@ Production foundation активирован dark-by-default: `api.dnd.eclipse-f
 
 Azgaar открывается как фиксированная внешняя HTTPS-ссылка, без iframe и передачи ключей. Импорт выполняется локально только из JSON до 8 МБ: проверяется официальный `pack.burgs`, названия очищаются от управляющих символов, а кампания меняется только после preview и явного подтверждения. `.map` остаётся резервным файлом пользователя и не исполняется DnD Forge.
 
+Map Workshop принимает только локальные PNG/JPEG/WebP до 8 МБ, сверяет MIME и magic bytes,
+отклоняет SVG/HTML/remote URL и хранит только preview до 384 КБ. Rights/provenance gate
+описан в [`docs/MAP-WORKSHOP-POLICY.md`](docs/MAP-WORKSHOP-POLICY.md); его denylist и
+metadata-проверки являются regression guard, а не юридической гарантией. Story Pins хранят
+только bounded plain text и нормализованные координаты; режим «Игроки» скрывает GM-метки в UI,
+но не является отдельным security boundary или ACL.
+
 GitHub Pages публикуется только после locked install без lifecycle scripts, typecheck, tests, lint и production build. Сборка выполняется с read-only token без сохранённых Git credentials; отдельный publisher получает проверенный immutable artifact и минимальный `contents: write`. Все используемые GitHub Actions зафиксированы полными commit SHA.
 
 ---
@@ -250,9 +266,9 @@ GitHub Pages публикуется только после locked install бе�
 ## Вдохновение
 
 - [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting) — ядро проекта (MIT)
-- [D&D 5.1 SRD](https://www.dndbeyond.com/sources/srd) — Open Gaming License
+- [SRD 5.1](https://dnd.wizards.com/resources/systems-reference-document) — rules baseline под CC BY 4.0
 - [donjon](https://donjon.bin.sh/) — генераторы для D&D
-- [Dungeon Scrawl](https://dungeonscrawl.com/) — редактор карт подземелий
+- [Dungeon Scrawl](https://dungeonscrawl.com/) — внешний research reference для быстрого map workflow; код, UI, assets и форматы не копируются
 - [Azgaar’s Fantasy Map Generator](https://azgaar.github.io/Fantasy-Map-Generator/) — карта мира и официальный Minimal JSON handoff (MIT)
 
 ---
