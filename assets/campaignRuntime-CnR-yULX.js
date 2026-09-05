@@ -1,0 +1,1 @@
+import{c as i,t as a}from"./campaignStorage-DiyxU5WO.js";function s(t){const e=i();e.migrateLegacy();const o=e.create(t.title,a(t.text,t.seed.entities,t.seed.locations));e.activate(o)}export{s as startCampaignFromTemplate};
