@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
+import { readSessionArchive } from "../model/dnd/sessionArchive";
 
 const STORAGE_KEY = "eclipse_dnd_sessions_v1";
 const MAX_SESSIONS = 100;
@@ -29,33 +31,30 @@ const DEFAULT: PersistedShape = { sessions: [], nextSessionNumber: 1 };
 
 function load(): PersistedShape {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = campaignResourceStorage.getItem(STORAGE_KEY);
         if (!raw) return DEFAULT;
-        const parsed = JSON.parse(raw);
-        return {
-            sessions: Array.isArray(parsed.sessions) ? parsed.sessions.slice(-MAX_SESSIONS) : [],
-            nextSessionNumber: typeof parsed.nextSessionNumber === "number" && parsed.nextSessionNumber > 0
-                ? parsed.nextSessionNumber
-                : 1,
-        };
+        return readSessionArchive(raw);
     } catch {
+        campaignRepository().blockResource(STORAGE_KEY);
         return DEFAULT;
     }
 }
 
-function persist(state: PersistedShape) {
+function persist(state: PersistedShape): string | null {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        campaignResourceStorage.setItem(STORAGE_KEY, JSON.stringify(readSessionArchive(JSON.stringify({
             sessions: state.sessions.slice(-MAX_SESSIONS),
             nextSessionNumber: state.nextSessionNumber,
-        }));
-    } catch {
-        // ignore
+        }))));
+        return null;
+    } catch (error) {
+        return error instanceof Error ? error.message : "Не удалось записать архив. Текст не очищен.";
     }
 }
 
 interface SessionState extends PersistedShape {
-    archiveCurrentSession: (params: { name: string; text: string; recap?: string }) => CampaignSession;
+    storageError: string | null;
+    archiveCurrentSession: (params: { name: string; text: string; recap?: string }) => CampaignSession | null;
     updateRecap: (sessionId: string, recap: string) => void;
     removeSession: (sessionId: string) => void;
     clearAll: () => void;
@@ -69,6 +68,7 @@ export const useSessionStore = create<SessionState>((set, get) => {
 
     return {
         ...initial,
+        storageError: null,
 
         archiveCurrentSession: ({ name, text, recap }) => {
             const session: CampaignSession = {
@@ -81,26 +81,30 @@ export const useSessionStore = create<SessionState>((set, get) => {
             };
             const sessions = [...get().sessions, session].slice(-MAX_SESSIONS);
             const nextSessionNumber = get().nextSessionNumber + 1;
-            persist({ sessions, nextSessionNumber });
-            set({ sessions, nextSessionNumber });
+            const storageError = persist({ sessions, nextSessionNumber });
+            if (storageError) { set({ storageError }); return null; }
+            set({ sessions, nextSessionNumber, storageError: null });
             return session;
         },
 
         updateRecap: (sessionId, recap) => {
             const sessions = get().sessions.map((s) => (s.id === sessionId ? { ...s, recap } : s));
-            persist({ sessions, nextSessionNumber: get().nextSessionNumber });
-            set({ sessions });
+            const storageError = persist({ sessions, nextSessionNumber: get().nextSessionNumber });
+            if (storageError) { set({ storageError }); return; }
+            set({ sessions, storageError: null });
         },
 
         removeSession: (sessionId) => {
             const sessions = get().sessions.filter((s) => s.id !== sessionId);
-            persist({ sessions, nextSessionNumber: get().nextSessionNumber });
-            set({ sessions });
+            const storageError = persist({ sessions, nextSessionNumber: get().nextSessionNumber });
+            if (storageError) { set({ storageError }); return; }
+            set({ sessions, storageError: null });
         },
 
         clearAll: () => {
-            persist(DEFAULT);
-            set(DEFAULT);
+            const storageError = persist(DEFAULT);
+            if (storageError) { set({ storageError }); return; }
+            set({ ...DEFAULT, storageError: null });
         },
 
         getRecentSessions: (n) => {

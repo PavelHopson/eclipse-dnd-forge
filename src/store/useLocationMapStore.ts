@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
 import {
     LocationMapAsset,
     LocationMapLibrary,
@@ -10,9 +11,9 @@ import {
 
 const STORAGE_KEY = "eclipse_location_maps_v1";
 
-function browserStorage(): Storage | null {
+function browserStorage(): Pick<Storage, "getItem" | "setItem"> | null {
     try {
-        return typeof localStorage === "undefined" ? null : localStorage;
+        return campaignResourceStorage;
     } catch {
         return null;
     }
@@ -27,6 +28,7 @@ function loadLibrary(): { library: LocationMapLibrary; error: string | null } {
             ? { library: readLocationMapLibrary(raw), error: null }
             : { library: emptyLocationMapLibrary(), error: null };
     } catch {
+        campaignRepository().blockResource(STORAGE_KEY);
         return {
             library: emptyLocationMapLibrary(),
             error: "Сохранённые карты повреждены и не были загружены.",
@@ -49,7 +51,7 @@ interface LocationMapState {
     library: LocationMapLibrary;
     storageError: string | null;
     saveMap: (map: LocationMapAsset) => boolean;
-    removeMap: (mapId: string) => void;
+    removeMap: (mapId: string) => boolean;
     clearStorageError: () => void;
 }
 
@@ -71,7 +73,7 @@ export const useLocationMapStore = create<LocationMapState>((set, get) => {
             try {
                 const library = readLocationMapLibrary(JSON.stringify({ ...current, maps }));
                 const storageError = persistLibrary(library);
-                set({ library, storageError });
+                set(storageError ? { storageError } : { library, storageError: null });
                 return storageError === null;
             } catch (reason) {
                 set({ storageError: reason instanceof Error ? reason.message : "Не удалось проверить карту." });
@@ -83,7 +85,9 @@ export const useLocationMapStore = create<LocationMapState>((set, get) => {
                 ...get().library,
                 maps: get().library.maps.filter((map) => map.id !== mapId),
             }));
-            set({ library, storageError: persistLibrary(library) });
+            const storageError = persistLibrary(library);
+            set(storageError ? { storageError } : { library, storageError: null });
+            return storageError === null;
         },
         clearStorageError: () => set({ storageError: null }),
     };

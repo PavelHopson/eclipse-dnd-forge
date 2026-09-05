@@ -1,3 +1,5 @@
+import { readLivingAtlasDocument, type LivingAtlasDocument } from "./livingAtlas.ts";
+
 export const LOCATION_MAP_LIBRARY_SCHEMA = "eclipse.location-map-library.v1" as const;
 export const MAX_LOCATION_MAPS = 8;
 export const MAX_LOCATION_MAP_SOURCE_BYTES = 8 * 1024 * 1024;
@@ -64,6 +66,7 @@ export type LocationMapAsset = {
     rightsState: LocationMapGateState;
     createdAt: number;
     updatedAt: number;
+    atlasDocument?: LivingAtlasDocument;
 };
 
 export type LocationMapLibrary = {
@@ -260,7 +263,7 @@ function parseProvenance(value: unknown): LocationMapProvenance {
 
 function parseAsset(value: unknown, index: number): LocationMapAsset {
     if (!isRecord(value) || !hasExactKeys(value, [
-        "id", "locationId", "name", "fileName", "previewDataUrl", "grid", "provenance", "rightsState", "createdAt", "updatedAt",
+        "id", "locationId", "name", "fileName", "previewDataUrl", "grid", "provenance", "rightsState", "createdAt", "updatedAt", ...(isRecord(value) && "atlasDocument" in value ? ["atlasDocument"] : []),
     ])) throw new Error(`Location map ${index + 1} has unknown fields.`);
     const id = cleanText(value.id, 80);
     const locationId = cleanText(value.locationId, 80);
@@ -271,6 +274,11 @@ function parseAsset(value: unknown, index: number): LocationMapAsset {
     const provenance = parseProvenance(value.provenance);
     const decision = evaluateLocationMapRights(provenance);
     if (value.rightsState !== decision.state) throw new Error("Location map rights state does not match its provenance.");
+    const grid = parseGrid(value.grid);
+    const atlasDocument = "atlasDocument" in value ? readLivingAtlasDocument(JSON.stringify(value.atlasDocument)) : undefined;
+    if (atlasDocument && (grid.type !== "square" || grid.widthCells !== atlasDocument.widthCells || grid.heightCells !== atlasDocument.heightCells)) {
+        throw new Error("Editable map dimensions must match its preview grid.");
+    }
     if (!Number.isSafeInteger(value.createdAt) || !Number.isSafeInteger(value.updatedAt)
         || (value.createdAt as number) < 0 || (value.updatedAt as number) < (value.createdAt as number)) {
         throw new Error("Location map has invalid timestamps.");
@@ -281,7 +289,8 @@ function parseAsset(value: unknown, index: number): LocationMapAsset {
         name,
         fileName,
         previewDataUrl: validateLocationMapPreviewDataUrl(value.previewDataUrl),
-        grid: parseGrid(value.grid),
+        grid,
+        ...(atlasDocument ? { atlasDocument } : {}),
         provenance,
         rightsState: decision.state,
         createdAt: value.createdAt as number,

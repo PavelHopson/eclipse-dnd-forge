@@ -1,10 +1,11 @@
 import { Button, Card, CardBody, CardHeader, Checkbox, Divider, Input, Tab, Tabs } from "@nextui-org/react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { CAMPAIGN_TEMPLATES, type CampaignTemplate } from "../model/dnd/campaignTemplates";
 import { useAiConfigStore } from "../store/useAiConfigStore";
 import type { AiProviderId } from "../model/ai/types";
 import { useDndIdentity } from "../hooks/useDndIdentity";
 import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
+const CampaignLibraryPanel = lazy(() => import("./dnd/CampaignLibraryPanel"));
 
 function CampaignMark() {
   return (
@@ -58,8 +59,9 @@ export default function Launcher() {
       const { startCampaignFromTemplate } = await import("../model/dnd/campaignRuntime");
       startCampaignFromTemplate(template);
       window.location.hash = '/free-form';
-    } catch {
-      setCampaignStartError("Не удалось открыть кампанию. Обновите страницу и попробуйте ещё раз.");
+      window.location.reload();
+    } catch (error) {
+      setCampaignStartError(error instanceof Error ? error.message : "Не удалось открыть кампанию. Сохранённые миры не изменены.");
       setStartingCampaignId(null);
     }
   }
@@ -78,6 +80,10 @@ export default function Launcher() {
             AI-менеджер кампаний · визуальный граф мира · таймлайн сессий · операционная система мастера
           </span>
         </CardHeader>
+        <Divider />
+        <CardBody style={{ padding: '16px 24px' }}>
+          <Suspense fallback={<p role="status">Загружаем сохранённые кампании…</p>}><CampaignLibraryPanel /></Suspense>
+        </CardBody>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -271,7 +277,7 @@ export default function Launcher() {
         </CardBody>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
-          <span style={{ fontWeight: 800, fontSize: 16, color: '#2a1a1a' }}>Запустить кампанию</span>
+          <span style={{ fontWeight: 800, fontSize: 16, color: '#2a1a1a' }}>Создать новую кампанию</span>
           <p style={{ fontSize: 12, color: '#5a4a3a', marginTop: 2, marginBottom: 14 }}>
             Каждый шаблон засевает героев, NPC, монстров и локации. Можно править текст сессии слева и
             кликать стрелку «refresh», чтобы обновить визуальный граф через AI.

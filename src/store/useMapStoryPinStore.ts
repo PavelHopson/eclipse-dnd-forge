@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
 import {
     MAX_MAP_STORY_PINS,
     MapStoryPin,
@@ -10,9 +11,9 @@ import {
 
 const STORAGE_KEY = "eclipse_map_story_pins_v1";
 
-function browserStorage(): Storage | null {
+function browserStorage(): Pick<Storage, "getItem" | "setItem"> | null {
     try {
-        return typeof localStorage === "undefined" ? null : localStorage;
+        return campaignResourceStorage;
     } catch {
         return null;
     }
@@ -27,6 +28,7 @@ function loadLibrary(): { library: MapStoryPinLibrary; error: string | null } {
             ? { library: readMapStoryPinLibrary(raw), error: null }
             : { library: emptyMapStoryPinLibrary(), error: null };
     } catch {
+        campaignRepository().blockResource(STORAGE_KEY);
         return {
             library: emptyMapStoryPinLibrary(),
             error: "Сохранённые сюжетные метки повреждены и не были загружены.",
@@ -64,7 +66,7 @@ export const useMapStoryPinStore = create<MapStoryPinState>((set, get) => {
                 pins,
             }));
             const storageError = persistLibrary(library);
-            set({ library, storageError });
+            set(storageError ? { storageError } : { library, storageError: null });
             return storageError === null;
         } catch (reason) {
             set({ storageError: reason instanceof Error ? reason.message : "Не удалось проверить сюжетные метки." });

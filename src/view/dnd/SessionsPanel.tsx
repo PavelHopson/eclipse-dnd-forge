@@ -5,6 +5,7 @@ import { IoClose, IoTrash } from "react-icons/io5";
 import { useModelStore } from "../../model/Model";
 import { generateSessionRecap } from "../../model/agents/SessionRecapAgent";
 import { useSessionStore } from "../../store/useSessionStore";
+import { flushCampaign } from "../../model/dnd/campaignPersistence";
 
 interface SessionsPanelProps {
     onClose: () => void;
@@ -20,6 +21,7 @@ function defaultSessionName(nextNumber: number, currentText: string): string {
 export default function SessionsPanel({ onClose }: SessionsPanelProps) {
     const sessions = useSessionStore((s) => s.sessions);
     const nextSessionNumber = useSessionStore((s) => s.nextSessionNumber);
+    const storageError = useSessionStore((s) => s.storageError);
 
     const currentText = useModelStore((s) => s.text);
 
@@ -41,6 +43,10 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
         setIsEnding(true);
 
         try {
+            if (!flushCampaign(true)) {
+                setError("Не удалось сохранить текущий мир. Сначала скачайте резервную копию или повторите сохранение.");
+                return;
+            }
             let recap: string | undefined;
             if (!skipRecap) {
                 try {
@@ -52,11 +58,19 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                 }
             }
 
-            useSessionStore.getState().archiveCurrentSession({
+            const archived = useSessionStore.getState().archiveCurrentSession({
                 name: proposedName,
                 text: currentText,
                 recap,
             });
+            if (!archived) {
+                setError(useSessionStore.getState().storageError ?? "Архив не сохранён. Текущий текст не очищен.");
+                return;
+            }
+            if (useModelStore.getState().text !== currentText) {
+                setError("Копия сессии архивирована. Текст изменился во время подготовки — новые правки оставлены в редакторе.");
+                return;
+            }
 
             // Reset the session text — keep entities, locations, world events
             // (they are the persistent campaign world; sessions are chapters).
@@ -146,9 +160,9 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
                 </Button>
             </div>
 
-            {error && (
-                <div style={{ fontSize: 11, color: "#7a1f1f", background: "#fde2e2", padding: 6, borderRadius: 6 }}>
-                    {error}
+            {(error || storageError) && (
+                <div role="alert" style={{ fontSize: 11, color: "#7a1f1f", background: "#fde2e2", padding: 6, borderRadius: 6 }}>
+                    {error || storageError}
                 </div>
             )}
 

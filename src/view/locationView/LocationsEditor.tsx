@@ -293,9 +293,13 @@ export default function LocationsEditor() {
           
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              const location = event.currentTarget.value;
+              const location = event.currentTarget.value.trim();
+              if (!location) return;
+              const existingLocationIds = new Set(locationNodes.map((node) => node.id));
+              let nextLocationIndex = locationNodes.length;
+              while (existingLocationIds.has(`location-${nextLocationIndex}`)) nextLocationIndex += 1;
               const pos = screenToFlowPosition({x: newLocationInputPosition.x + divRef.current!.getBoundingClientRect().left, y: newLocationInputPosition.y + divRef.current!.getBoundingClientRect().top}, {snapToGrid: false});
-              const newLocatioNodes = [...locationNodes, { id: `location-${location}`, type: "locationNode", measured: { width: 160, height: 160 }, position: { x: pos.x, y: pos.y }, data: { name: location, emoji: "" } }]
+              const newLocatioNodes = [...locationNodes, { id: `location-${nextLocationIndex}`, type: "locationNode", measured: { width: 160, height: 160 }, position: { x: pos.x, y: pos.y }, data: { name: location, emoji: "" } }]
               setLocationNodes(newLocatioNodes)
               setNewLocationInputPosition(null);
               LayoutUtils.optimizeNodeLayout("location", newLocatioNodes, setLocationNodes, { x: divRef.current!.clientWidth/2, y: divRef.current!.clientHeight/2 }, 120);

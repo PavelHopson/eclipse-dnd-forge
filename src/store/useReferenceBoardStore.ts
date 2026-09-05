@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
 import {
     MAX_REFERENCE_ASSETS,
     ReferenceAsset,
@@ -11,9 +12,9 @@ import {
 
 const STORAGE_KEY = "eclipse_dnd_reference_board_v1";
 
-function browserStorage(): Storage | null {
+function browserStorage(): Pick<Storage, "getItem" | "setItem"> | null {
     try {
-        return typeof localStorage === "undefined" ? null : localStorage;
+        return campaignResourceStorage;
     } catch {
         return null;
     }
@@ -28,6 +29,7 @@ function loadBoard(): { board: ReferenceBoard; error: string | null } {
             ? { board: readReferenceBoard(raw), error: null }
             : { board: emptyReferenceBoard(), error: null };
     } catch {
+        campaignRepository().blockResource(STORAGE_KEY);
         return {
             board: emptyReferenceBoard(),
             error: "Сохранённая доска повреждена и не была загружена. Экспортируйте данные до повторного сохранения, если нужна ручная диагностика.",
@@ -66,7 +68,8 @@ export const useReferenceBoardStore = create<ReferenceBoardState>((set, get) => 
                 bible: { ...bible, updatedAt: Date.now() },
             };
             const validated = readReferenceBoard(JSON.stringify(board));
-            set({ board: validated, storageError: persistBoard(validated) });
+            const storageError = persistBoard(validated);
+            set(storageError ? { storageError } : { board: validated, storageError: null });
         },
         saveAsset: (asset) => {
             const current = get().board;
@@ -80,8 +83,9 @@ export const useReferenceBoardStore = create<ReferenceBoardState>((set, get) => 
                 : current.assets.map((item) => item.id === asset.id ? asset : item);
             try {
                 const board = readReferenceBoard(JSON.stringify({ ...current, assets }));
-                set({ board, storageError: persistBoard(board) });
-                return true;
+                const storageError = persistBoard(board);
+                set(storageError ? { storageError } : { board, storageError: null });
+                return storageError === null;
             } catch (reason) {
                 set({ storageError: reason instanceof Error ? reason.message : "Не удалось проверить reference asset." });
                 return false;
@@ -92,7 +96,8 @@ export const useReferenceBoardStore = create<ReferenceBoardState>((set, get) => 
                 ...get().board,
                 assets: get().board.assets.filter((asset) => asset.id !== assetId),
             };
-            set({ board, storageError: persistBoard(board) });
+            const storageError = persistBoard(board);
+            set(storageError ? { storageError } : { board, storageError: null });
         },
         clearStorageError: () => set({ storageError: null }),
     };

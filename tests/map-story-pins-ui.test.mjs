@@ -13,9 +13,17 @@ test("Story Pins expose an obvious mouse path and a keyboard-equivalent action",
     assert.match(pins, /MAX_MAP_STORY_PINS_PER_MAP/);
 });
 
+test("Story Pins use the scoped workshop surface instead of duplicated form styling", () => {
+    assert.match(pins, /className="map-story-workspace"/);
+    assert.match(pins, /className="map-story-board"/);
+    assert.match(pins, /className="map-pin-editor"/);
+    assert.doesNotMatch(pins, /const fieldStyle/);
+    assert.doesNotMatch(pins, /const labelStyle/);
+});
+
 test("player preview hides GM-only pins and never claims access control", () => {
     assert.match(pins, /pins\.filter\(\(pin\) => pin\.visibility === "table"\)/);
-    assert.match(pins, /локальный preview, а не защита доступа/);
+    assert.match(pins, /локальный предпросмотр, а не защита доступа/);
     assert.match(pins, /Только мастер/);
     assert.match(pins, /Можно показать игрокам/);
 });
@@ -51,5 +59,5 @@ test("player handout renderer uses the redacted plan and local canvas only", () 
 test("handout download remains closed until rights are allowed", () => {
     assert.match(pins, /handoutPlan\.state === "ready"/);
     assert.match(pins, /права карты требуют ручной проверки/);
-    assert.match(pins, /карта заблокирована rights gate/);
+    assert.match(pins, /карта заблокирована проверкой прав/);
 });

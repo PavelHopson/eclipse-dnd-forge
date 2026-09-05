@@ -1,5 +1,5 @@
 import { Button } from "@nextui-org/react";
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { IoCheckmarkCircle, IoImageOutline, IoOpenOutline, IoTrashOutline, IoWarningOutline } from "react-icons/io5";
 import { useModelStore } from "../../model/Model";
 import {
@@ -18,22 +18,11 @@ import {
 } from "../../model/dnd/locationMap";
 import { useLocationMapStore } from "../../store/useLocationMapStore";
 import { useMapStoryPinStore } from "../../store/useMapStoryPinStore";
+import LivingAtlasEditor from "./LivingAtlasEditor";
+import type { LivingAtlasDocument } from "../../model/dnd/livingAtlas";
 import MapStoryPins from "./MapStoryPins";
 
 const DUNGEON_SCRAWL_URL = "https://app.dungeonscrawl.com/";
-
-const fieldStyle = {
-    width: "100%",
-    minHeight: 36,
-    border: "1px solid #d8c9a8",
-    borderRadius: 8,
-    background: "#fffdf7",
-    color: "#2a1a1a",
-    padding: "7px 9px",
-    font: "inherit",
-} as const;
-
-const labelStyle = { display: "grid", gap: 5, color: "#514438", fontWeight: 700 } as const;
 
 const rightsBasisLabels: Record<LocationMapRightsBasis, string> = {
     original: "Создано мной",
@@ -43,6 +32,18 @@ const rightsBasisLabels: Record<LocationMapRightsBasis, string> = {
     "external-tool": "Внешний редактор",
     unverified: "Источник не проверен",
 };
+
+const gridTypeLabels: Record<LocationMapGridType, string> = {
+    square: "Квадратная сетка",
+    hex: "Гексы",
+    none: "Без сетки",
+};
+
+const rightsStateLabels = {
+    allowed: "проверено",
+    "review-required": "нужна проверка",
+    blocked: "заблокировано",
+} as const;
 
 const reasonLabels = {
     "source-rights-unverified": "Права на источник не подтверждены",
@@ -88,7 +89,7 @@ async function createPreview(file: File): Promise<string> {
     throw new Error("Не удалось уменьшить preview до безопасного лимита 384 КБ.");
 }
 
-export default function LocationMapWorkshop() {
+export default function LocationMapWorkshop({ onEditorChange }: { onEditorChange?: (open: boolean) => void }) {
     const locationNodes = useModelStore((state) => state.locationNodes);
     const selectedNodes = useModelStore((state) => state.selectedNodes);
     const selectedLocation = locationNodes.find((node) => selectedNodes.includes(node.id));
@@ -116,12 +117,22 @@ export default function LocationMapWorkshop() {
     const [error, setError] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
     const [activeMapId, setActiveMapId] = useState("");
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [isAtlasOpen, setIsAtlasOpen] = useState(false);
+    const [editingMapId, setEditingMapId] = useState("");
+    const [pendingAtlas, setPendingAtlas] = useState<LivingAtlasDocument | undefined>();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const importRef = useRef<HTMLDetailsElement>(null);
+    useEffect(() => { onEditorChange?.(isAtlasOpen); }, [isAtlasOpen, onEditorChange]);
+    useEffect(() => {
+        if (!isAtlasOpen && previewDataUrl) importRef.current?.scrollIntoView({ block: "start" });
+    }, [isAtlasOpen, previewDataUrl]);
 
     const library = useLocationMapStore((state) => state.library);
     const storageError = useLocationMapStore((state) => state.storageError);
     const maps = library.maps.filter((map) => map.locationId === locationId);
     const activeMap = maps.find((map) => map.id === activeMapId) ?? maps[0];
+    const editingMap = maps.find((map) => map.id === editingMapId);
 
     const provenance = useMemo<LocationMapProvenance>(() => ({
         rightsBasis,
@@ -145,10 +156,13 @@ export default function LocationMapWorkshop() {
         const file = event.target.files?.[0];
         event.target.value = "";
         if (!file) return;
+        setIsImportOpen(true);
         setError(null);
         setFeedback(null);
         setPreviewDataUrl("");
         setFileName("");
+        setPendingAtlas(undefined);
+        setEditingMapId("");
 
         const extension = file.name.toLocaleLowerCase("en").split(".").pop();
         const expectedMime = extension === "png"
@@ -177,7 +191,7 @@ export default function LocationMapWorkshop() {
             setPreviewDataUrl(preview);
             setFileName(file.name.split(/[\\/]/).pop() ?? "map.webp");
             if (!name) setName(file.name.replace(/\.[^.]+$/, "").slice(0, 80));
-            setFeedback("Preview подготовлен локально. Исходный файл никуда не отправлялся.");
+            setFeedback("Предпросмотр подготовлен локально. Исходный файл никуда не отправлялся.");
         } catch (reason) {
             setError(reason instanceof Error ? reason.message : "Не удалось проверить изображение.");
         } finally {
@@ -200,56 +214,131 @@ export default function LocationMapWorkshop() {
             const randomPart = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
                 ? crypto.randomUUID().slice(0, 8)
                 : Math.random().toString(36).slice(2, 10);
-            const map = createLocationMapAsset({
-                id: `map-${Date.now().toString(36)}-${randomPart}`,
+            const candidate = createLocationMapAsset({
+                id: editingMap?.id ?? `map-${Date.now().toString(36)}-${randomPart}`,
                 locationId,
                 name,
                 fileName,
                 previewDataUrl,
                 grid: { type: gridType, scale, unit, widthCells, heightCells },
                 provenance,
+                ...(pendingAtlas ? { atlasDocument: { ...pendingAtlas, name, updatedAt: Date.now() } } : {}),
             });
+            const map = { ...candidate, createdAt: editingMap?.createdAt ?? candidate.createdAt };
             if (!useLocationMapStore.getState().saveMap(map)) return;
             setActiveMapId(map.id);
+            setIsImportOpen(false);
             setPreviewDataUrl("");
             setFileName("");
             setName("");
+            setPendingAtlas(undefined);
+            setEditingMapId("");
             setFeedback(map.rightsState === "allowed"
                 ? "Карта сохранена локально и готова для работы внутри кампании."
-                : "Карта сохранена как черновик; public/commercial export остаётся закрыт.");
+                : "Карта сохранена как черновик; публичный и коммерческий экспорт остаётся закрыт.");
         } catch (reason) {
             setError(reason instanceof Error ? reason.message : "Не удалось сохранить карту.");
         }
     };
 
     const removeMap = (mapId: string) => {
-        useLocationMapStore.getState().removeMap(mapId);
+        if (!window.confirm("Удалить карту и её сюжетные метки? Для восстановления нужна резервная копия кампании.")) return;
+        if (!useLocationMapStore.getState().removeMap(mapId)) return;
         useMapStoryPinStore.getState().removePinsForMap(mapId);
         if (activeMapId === mapId) setActiveMapId("");
     };
 
+    const useAtlasPreview = (result: {
+        previewDataUrl: string;
+        name: string;
+        fileName: string;
+        widthCells: number;
+        heightCells: number;
+        document: LivingAtlasDocument;
+    }) => {
+        try {
+            setPreviewDataUrl(validateLocationMapPreviewDataUrl(result.previewDataUrl));
+            setName(result.name.slice(0, 80));
+            setFileName(result.fileName.slice(0, 120));
+            setGridType("square");
+            setWidthCells(result.widthCells);
+            setHeightCells(result.heightCells);
+            setPendingAtlas(result.document);
+            const imported = result.document.source === "imported" && result.document.id !== editingMap?.atlasDocument?.id;
+            const previous = editingMap?.provenance;
+            setRightsBasis(imported ? "unverified" : previous?.rightsBasis ?? "original");
+            setCreator(previous?.creator ?? "Автор кампании");
+            setProvider(previous?.provider ?? "");
+            setSourceUrl(previous?.sourceUrl ?? "");
+            setLicense(previous?.license ?? "");
+            setAttribution(previous?.attribution ?? "");
+            setCommercialIntent(previous?.commercialIntent ?? false);
+            setCommercialRights(imported ? "unknown" : previous?.commercialRights ?? "not-requested");
+            setContainsRealPerson(previous?.containsRealPerson ?? false);
+            setConsentEvidence(previous?.consentEvidence ?? "");
+            setIpRisk(previous?.ipRisk ?? "none");
+            setIsAtlasOpen(false);
+            setIsImportOpen(true);
+            setError(null);
+            setFeedback(imported ? "Импортированный проект не подтверждает права на источник. Заполните сведения перед публикацией."
+                : editingMap ? "Изменения готовы. Сохраните карту — её идентификатор и сюжетные метки останутся прежними."
+                : "Карта из Living Atlas готова. Проверьте название и сохраните её в локацию.");
+        } catch (reason) {
+            setError(reason instanceof Error ? reason.message : "Не удалось проверить карту Living Atlas.");
+        }
+    };
+
     if (locationNodes.length === 0) {
         return (
-            <div style={{ border: "1px dashed #c9b894", borderRadius: 10, padding: 16, background: "#fffdf7" }}>
+            <div className="map-empty-state map-location-empty">
                 <strong>Сначала нужна локация</strong>
-                <p style={{ margin: "5px 0 0", color: "#6b5c4c" }}>Создайте локацию вручную или импортируйте города из карты мира.</p>
+                <p>Создайте локацию вручную или импортируйте города из карты мира.</p>
             </div>
         );
     }
 
-    const gateColor = decision.state === "allowed" ? "#166534" : decision.state === "blocked" ? "#991b1b" : "#8a5a17";
-    const gateBackground = decision.state === "allowed" ? "#dcfce7" : decision.state === "blocked" ? "#fee2e2" : "#fef3c7";
+    if (isAtlasOpen) {
+        const locationName = locationNodes.find((node) => node.id === locationId)?.data.name ?? "Новая локация";
+        return (
+            <LivingAtlasEditor
+                key={editingMapId || locationId}
+                locationId={locationId}
+                mapId={editingMap?.id}
+                initialDocument={editingMap?.atlasDocument}
+                savedDocumentIds={library.maps.flatMap((map) => map.atlasDocument ? [map.atlasDocument.id] : [])}
+                initialName={`${locationName} — карта`}
+                onClose={() => setIsAtlasOpen(false)}
+                onUsePreview={useAtlasPreview}
+            />
+        );
+    }
 
     return (
-        <div style={{ display: "grid", gap: 14 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 10, alignItems: "end" }}>
-                <label style={labelStyle} htmlFor="map-location">
+        <div className="location-map-workshop">
+            <div className="map-commandbar">
+                <label className="map-field" htmlFor="map-location">
                     Локация
-                    <select id="map-location" value={locationId} onChange={(event) => setLocationId(event.target.value)} style={fieldStyle}>
+                    <select id="map-location" value={locationId} onChange={(event) => setLocationId(event.target.value)}>
                         {locationNodes.map((node) => <option key={node.id} value={node.id}>{node.data.emoji} {node.data.name}</option>)}
                     </select>
                 </label>
                 <Button
+                    className="map-command-button"
+                    color="primary"
+                    onClick={() => { setEditingMapId(""); setIsAtlasOpen(true); }}
+                >
+                    Нарисовать карту
+                </Button>
+                <Button
+                    className="map-command-button"
+                    variant="bordered"
+                    startContent={<IoImageOutline />}
+                    onClick={() => { setIsImportOpen(true); fileInputRef.current?.click(); }}
+                >
+                    Импортировать
+                </Button>
+                <Button
+                    className="map-command-button"
                     as="a"
                     size="sm"
                     variant="bordered"
@@ -262,162 +351,182 @@ export default function LocationMapWorkshop() {
                 </Button>
             </div>
 
-            <div style={{ border: "1px solid #e2d7bd", borderRadius: 10, padding: 12, background: "#fffdf7" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                    <div>
-                        <strong>1. Выберите готовую карту</strong>
-                        <p style={{ margin: "3px 0 0", color: "#6b5c4c" }}>PNG, JPEG или WebP до 8 МБ. В библиотеке хранится только уменьшенный preview.</p>
+            {(error || storageError) && <p role="alert" className="map-message is-error">{error || storageError}</p>}
+            {feedback && <p aria-live="polite" className="map-message is-success">{feedback}</p>}
+
+            {activeMap && <MapStoryPins key={activeMap.id} map={activeMap} />}
+
+            <details
+                ref={importRef}
+                className="map-import-drawer"
+                open={maps.length === 0 || isImportOpen}
+                onToggle={(event) => setIsImportOpen(event.currentTarget.open)}
+            >
+                <summary>{previewDataUrl ? "Настройте новую карту" : "Добавить новую карту"}</summary>
+                <div className="map-import-body">
+                    <div className="map-dropzone">
+                        <div>
+                            <strong>Локальное изображение карты</strong>
+                            <p>PNG, JPEG или WebP до 8 МБ. В приложении останется только уменьшенный preview.</p>
+                            <input ref={fileInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden onChange={(event) => void readImage(event)} />
+                        </div>
+                        <Button className="map-command-button" variant="bordered" isLoading={isProcessing} startContent={isProcessing ? undefined : <IoImageOutline />} onClick={() => fileInputRef.current?.click()}>
+                            Выбрать изображение
+                        </Button>
+                        {previewDataUrl && (
+                            <img
+                                className="map-import-preview"
+                                src={previewDataUrl}
+                                alt={`Preview карты ${name || "локации"}`}
+                            />
+                        )}
                     </div>
-                    <input ref={fileInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden onChange={(event) => void readImage(event)} />
-                    <Button size="sm" variant="bordered" isLoading={isProcessing} startContent={isProcessing ? undefined : <IoImageOutline />} onClick={() => fileInputRef.current?.click()}>
-                        Выбрать изображение
-                    </Button>
-                </div>
-                {previewDataUrl && (
-                    <img
-                        src={previewDataUrl}
-                        alt={`Preview карты ${name || "локации"}`}
-                        style={{ width: "100%", maxHeight: 230, objectFit: "contain", marginTop: 12, borderRadius: 8, background: "#17130f" }}
-                    />
-                )}
-            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 9 }}>
-                <label style={{ ...labelStyle, gridColumn: "1 / -1" }} htmlFor="map-name">
-                    Название карты
-                    <input id="map-name" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} placeholder="Например: Затопленные тоннели" style={fieldStyle} />
-                </label>
-                <label style={labelStyle} htmlFor="map-grid">
-                    Сетка
-                    <select id="map-grid" value={gridType} onChange={(event) => setGridType(event.target.value as LocationMapGridType)} style={fieldStyle}>
-                        <option value="square">Квадратная</option><option value="hex">Гексы</option><option value="none">Без сетки</option>
-                    </select>
-                </label>
-                <label style={labelStyle} htmlFor="map-scale">
-                    Масштаб клетки
-                    <input id="map-scale" type="number" min={0.1} max={10000} step={0.1} value={scale} onChange={(event) => setScale(Number(event.target.value))} style={fieldStyle} />
-                </label>
-                <label style={labelStyle} htmlFor="map-unit">
-                    Единица
-                    <select id="map-unit" value={unit} onChange={(event) => setUnit(event.target.value as LocationMapScaleUnit)} style={fieldStyle}>
-                        <option value="ft">футы</option><option value="m">метры</option><option value="km">км</option><option value="mi">мили</option><option value="custom">своя</option>
-                    </select>
-                </label>
-                <label style={labelStyle} htmlFor="map-width">
-                    Ширина, клетки
-                    <input id="map-width" type="number" min={1} max={500} value={widthCells} onChange={(event) => setWidthCells(Number(event.target.value))} style={fieldStyle} />
-                </label>
-                <label style={labelStyle} htmlFor="map-height">
-                    Высота, клетки
-                    <input id="map-height" type="number" min={1} max={500} value={heightCells} onChange={(event) => setHeightCells(Number(event.target.value))} style={fieldStyle} />
-                </label>
-            </div>
+                    <div className="map-config-grid">
+                        <label className="map-field map-field-wide" htmlFor="map-name">
+                            Название карты
+                            <input id="map-name" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} placeholder="Например: Затопленные тоннели" />
+                        </label>
+                        <label className="map-field" htmlFor="map-grid">
+                            Сетка
+                            <select id="map-grid" value={gridType} disabled={!!pendingAtlas} onChange={(event) => setGridType(event.target.value as LocationMapGridType)}>
+                                <option value="square">Квадратная</option><option value="hex">Гексы</option><option value="none">Без сетки</option>
+                            </select>
+                        </label>
+                        <label className="map-field" htmlFor="map-scale">
+                            Масштаб клетки
+                            <input id="map-scale" type="number" min={0.1} max={10000} step={0.1} value={scale} onChange={(event) => setScale(Number(event.target.value))} />
+                        </label>
+                        <label className="map-field" htmlFor="map-unit">
+                            Единица
+                            <select id="map-unit" value={unit} onChange={(event) => setUnit(event.target.value as LocationMapScaleUnit)}>
+                                <option value="ft">футы</option><option value="m">метры</option><option value="km">км</option><option value="mi">мили</option><option value="custom">своя</option>
+                            </select>
+                        </label>
+                        <label className="map-field" htmlFor="map-width">
+                            Ширина, клетки
+                            <input id="map-width" type="number" min={1} max={500} value={widthCells} disabled={!!pendingAtlas} onChange={(event) => setWidthCells(Number(event.target.value))} />
+                        </label>
+                        <label className="map-field" htmlFor="map-height">
+                            Высота, клетки
+                            <input id="map-height" type="number" min={1} max={500} value={heightCells} disabled={!!pendingAtlas} onChange={(event) => setHeightCells(Number(event.target.value))} />
+                        </label>
+                    </div>
 
-            <details style={{ border: "1px solid #e2d7bd", borderRadius: 10, padding: "9px 11px", background: "#fffdf7" }}>
-                <summary style={{ cursor: "pointer", fontWeight: 800 }}>2. Права и provenance · {decision.state}</summary>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginTop: 12 }}>
-                    <label style={labelStyle} htmlFor="map-rights-basis">
+                    <details className="map-provenance">
+                        <summary>Права и источник · {rightsStateLabels[decision.state]}</summary>
+                        <div className="map-provenance-grid">
+                    <label className="map-field" htmlFor="map-rights-basis">
                         Основание прав
-                        <select id="map-rights-basis" value={rightsBasis} onChange={(event) => setRightsBasis(event.target.value as LocationMapRightsBasis)} style={fieldStyle}>
+                        <select id="map-rights-basis" value={rightsBasis} onChange={(event) => setRightsBasis(event.target.value as LocationMapRightsBasis)}>
                             {Object.entries(rightsBasisLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                         </select>
                     </label>
-                    <label style={labelStyle} htmlFor="map-creator">
+                    <label className="map-field" htmlFor="map-creator">
                         Автор / правообладатель
-                        <input id="map-creator" value={creator} maxLength={100} onChange={(event) => setCreator(event.target.value)} style={fieldStyle} />
+                        <input id="map-creator" value={creator} maxLength={100} onChange={(event) => setCreator(event.target.value)} />
                     </label>
                     {(rightsBasis === "generated" || rightsBasis === "external-tool") && (
-                        <label style={labelStyle} htmlFor="map-provider">
+                        <label className="map-field" htmlFor="map-provider">
                             Сервис / провайдер
-                            <input id="map-provider" value={provider} maxLength={100} onChange={(event) => setProvider(event.target.value)} placeholder="Например: Dungeon Scrawl" style={fieldStyle} />
+                            <input id="map-provider" value={provider} maxLength={100} onChange={(event) => setProvider(event.target.value)} placeholder="Например: Dungeon Scrawl" />
                         </label>
                     )}
                     {rightsBasis !== "original" && (
                         <>
-                            <label style={labelStyle} htmlFor="map-source-url">
+                            <label className="map-field" htmlFor="map-source-url">
                                 HTTPS-ссылка на источник/условия
-                                <input id="map-source-url" type="url" value={sourceUrl} maxLength={2048} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://…" style={fieldStyle} />
+                                <input id="map-source-url" type="url" value={sourceUrl} maxLength={2048} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://…" />
                             </label>
-                            <label style={labelStyle} htmlFor="map-license">
+                            <label className="map-field" htmlFor="map-license">
                                 Лицензия
-                                <input id="map-license" value={license} maxLength={160} onChange={(event) => setLicense(event.target.value)} placeholder="CC BY 4.0, договор…" style={fieldStyle} />
+                                <input id="map-license" value={license} maxLength={160} onChange={(event) => setLicense(event.target.value)} placeholder="CC BY 4.0, договор…" />
                             </label>
-                            <label style={{ ...labelStyle, gridColumn: "1 / -1" }} htmlFor="map-attribution">
+                            <label className="map-field map-field-wide" htmlFor="map-attribution">
                                 Атрибуция
-                                <input id="map-attribution" value={attribution} maxLength={300} onChange={(event) => setAttribution(event.target.value)} style={fieldStyle} />
+                                <input id="map-attribution" value={attribution} maxLength={300} onChange={(event) => setAttribution(event.target.value)} />
                             </label>
                         </>
                     )}
-                    <label style={labelStyle} htmlFor="map-ip-risk">
+                    <label className="map-field" htmlFor="map-ip-risk">
                         Сходство с чужой франшизой
-                        <select id="map-ip-risk" value={ipRisk} onChange={(event) => setIpRisk(event.target.value as LocationMapIpRisk)} style={fieldStyle}>
+                        <select id="map-ip-risk" value={ipRisk} onChange={(event) => setIpRisk(event.target.value as LocationMapIpRisk)}>
                             <option value="none">Нет</option><option value="review">Нужна проверка</option><option value="blocked">Высокий риск</option>
                         </select>
                     </label>
-                    <label style={{ ...labelStyle, alignContent: "end" }}>
+                    <label className="map-check">
                         <span><input type="checkbox" checked={commercialIntent} onChange={(event) => { setCommercialIntent(event.target.checked); setCommercialRights(event.target.checked ? "unknown" : "not-requested"); }} /> Планируется коммерческое использование</span>
                     </label>
                     {commercialIntent && (
-                        <label style={labelStyle} htmlFor="map-commercial-rights">
+                        <label className="map-field" htmlFor="map-commercial-rights">
                             Коммерческие права
-                            <select id="map-commercial-rights" value={commercialRights} onChange={(event) => setCommercialRights(event.target.value as LocationMapCommercialRights)} style={fieldStyle}>
+                            <select id="map-commercial-rights" value={commercialRights} onChange={(event) => setCommercialRights(event.target.value as LocationMapCommercialRights)}>
                                 <option value="unknown">Не проверены</option><option value="confirmed">Подтверждены документом</option><option value="prohibited">Запрещены</option>
                             </select>
                         </label>
                     )}
-                    <label style={{ ...labelStyle, alignContent: "end" }}>
+                    <label className="map-check">
                         <span><input type="checkbox" checked={containsRealPerson} onChange={(event) => setContainsRealPerson(event.target.checked)} /> На изображении есть узнаваемый реальный человек</span>
                     </label>
                     {containsRealPerson && (
-                        <label style={{ ...labelStyle, gridColumn: "1 / -1" }} htmlFor="map-consent">
+                        <label className="map-field map-field-wide" htmlFor="map-consent">
                             Подтверждение согласия
-                            <input id="map-consent" value={consentEvidence} maxLength={300} onChange={(event) => setConsentEvidence(event.target.value)} style={fieldStyle} />
+                            <input id="map-consent" value={consentEvidence} maxLength={300} onChange={(event) => setConsentEvidence(event.target.value)} />
                         </label>
                     )}
+                        </div>
+                    </details>
+
+                    <div className="map-savebar">
+                        <div role="status" className={`map-gate is-${decision.state === "review-required" ? "review" : decision.state}`}>
+                            <strong>
+                                {decision.state === "allowed" ? <IoCheckmarkCircle /> : <IoWarningOutline />}
+                                {decision.state === "allowed" ? "Разрешено для внутренней работы" : decision.state === "blocked" ? "Заблокировано для публикации" : "Нужна проверка перед публикацией"}
+                            </strong>
+                            {decision.reasons.length > 0 && <p>{decision.reasons.map((reason) => reasonLabels[reason]).join(" · ")}</p>}
+                        </div>
+
+                        <Button className="map-command-button" color="primary" startContent={<IoCheckmarkCircle />} onClick={saveMap} isDisabled={!previewDataUrl || !name.trim()}>
+                            {editingMap ? "Сохранить изменения карты" : "Сохранить карту"}
+                        </Button>
+                    </div>
                 </div>
             </details>
 
-            <div role="status" style={{ borderRadius: 9, padding: "9px 11px", background: gateBackground, color: gateColor }}>
-                <strong style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {decision.state === "allowed" ? <IoCheckmarkCircle /> : <IoWarningOutline />}
-                    {decision.state === "allowed" ? "Разрешено для внутренней работы" : decision.state === "blocked" ? "Заблокировано для публикации" : "Нужна проверка перед публикацией"}
-                </strong>
-                {decision.reasons.length > 0 && <p style={{ margin: "4px 0 0" }}>{decision.reasons.map((reason) => reasonLabels[reason]).join(" · ")}</p>}
-            </div>
-
-            <Button color="primary" startContent={<IoCheckmarkCircle />} onClick={saveMap} isDisabled={!previewDataUrl || !name.trim()}>
-                Сохранить карту локации
-            </Button>
-
-            {(error || storageError) && <p role="alert" style={{ margin: 0, borderRadius: 8, padding: "9px 10px", background: "#fee2e2", color: "#991b1b" }}>{error || storageError}</p>}
-            {feedback && <p aria-live="polite" style={{ margin: 0, borderRadius: 8, padding: "9px 10px", background: "#dcfce7", color: "#166534" }}>{feedback}</p>}
-
             {maps.length > 0 && (
-                <section aria-label="Сохранённые карты локации" style={{ display: "grid", gap: 9 }}>
-                    <strong>Карты этой локации</strong>
-                    {maps.map((map) => (
-                        <article key={map.id} style={{ display: "grid", gridTemplateColumns: "92px minmax(0, 1fr) auto", gap: 10, alignItems: "center", border: activeMap?.id === map.id ? "2px solid #7a1f1f" : "1px solid #e2d7bd", borderRadius: 10, padding: 9, background: "#fffdf7" }}>
-                            <img src={map.previewDataUrl} alt="" style={{ width: 92, height: 64, objectFit: "cover", borderRadius: 6, background: "#17130f" }} />
-                            <div style={{ minWidth: 0 }}>
-                                <strong style={{ display: "block", overflowWrap: "anywhere" }}>{map.name}</strong>
-                                <span style={{ color: "#6b5c4c" }}>{map.grid.type} · {map.grid.widthCells}×{map.grid.heightCells} · {map.rightsState}</span>
-                            </div>
-                            <div style={{ display: "grid", gap: 4 }}>
-                                <Button size="sm" variant={activeMap?.id === map.id ? "solid" : "light"} color={activeMap?.id === map.id ? "primary" : "default"} onClick={() => setActiveMapId(map.id)}>
-                                    Открыть
-                                </Button>
-                                <Button isIconOnly size="sm" variant="light" color="danger" aria-label={`Удалить карту ${map.name}`} onClick={() => removeMap(map.id)}>
-                                    <IoTrashOutline />
-                                </Button>
-                            </div>
-                        </article>
-                    ))}
-                    {activeMap && <MapStoryPins key={activeMap.id} map={activeMap} />}
+                <section aria-label="Сохранённые карты локации" className="map-library">
+                    <div className="map-section-heading">
+                        <strong>Карты локации</strong>
+                        <span>{maps.length} в локации · {library.maps.length} / 8 в кампании</span>
+                    </div>
+                    <div className="map-library-grid">
+                        {maps.map((map) => (
+                            <article key={map.id} className={`map-library-card${activeMap?.id === map.id ? " is-active" : ""}`}>
+                                <img src={map.previewDataUrl} alt="" />
+                                <div className="map-library-copy">
+                                    <strong>{map.name}</strong>
+                                    <span>{gridTypeLabels[map.grid.type]} · {map.grid.widthCells}×{map.grid.heightCells} · {rightsStateLabels[map.rightsState]}</span>
+                                </div>
+                                <div className="map-library-actions">
+                                    {map.atlasDocument && <Button size="sm" variant="bordered"
+                                        isDisabled={map.rightsState === "blocked"}
+                                        onClick={() => { setEditingMapId(map.id); setIsAtlasOpen(true); }}
+                                        aria-label={`Редактировать карту ${map.name}`}>Редактировать</Button>}
+                                    <Button size="sm" variant={activeMap?.id === map.id ? "solid" : "light"} color={activeMap?.id === map.id ? "primary" : "default"} onClick={() => setActiveMapId(map.id)}>
+                                        Открыть
+                                    </Button>
+                                    <Button isIconOnly size="sm" variant="light" color="danger" aria-label={`Удалить карту ${map.name}`} onClick={() => removeMap(map.id)}>
+                                        <IoTrashOutline />
+                                    </Button>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
                 </section>
             )}
 
-            <p style={{ margin: 0, color: "#786957", fontSize: 11, lineHeight: 1.45 }}>
-                Dungeon Scrawl и другие VTT — только внешние инструменты. Приложение не копирует их код, интерфейс, форматы или assets и не подтверждает ваши права автоматически. Product trademark gate остаётся отдельным.
+            <p className="map-legal-note">
+                Dungeon Scrawl и другие VTT — только внешние инструменты. Приложение не копирует их код, интерфейс, форматы или материалы и не подтверждает ваши права автоматически. Проверка названия продукта остаётся отдельным этапом.
             </p>
         </div>
     );

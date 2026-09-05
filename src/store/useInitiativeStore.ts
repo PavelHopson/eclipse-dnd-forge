@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
+import { readInitiativeState } from "../model/dnd/campaignResourceValidation";
 
 const STORAGE_KEY = "eclipse_dnd_initiative_v1";
 
@@ -31,9 +33,9 @@ const DEFAULT: PersistedShape = { entries: [], activeIndex: 0, round: 0, active:
 
 function load(): PersistedShape {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = campaignResourceStorage.getItem(STORAGE_KEY);
         if (!raw) return DEFAULT;
-        const parsed = JSON.parse(raw);
+        const parsed = readInitiativeState(raw);
         return {
             entries: Array.isArray(parsed.entries) ? parsed.entries : [],
             activeIndex: typeof parsed.activeIndex === "number" ? parsed.activeIndex : 0,
@@ -41,15 +43,20 @@ function load(): PersistedShape {
             active: !!parsed.active,
         };
     } catch {
+        campaignRepository().blockResource(STORAGE_KEY);
         return DEFAULT;
     }
 }
 
 function persist(state: PersistedShape) {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-        // ignore
+        const raw = JSON.stringify(state);
+        readInitiativeState(raw);
+        campaignResourceStorage.setItem(STORAGE_KEY, raw);
+        return true;
+    } catch (error) {
+        campaignRepository().reportError(error);
+        return false;
     }
 }
 
@@ -81,7 +88,7 @@ export const useInitiativeStore = create<InitiativeState>((set, get) => {
 
         addEntry: (entry) => {
             const next = [...get().entries, entry];
-            persist({ ...snapshot(), entries: next });
+            if (!persist({ ...snapshot(), entries: next })) return;
             set({ entries: next });
         },
 
@@ -92,19 +99,19 @@ export const useInitiativeStore = create<InitiativeState>((set, get) => {
             const removedIdx = get().entries.findIndex((e) => e.id === id);
             if (removedIdx >= 0 && removedIdx < activeIndex) activeIndex--;
             if (activeIndex >= next.length) activeIndex = 0;
-            persist({ ...snapshot(), entries: next, activeIndex });
+            if (!persist({ ...snapshot(), entries: next, activeIndex })) return;
             set({ entries: next, activeIndex });
         },
 
         updateEntry: (id, patch) => {
             const next = get().entries.map((e) => (e.id === id ? { ...e, ...patch } : e));
-            persist({ ...snapshot(), entries: next });
+            if (!persist({ ...snapshot(), entries: next })) return;
             set({ entries: next });
         },
 
         startCombat: () => {
             const sorted = [...get().entries].sort((a, b) => b.initiative - a.initiative);
-            persist({ entries: sorted, activeIndex: 0, round: 1, active: true });
+            if (!persist({ entries: sorted, activeIndex: 0, round: 1, active: true })) return;
             set({ entries: sorted, activeIndex: 0, round: 1, active: true });
         },
 
@@ -117,17 +124,17 @@ export const useInitiativeStore = create<InitiativeState>((set, get) => {
                 activeIndex = 0;
                 round = round + 1;
             }
-            persist({ ...snapshot(), activeIndex, round });
+            if (!persist({ ...snapshot(), activeIndex, round })) return;
             set({ activeIndex, round });
         },
 
         endCombat: () => {
-            persist({ ...snapshot(), active: false, activeIndex: 0, round: 0 });
+            if (!persist({ ...snapshot(), active: false, activeIndex: 0, round: 0 })) return;
             set({ active: false, activeIndex: 0, round: 0 });
         },
 
         clearAll: () => {
-            persist(DEFAULT);
+            if (!persist(DEFAULT)) return;
             set(DEFAULT);
         },
     };

@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
+import { readWorldEventState } from "../model/dnd/campaignResourceValidation";
 import { WorldTickEvent } from "../model/agents/WorldTickAgent";
 
 const STORAGE_KEY = "eclipse_dnd_world_events_v1";
@@ -41,9 +43,9 @@ function loadPersisted(): PersistedShape {
         lastAutoTickAt: 0,
     };
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = campaignResourceStorage.getItem(STORAGE_KEY);
         if (!raw) return defaults;
-        const parsed = JSON.parse(raw);
+        const parsed = readWorldEventState(raw);
         const interval: WorldTickInterval = INTERVAL_KEYS.includes(parsed.autoTickInterval)
             ? parsed.autoTickInterval
             : "off";
@@ -55,21 +57,26 @@ function loadPersisted(): PersistedShape {
             lastAutoTickAt: typeof parsed.lastAutoTickAt === "number" ? parsed.lastAutoTickAt : 0,
         };
     } catch {
+        campaignRepository().blockResource(STORAGE_KEY);
         return defaults;
     }
 }
 
 function persist(state: PersistedShape) {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        const raw = JSON.stringify({
             events: state.events.slice(-MAX_EVENTS),
             insertedIds: state.insertedIds,
             lastDmAcknowledgedAt: state.lastDmAcknowledgedAt,
             autoTickInterval: state.autoTickInterval,
             lastAutoTickAt: state.lastAutoTickAt,
-        }));
-    } catch {
-        // ignore — localStorage may be unavailable
+        });
+        readWorldEventState(raw);
+        campaignResourceStorage.setItem(STORAGE_KEY, raw);
+        return true;
+    } catch (error) {
+        campaignRepository().reportError(error);
+        return false;
     }
 }
 
@@ -129,36 +136,36 @@ export const useWorldEventStore = create<WorldEventState>((set, get) => {
 
         appendEvent: (event) => {
             const next = [...get().events, event].slice(-MAX_EVENTS);
-            persist({ ...snapshot(), events: next });
+            if (!persist({ ...snapshot(), events: next })) return;
             set({ events: next });
         },
 
         markInserted: (eventId) => {
             if (get().insertedIds.includes(eventId)) return;
             const next = [...get().insertedIds, eventId];
-            persist({ ...snapshot(), insertedIds: next });
+            if (!persist({ ...snapshot(), insertedIds: next })) return;
             set({ insertedIds: next });
         },
 
         markDmAcknowledged: () => {
             const now = Date.now();
-            persist({ ...snapshot(), lastDmAcknowledgedAt: now });
+            if (!persist({ ...snapshot(), lastDmAcknowledgedAt: now })) return;
             set({ lastDmAcknowledgedAt: now });
         },
 
         setAutoTickInterval: (interval) => {
-            persist({ ...snapshot(), autoTickInterval: interval });
+            if (!persist({ ...snapshot(), autoTickInterval: interval })) return;
             set({ autoTickInterval: interval });
         },
 
         markAutoTicked: () => {
             const now = Date.now();
-            persist({ ...snapshot(), lastAutoTickAt: now });
+            if (!persist({ ...snapshot(), lastAutoTickAt: now })) return;
             set({ lastAutoTickAt: now });
         },
 
         clearEvents: () => {
-            persist({ ...snapshot(), events: [], insertedIds: [] });
+            if (!persist({ ...snapshot(), events: [], insertedIds: [] })) return;
             set({ events: [], insertedIds: [], currentTickId: null });
         },
 
