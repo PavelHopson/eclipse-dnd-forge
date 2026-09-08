@@ -62,7 +62,12 @@ test("Pages deploy isolates the build from the write token", async () => {
     assert.doesNotMatch(buildJob, /contents: write/);
     assert.match(buildJob, /npm ci --ignore-scripts --no-audit/);
 
-    assert.match(publishJob, /needs: build/);
+    const publishNeeds = publishJob.match(/^    needs: (.+)$/m)?.[1];
+    assert.deepEqual(JSON.parse(publishNeeds), ["build", "deployment-scope"]);
+    assert.match(publishJob, /needs\.deployment-scope\.outputs\.required == 'true'/);
+    const scopeJob = workflow.slice(workflow.indexOf("  deployment-scope:"), workflow.indexOf("  build:"));
+    assert.match(scopeJob, /permissions:\s*\n\s+contents: read\s*\n\s+checks: read/);
+    assert.doesNotMatch(scopeJob, /contents: write|secrets\./);
     assert.match(publishJob, /permissions:\s*\n\s+contents: write/);
     assert.match(publishJob, /digest-mismatch: error/);
     assert.match(publishJob, /test "\$\(cat build\/CNAME\)" = "dnd\.eclipse-forge\.ru"/);

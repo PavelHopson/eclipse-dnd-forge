@@ -52,7 +52,7 @@ jobs:
               }
               return false;
             }
-            const required = await deploymentScope({ github, context, bootstrapBase: "82b81fece9bdec214a56b0803c909d5c192c9652", bootstrapFiles: ["README.md","docs/repository-guide.md","docs/assets/repository-cover.svg","docs/assets/ui/overview.png","docs/assets/ui/mobile.png","docs/assets/ui/capture.json",".github/workflows/deploy.yml"] });
+            const required = await deploymentScope({ github, context, bootstrapBase: "73b4f151feb4c27a2cb1734ef66cfd47a762a964", bootstrapFiles: [".github/workflows/deploy.yml","tests/security-contract.test.mjs"] });
             core.setOutput('required', String(required));
             core.info(required ? 'Runtime changes: existing deployment gates remain in force.' : 'Presentation-only change: deployment is not required.');
 
