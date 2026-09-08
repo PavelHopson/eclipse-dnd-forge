@@ -1,22 +1,64 @@
-<div align="center">
+# Eclipse D&D Forge
 
-# ⚔️ Eclipse DnD Forge
+![Eclipse D&D Forge: Мир → Кампания → Сессия](docs/assets/repository-cover.svg)
 
-### AI Campaign Manager — настолка с ИИ-агентами и картой мира
+**Мастерская кампаний.** Организация настольных приключений: миры, кампании и AI-помощники для подготовки игры.
 
-**🌐 Live demo: <https://dnd.eclipse-forge.ru/>**
+<!-- repository-guide:start -->
+[Интерфейс](#readme-interface) · [Первый запуск](#readme-start) · [Что внутри](#readme-map) · [Путеводитель](docs/repository-guide.md#start) · [Карта кода](docs/repository-guide.md#map) · [Проверки](docs/repository-guide.md#checks) · [Границы и права](docs/repository-guide.md#boundaries)
 
-[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
-[![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+<a id="readme-interface"></a>
 
-> **Статус:** ✅ v0.3 — 39 ограниченных продуктовых и safety-слайсов поверх форка [VisualStoryWriting](https://github.com/m-damien/VisualStoryWriting). Agent runtime, 3 провайдера, persistent living-world loop, Map Workshop со Story Pins и player handouts, Azgaar workflow, Eclipse identity canary и responsive workspace. Интерфейс полностью на русском.
+## Интерфейс
 
-</div>
+![Eclipse D&D Forge — Стартовый экран ведущего: кампании, выбор AI-провайдера и параметры подключения. Поле ключа пустое.](docs/assets/ui/overview.png)
 
----
+**Стартовый экран ведущего: кампании, выбор AI-провайдера и параметры подключения. Поле ключа пустое.**
+
+Локальный снимок от 8 сентября 2026: отдельный профиль браузера, без внешних API и пользовательских секретов. Это вид интерфейса, не подтверждение production-функций.
+
+<details>
+<summary><strong>Мобильный экран · 390 px</strong></summary>
+
+<img src="docs/assets/ui/mobile.png" alt="Eclipse D&D Forge — мобильный экран" width="390">
+
+</details>
+
+[Открыть в полном размере](docs/assets/ui/overview.png) · [Данные снимка](docs/assets/ui/capture.json)
+
+<a id="readme-map"></a>
+
+## Проект за минуту
+
+- **[Мир и игровые сущности](<src/model>)** — Модель данных и сценарии подготовки приключения.
+- **[Рабочее пространство](<src/view>)** — Экраны и инструменты ведущего.
+- **[Серверная граница](<bff>)** — Отдельная backend-for-frontend часть и её тесты.
+
+<a id="readme-start"></a>
+
+## Начать локально
+
+**Среда:** Node.js и npm. **Источник:** [package.json](<package.json>).
+
+Из корня клонированного репозитория:
+
+```bash
+npm ci
+npm run dev
+```
+
+Интерфейс и внешние AI-вызовы — разные этапы. До подключения провайдера проверьте настройки, стоимость и обработку ключей; значения секретов в README не размещаются.
+
+<details>
+<summary><strong>Перед первым запуском и изменением кода</strong></summary>
+
+- Команды сверены с исходниками 8 сентября 2026. Это инструкция, а не отметка об успешном запуске или текущем production.
+- Установка зависимостей может обращаться в registry и выполнять lifecycle scripts. Используйте отдельную рабочую среду и демонстрационные данные.
+- AI-материалы проходят review ведущего; ключи провайдеров и частные заметки игроков не публикуются.
+- [ROADMAP.md](<ROADMAP.md>)
+
+</details>
+<!-- repository-guide:end -->
 
 ## Что это
 

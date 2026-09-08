@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "project": "eclipse-dnd-forge",
+  "capturedAt": "2026-09-08T09:52:45.858Z",
+  "caption": "Стартовый экран ведущего: кампании, выбор AI-провайдера и параметры подключения. Поле ключа пустое.",
+  "method": "isolated-local-source-preview",
+  "context": "Local source preview, clean browser storage, reduced motion, no .env, external resources and backend APIs blocked. Repository content only, no additional fixtures or personal history; no production verification.",
+  "sourceHead": "82b81fece9bdec214a56b0803c909d5c192c9652",
+  "sourceWorktreeDirty": true,
+  "entryFiles": [
+    {
+      "file": "index.html",
+      "sha256": "5c7f7ca30ccc4435fe2f1b35cc22a8f8279680fc67bcb04d05c58c76caca8696"
+    },
+    {
+      "file": "package.json",
+      "sha256": "a44636028dc149f8b0980fac9fdd2147ce9b9d4f0e9b0512474c84f404c46cd7"
+    },
+    {
+      "file": "src/main.tsx",
+      "sha256": "68e47ed405d114b950755b549c2836ca843c89e85bc931f7a50f1772e498e60d"
+    }
+  ],
+  "screenshots": [
+    {
+      "kind": "overview",
+      "file": "overview.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "7472aee88092dc4501730702f3d54f632078b935e1362211c7f8364c2e0369a2",
+      "bytes": 338609
+    },
+    {
+      "kind": "mobile",
+      "file": "mobile.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "19cacc27e3ec08fdbe797164115ad296fb5741f9415765570a1538ded5ea9730",
+      "bytes": 93947
+    }
+  ],
+  "review": "Desktop and selected mobile captures visually reviewed before documentation use."
+}
