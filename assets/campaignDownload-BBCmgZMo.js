@@ -1,0 +1,1 @@
+function t(n,a){const o=URL.createObjectURL(new Blob([n],{type:"application/json"})),e=document.createElement("a");e.href=o,e.download=`${a.replace(/[^a-zA-Z0-9-]/g,"-")}.campaign.json`,document.body.appendChild(e),e.click(),e.remove(),setTimeout(()=>URL.revokeObjectURL(o),1e3)}export{t as d};
