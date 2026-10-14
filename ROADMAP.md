@@ -155,6 +155,9 @@ media остаётся human-review-only, а public figures не считают�
   а узнаваемое лицо без явного consent evidence получает blocked status.
 - [x] Добавлены empty/loading/error/success/disabled/focus states, mobile layout и
   `prefers-reduced-motion` contract.
+- [x] Ошибка проверки или локального сохранения Project Bible больше не закрывает форму
+  и не показывает ложный success; сообщение остаётся у полей, а после успеха фокус
+  возвращается на кнопку редактирования.
 
 **Проверено локально:** lint, typecheck, production build и 46/46 Node tests проходят.
 Интерактивный browser smoke не запустился из-за локального Windows sandbox helper; mobile,

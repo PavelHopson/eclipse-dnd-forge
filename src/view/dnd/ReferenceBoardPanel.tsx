@@ -1,4 +1,4 @@
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { IoAdd, IoCheckmarkCircle, IoClose, IoDownloadOutline, IoPencil, IoTrashOutline } from "react-icons/io5";
 import {
     MAX_REFERENCE_ASSETS,
@@ -126,6 +126,8 @@ export default function ReferenceBoardPanel({ onClose }: ReferenceBoardPanelProp
     const board = useReferenceBoardStore((state) => state.board);
     const storageError = useReferenceBoardStore((state) => state.storageError);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const bibleEditButtonRef = useRef<HTMLButtonElement>(null);
+    const bibleErrorRef = useRef<HTMLDivElement>(null);
     const [mode, setMode] = useState<"board" | "wizard">("board");
     const [step, setStep] = useState(1);
     const [draft, setDraft] = useState<Draft>(() => emptyDraft());
@@ -141,6 +143,12 @@ export default function ReferenceBoardPanel({ onClose }: ReferenceBoardPanelProp
         continuityRules: board.bible.continuityRules.join("\n"),
         avoid: board.bible.avoid.join("\n"),
     }));
+
+    useEffect(() => {
+        if (isEditingBible && mode === "board" && storageError) {
+            bibleErrorRef.current?.scrollIntoView({ block: "center" });
+        }
+    }, [isEditingBible, mode, storageError]);
 
     const provenance = useMemo(() => ({
         kind: draft.provenanceKind,
@@ -219,16 +227,28 @@ export default function ReferenceBoardPanel({ onClose }: ReferenceBoardPanelProp
     };
 
     const saveBible = () => {
-        useReferenceBoardStore.getState().saveBible({
-            title: bibleDraft.title.trim(),
-            visualDirection: bibleDraft.visualDirection.trim(),
-            palette: lines(bibleDraft.palette, 8),
-            cameraLanguage: bibleDraft.cameraLanguage.trim(),
-            continuityRules: lines(bibleDraft.continuityRules, 12),
-            avoid: lines(bibleDraft.avoid, 12),
-        });
+        setError(null);
+        setFeedback(null);
+        let saved = false;
+        try {
+            const result = useReferenceBoardStore.getState().saveBible({
+                title: bibleDraft.title.trim(),
+                visualDirection: bibleDraft.visualDirection.trim(),
+                palette: lines(bibleDraft.palette, 8),
+                cameraLanguage: bibleDraft.cameraLanguage.trim(),
+                continuityRules: lines(bibleDraft.continuityRules, 12),
+                avoid: lines(bibleDraft.avoid, 12),
+            });
+            saved = (result as boolean | undefined) !== false;
+        } catch {
+            setError("Не удалось проверить project bible. Проверьте длину значений и повторите сохранение.");
+            return;
+        }
+        if (!saved) return;
+        if (useReferenceBoardStore.getState().storageError) return;
         setIsEditingBible(false);
         setFeedback("Project bible сохранена и применяется ко всей reference board.");
+        bibleEditButtonRef.current?.focus();
     };
 
     const downloadBoard = () => {
@@ -253,7 +273,7 @@ export default function ReferenceBoardPanel({ onClose }: ReferenceBoardPanelProp
                 <button type="button" className="reference-icon-button" onClick={onClose} aria-label="Закрыть Reference Board"><IoClose /></button>
             </header>
 
-            {(error || storageError) && <div className="reference-message is-error" role="alert">{error || storageError}</div>}
+            {!(isEditingBible && mode === "board") && (error || storageError) && <div className="reference-message is-error" role="alert">{error || storageError}</div>}
             {feedback && <div className="reference-message is-success" role="status"><IoCheckmarkCircle /> {feedback}</div>}
 
             {mode === "board" ? (
@@ -267,7 +287,7 @@ export default function ReferenceBoardPanel({ onClose }: ReferenceBoardPanelProp
                     <section className="reference-bible-card">
                         <div className="reference-section-heading">
                             <div><span>Project bible</span><h3>{board.bible.title || "Визуальные правила ещё не заданы"}</h3></div>
-                            <button type="button" className="reference-secondary-button" onClick={() => setIsEditingBible((value) => !value)}><IoPencil /> {isEditingBible ? "Свернуть" : "Редактировать"}</button>
+                            <button ref={bibleEditButtonRef} type="button" className="reference-secondary-button" onClick={() => { setFeedback(null); setIsEditingBible((value) => !value); }}><IoPencil /> {isEditingBible ? "Свернуть" : "Редактировать"}</button>
                         </div>
                         {isEditingBible ? (
                             <div className="reference-form-grid">
@@ -277,6 +297,7 @@ export default function ReferenceBoardPanel({ onClose }: ReferenceBoardPanelProp
                                 <label>Camera language<textarea value={bibleDraft.cameraLanguage} maxLength={300} onChange={(e) => setBibleDraft({ ...bibleDraft, cameraLanguage: e.target.value })} placeholder="Высота камеры, фокус, дистанция" /></label>
                                 <label>Continuity rules<textarea value={bibleDraft.continuityRules} onChange={(e) => setBibleDraft({ ...bibleDraft, continuityRules: e.target.value })} placeholder="Одна неизменная деталь на строку" /></label>
                                 <label>Avoid list<textarea value={bibleDraft.avoid} onChange={(e) => setBibleDraft({ ...bibleDraft, avoid: e.target.value })} placeholder="Чего никогда не должно быть" /></label>
+                                {(error || storageError) && <div ref={bibleErrorRef} className="reference-message is-error is-wide" role="alert">{error || storageError}</div>}
                                 <button type="button" className="reference-primary-button is-wide" onClick={saveBible}>Сохранить project bible</button>
                             </div>
                         ) : board.bible.visualDirection || board.bible.continuityRules.length ? (

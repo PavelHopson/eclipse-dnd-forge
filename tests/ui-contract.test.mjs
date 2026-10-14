@@ -66,3 +66,15 @@ test("visual contract uses only self-hosted fonts", async () => {
     assert.match(styles, /src: url\('\/fonts\/inter-cyrillic[.]woff2'\)/);
     assert.match(styles, /src: url\('\/fonts\/outfit-latin[.]woff2'\)/);
 });
+
+test("Project Bible reports durable-save errors in context and restores keyboard focus", async () => {
+    const panel = await readFile(new URL("../src/view/dnd/ReferenceBoardPanel.tsx", import.meta.url), "utf8");
+    const handler = panel.slice(panel.indexOf("const saveBible ="), panel.indexOf("const downloadBoard ="));
+
+    assert.match(handler, /setFeedback\(null\)/);
+    assert.match(handler, /if \(useReferenceBoardStore[.]getState\(\)[.]storageError\) return;/);
+    assert.ok(handler.indexOf("storageError) return;") < handler.indexOf("setIsEditingBible(false)"));
+    assert.match(handler, /bibleEditButtonRef[.]current[?][.]focus\(\)/);
+    assert.match(panel, /className="reference-message is-error is-wide" role="alert"/);
+    assert.match(panel, /bibleErrorRef[.]current[?][.]scrollIntoView\(\{ block: "center" \}\)/);
+});
