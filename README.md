@@ -1,5 +1,9 @@
 # Eclipse D&D Forge
 
+<!-- project-links:start -->
+[Открыть веб-версию](https://dnd.eclipse-forge.ru/) · [Документация](docs/repository-guide.md) · [Код](https://github.com/PavelHopson/eclipse-dnd-forge/tree/main) · [История изменений](https://github.com/PavelHopson/eclipse-dnd-forge/commits/main/)
+<!-- project-links:end -->
+
 ![Eclipse D&D Forge: Мир → Кампания → Сессия](docs/assets/repository-cover.svg)
 
 **Мастерская кампаний.** Организация настольных приключений: миры, кампании и AI-помощники для подготовки игры.
@@ -275,7 +279,9 @@ src/
 
 ---
 
-## Roadmap
+<a id="roadmap"></a>
+
+## Направления развития
 
 Полная дорожная карта — **[`ROADMAP.md`](ROADMAP.md)**. Список 37 слайсов хранится там с техническими нотами, границами и результатами проверок. Открытые follow-ups:
 
@@ -327,7 +333,9 @@ GitHub Pages публикуется только после locked install бе�
 <div align="center">
 <sub>Eclipse Forge · Сделано для мастеров подземелий</sub>
 </div>
-## Eclipse Forge visual contract
+<a id="eclipse-forge-visual-contract"></a>
+
+## Визуальный стандарт Eclipse Forge
 
 DnD Forge uses the local `eclipse-forge.visual-system.v1` `product` profile for the launcher and app shell. The shared signal-blue/warm-gold stage, Outfit/Inter typography and reduced-motion behavior frame the product while the parchment editor remains optimized for long-form campaign reading.
 
