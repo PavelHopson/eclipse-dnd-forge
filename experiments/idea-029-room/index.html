@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' ws://127.0.0.1:*; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+<title>Зал угасшего маяка · локальный этюд</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./room.css">
+<body>
+<header><span class="eyebrow">ECLIPSE · SCENE STUDY / 029</span><span class="badge">Локальный прототип</span></header>
+<main>
+  <section class="intro"><div><p class="eyebrow">01 / ПОДЗЕМЕЛЬЕ</p><h1>Зал угасшего маяка</h1></div><p>Огонь помнит дорогу.<br>Исследуйте три предмета в забытой караульной.</p></section>
+  <div class="workspace">
+    <section class="viewport" aria-label="Интерактивная комната">
+      <canvas id="scene" tabindex="0" aria-label="Комната. Стрелки — вращение, WASD — перемещение, плюс и минус — масштаб, R — сброс." aria-describedby="help"></canvas>
+      <div id="failure" role="alert" hidden><h2>Комната недоступна</h2><p id="failure-text"></p><button id="retry">Повторить запуск</button></div>
+      <div class="scene-caption"><span>КАМЕНЬ / МЕДЬ / УГОЛЬ</span><span id="render-state">Запуск…</span></div>
+    </section>
+    <aside>
+      <h2>Оставленные вещи</h2><p class="muted">Нажмите на предмет в комнате или выберите его здесь.</p>
+      <div class="objects">
+        <button data-object="lamp" disabled><span class="number">01</span><span><strong>Разжечь жаровню</strong><small>Тёплый свет на камне</small></span><span class="state">Погашена</span></button>
+        <button data-object="chest" disabled><span class="number">02</span><span><strong>Открыть сундук</strong><small>Тайник смотрителя</small></span><span class="state">Закрыт</span></button>
+        <button data-object="gate" disabled><span class="number">03</span><span><strong>Поднять решётку</strong><small>Проход к старому маяку</small></span><span class="state">Опущена</span></button>
+      </div>
+      <p id="reply" role="status" aria-live="polite">Готовим комнату…</p>
+      <h2>Осмотреть комнату</h2>
+      <fieldset disabled id="controls"><legend class="sr-only">Управление камерой</legend>
+        <div class="control-row"><button data-camera="left" aria-label="Повернуть влево">↶</button><button data-camera="right" aria-label="Повернуть вправо">↷</button><button data-camera="in" aria-label="Приблизить">+</button><button data-camera="out" aria-label="Отдалить">−</button></div>
+        <div class="control-row"><button data-camera="west" aria-label="Сместить влево">←</button><button data-camera="north" aria-label="Сместить вперёд">↑</button><button data-camera="south" aria-label="Сместить назад">↓</button><button data-camera="east" aria-label="Сместить вправо">→</button></div>
+        <button id="reset">Сбросить комнату и камеру</button>
+      </fieldset>
+      <p id="help" class="muted">Потяните сцену, чтобы повернуть её. Колесо — масштаб. Клавиатура: стрелки, WASD, +/−, R. Все действия доступны кнопками.</p>
+      <p id="motion" class="muted"></p>
+    </aside>
+  </div>
+</main>
+<footer><span>Оригинальная процедурная геометрия · без внешних assets</span><span>Не связано с кампаниями · изменения не сохраняются</span></footer>
+<script type="module" src="./room.mjs"></script>
+</body></html>
