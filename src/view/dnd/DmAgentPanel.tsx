@@ -9,6 +9,10 @@ import { extractNpcQuotes, mirrorDmQuotesToNpcHistories } from "../../model/agen
 import { insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 import { useWorldEventStore } from "../../store/useWorldEventStore";
+import { aiRecoveryMessage } from "../../model/ai/requestRecovery";
+import { clearDmRecovery, readDmRecovery, saveDmRecovery } from "../../model/agents/dmRecoverySnapshot";
+import { campaignRepository } from "../../model/dnd/campaignStorage";
+import { flushCampaign } from "../../model/dnd/campaignPersistence";
 
 interface DmAgentPanelProps {
     onClose: () => void;
@@ -22,8 +26,12 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
         s.events.filter((e) => !!e.action && e.createdAt > s.lastDmAcknowledgedAt),
     );
 
-    const [input, setInput] = useState("");
+    const input = useAgentStore((s) => s.drafts[DM_AGENT_ID] ?? "");
+    const setInput = (value: string) => useAgentStore.getState().setDraft(DM_AGENT_ID, value);
     const [error, setError] = useState<string | null>(null);
+    const [moduleFailed, setModuleFailed] = useState(false);
+    const [partial, setPartial] = useState("");
+    const requestRef = useRef<AbortController | null>(null);
     const [lastMirrored, setLastMirrored] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const latestMessageContent = history[history.length - 1]?.content;
@@ -32,26 +40,54 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [history.length, streaming, latestMessageContent]);
+    }, [history.length, streaming, latestMessageContent, partial]);
+
+    useEffect(() => {
+        try {
+            const id = campaignRepository().getActive()?.id;
+            if (id) {
+                const saved = readDmRecovery(sessionStorage, id);
+                if (saved && useAgentStore.getState().getHistory(DM_AGENT_ID).length === 0) {
+                    useAgentStore.setState((state) => ({
+                        histories: { ...state.histories, [DM_AGENT_ID]: saved.history },
+                        drafts: { ...state.drafts, [DM_AGENT_ID]: saved.draft },
+                    }));
+                }
+                if (saved) clearDmRecovery(sessionStorage, id);
+            }
+        } catch { setError("Не удалось прочитать сохранённый запрос DM. Данные восстановления не перезаписаны."); }
+        return () => {
+            requestRef.current?.abort();
+            requestRef.current = null;
+            useAgentStore.getState().setStreaming(DM_AGENT_ID, false);
+        };
+    }, []);
 
     const send = async () => {
         const trimmed = input.trim();
-        if (!trimmed || streaming) return;
+        if (!trimmed || requestRef.current || streaming) return;
 
         setError(null);
-        setInput("");
+        setModuleFailed(false);
+        setLastMirrored([]);
+        setPartial("");
+        const controller = new AbortController();
+        requestRef.current = controller;
 
         const agent = useAgentStore.getState();
         const priorHistory = agent.getHistory(DM_AGENT_ID);
 
-        agent.appendUserMessage(DM_AGENT_ID, trimmed);
         agent.setStreaming(DM_AGENT_ID, true);
-        agent.updateAssistantStream(DM_AGENT_ID, "");
 
         try {
             const finalText = await runDmTurn(priorHistory, trimmed, (partial) => {
-                useAgentStore.getState().updateAssistantStream(DM_AGENT_ID, partial);
-            });
+                if (requestRef.current === controller) setPartial(partial);
+            }, controller.signal);
+            if (requestRef.current !== controller || controller.signal.aborted) return;
+            // Only a complete successful turn becomes history. Failed partials are not canon.
+            agent.appendUserMessage(DM_AGENT_ID, trimmed);
+            agent.appendAssistantMessage(DM_AGENT_ID, finalText);
+            setInput("");
 
             // Mirror any **Name:** "..." quotes the DM voiced into the
             // matching NPC chat histories so future per-NPC conversations
@@ -64,18 +100,27 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
             } else {
                 setLastMirrored([]);
             }
-        } catch (e: any) {
-            const message = typeof e?.message === "string"
-                ? e.message
-                : "Не удалось получить ход DM. Проверьте API-ключ и попробуйте снова.";
-            setError(message);
-            useAgentStore.getState().updateAssistantStream(
-                DM_AGENT_ID,
-                `*Голос рассказчика на мгновение запинается.* (${message})`,
-            );
+        } catch (e) {
+            if (requestRef.current !== controller) return;
+            setError(aiRecoveryMessage(e));
+            setModuleFailed(e instanceof Error && e.name === "AiModuleLoadError");
         } finally {
-            useAgentStore.getState().setStreaming(DM_AGENT_ID, false);
+            if (requestRef.current === controller) {
+                requestRef.current = null;
+                setPartial("");
+                useAgentStore.getState().setStreaming(DM_AGENT_ID, false);
+            }
         }
+    };
+
+    const reloadModule = () => {
+        try {
+            if (!flushCampaign(true)) throw new Error("World not saved");
+            const id = campaignRepository().getActive()?.id;
+            if (!id) throw new Error("No campaign");
+            saveDmRecovery(sessionStorage, id, { draft: input, history: useAgentStore.getState().getHistory(DM_AGENT_ID) });
+            window.location.reload();
+        } catch { setError("Перезагрузка отменена: не удалось сохранить данные. Скопируйте запрос и историю DM перед ручной перезагрузкой."); }
     };
 
     const clear = () => {
@@ -92,7 +137,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                 top: 60,
                 right: 16,
                 zIndex: 1000,
-                width: 440,
+                width: "min(440px, calc(100% - 32px))",
                 maxHeight: "calc(100% - 80px)",
                 background: "#fffbf0",
                 border: "1px solid #d4c5a0",
@@ -106,7 +151,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
             }}
         >
             {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <GiCrown style={{ fontSize: 28, color: "#7a1f1f" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -114,7 +159,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                         <span style={{ fontSize: 10, color: "#6b5c4c", lineHeight: 1.1 }}>AI-рассказчик / арбитр текущей кампании</span>
                     </div>
                 </div>
-                <Button size="sm" variant="light" isIconOnly onClick={onClose} aria-label="Закрыть панель DM">
+                <Button size="sm" variant="light" isIconOnly onPress={onClose} aria-label="Закрыть панель DM">
                     <IoClose />
                 </Button>
             </div>
@@ -129,7 +174,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                     border: "1px solid #e8dcc0",
                     borderRadius: 6,
                     padding: 8,
-                    minHeight: 240,
+                    minHeight: 0,
                     maxHeight: 420,
                     display: "flex",
                     flexDirection: "column",
@@ -176,7 +221,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                                             size="sm"
                                             variant="flat"
                                             startContent={<GiScrollQuill />}
-                                            onClick={() => insertTextAtCursor(m.content)}
+                                            onPress={() => insertTextAtCursor(m.content)}
                                             style={{
                                                 height: 24,
                                                 minHeight: 24,
@@ -193,6 +238,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                         </div>
                     );
                 })}
+                {streaming && <div role="status" style={{ whiteSpace: "pre-wrap" }}>{partial || "AI готовит ответ…"}<div>Незавершённый ответ — ещё не добавлен в историю.</div></div>}
             </div>
 
             {pendingTickEvents.length > 0 && !streaming && (
@@ -210,17 +256,24 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
             )}
 
             {error && (
-                <div style={{ fontSize: 11, color: "#7a1f1f", background: "#fde2e2", padding: 6, borderRadius: 6 }}>
+                <div role="alert" style={{ flexShrink: 0, fontSize: 12, color: "#7a1f1f", background: "#fde2e2", padding: 6, borderRadius: 6 }}>
                     {error}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                        {moduleFailed
+                            ? <Button size="sm" onPress={reloadModule}>Сохранить и перезагрузить</Button>
+                            : <Button size="sm" onPress={() => void send()} isDisabled={streaming || !input.trim()}>Повторить запрос</Button>}
+                        <Button size="sm" variant="light" onPress={() => setError(null)}>Закрыть ошибку</Button>
+                    </div>
                 </div>
             )}
 
             {/* Input */}
-            <div style={{ display: "flex", gap: 6, alignItems: "flex-end" }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
                 <Textarea
                     size="sm"
                     variant="faded"
                     placeholder="Опишите что делает партия — или попросите DM задать следующую сцену…"
+                    aria-label="Запрос DM"
                     value={input}
                     onValueChange={setInput}
                     minRows={1}
@@ -238,19 +291,20 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                     size="sm"
                     isIconOnly
                     isLoading={streaming}
-                    onClick={send}
+                    onPress={() => void send()}
                     isDisabled={streaming || input.trim().length === 0}
                     style={{ background: "#7a1f1f", color: "white", height: 36 }}
                     aria-label="Отправить DM"
                 >
                     <IoSend />
                 </Button>
+                {streaming && <Button size="sm" onPress={() => requestRef.current?.abort()}>Остановить</Button>}
                 <Tooltip content="Очистить разговор с DM" closeDelay={0}>
                     <Button
                         size="sm"
                         isIconOnly
                         variant="light"
-                        onClick={clear}
+                        onPress={clear}
                         isDisabled={streaming || history.length === 0}
                         style={{ height: 36 }}
                         aria-label="Очистить разговор с DM"

@@ -1,4 +1,4 @@
-import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
+import type { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
 
 /**
  * Chains multiple providers. Tries each in order; on error, moves to the next.
@@ -23,6 +23,7 @@ export class FallbackProvider implements AiProvider {
         const errors: string[] = [];
 
         for (let i = 0; i < this.providers.length; i++) {
+            options.signal?.throwIfAborted();
             const provider = this.providers[i];
 
             if (i > 0) {
@@ -34,9 +35,10 @@ export class FallbackProvider implements AiProvider {
             try {
                 return await provider.streamChat(messages, options);
             } catch (e: any) {
-                const msg = `${provider.id}: ${e?.message ?? e}`;
+                options.signal?.throwIfAborted();
+                if (["AbortError", "TimeoutError", "APIUserAbortError", "AiModuleLoadError"].includes(e?.name)) throw e;
+                const msg = `${provider.id}: request failed`;
                 errors.push(msg);
-                console.warn(`[FallbackProvider] ${msg}`);
                 // Keep going to the next provider.
             }
         }
@@ -51,12 +53,14 @@ export class FallbackProvider implements AiProvider {
     ): Promise<T> {
         const errors: string[] = [];
         for (const provider of this.providers) {
+            options.signal?.throwIfAborted();
             try {
                 return await provider.generateStructured(messages, spec, options);
             } catch (e: any) {
-                const msg = `${provider.id}: ${e?.message ?? e}`;
+                options.signal?.throwIfAborted();
+                if (["AbortError", "TimeoutError", "APIUserAbortError", "AiModuleLoadError"].includes(e?.name)) throw e;
+                const msg = `${provider.id}: request failed`;
                 errors.push(msg);
-                console.warn(`[FallbackProvider/structured] ${msg}`);
             }
         }
         throw new Error(`Все AI-провайдеры недоступны (структурированный вывод). ${errors.join(" | ")}`);

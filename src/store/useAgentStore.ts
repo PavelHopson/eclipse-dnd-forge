@@ -6,6 +6,8 @@ interface AgentState {
     histories: Record<string, AgentMessage[]>;
     /** Per-entity "agent is currently streaming a reply" flag. */
     streaming: Record<string, boolean>;
+    drafts: Record<string, string>;
+    setDraft(entityId: string, value: string): void;
 
     getHistory(entityId: string): AgentMessage[];
     isStreaming(entityId: string): boolean;
@@ -21,6 +23,8 @@ interface AgentState {
 export const useAgentStore = create<AgentState>((set, get) => ({
     histories: {},
     streaming: {},
+    drafts: {},
+    setDraft: (entityId, value) => set({ drafts: { ...get().drafts, [entityId]: value } }),
 
     getHistory: (entityId) => get().histories[entityId] ?? [],
     isStreaming: (entityId) => !!get().streaming[entityId],
@@ -71,8 +75,9 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     clearHistory: (entityId) => {
         const { [entityId]: _omit, ...rest } = get().histories;
         const { [entityId]: _omitStream, ...restStream } = get().streaming;
-        set({ histories: rest, streaming: restStream });
+        const { [entityId]: _omitDraft, ...restDrafts } = get().drafts;
+        set({ histories: rest, streaming: restStream, drafts: restDrafts });
     },
 
-    clearAll: () => set({ histories: {}, streaming: {} }),
+    clearAll: () => set({ histories: {}, streaming: {}, drafts: {} }),
 }));

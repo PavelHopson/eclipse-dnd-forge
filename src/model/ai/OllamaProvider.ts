@@ -1,5 +1,5 @@
-import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
-import { zodToJsonSchema } from "./zodToJsonSchema";
+import type { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
+import { zodToJsonSchema } from "./zodToJsonSchema.ts";
 
 const DEFAULT_BASE_URL = "http://localhost:11434";
 const DEFAULT_MODEL = "llama3.2";
@@ -62,12 +62,14 @@ export class OllamaProvider implements AiProvider {
 
         let buffer = "";
         let text = "";
+        let complete = false;
 
+        try {
         for (;;) {
             const { value, done } = await reader.read();
-            if (done) break;
 
-            buffer += decoder.decode(value, { stream: true });
+            buffer += decoder.decode(value, { stream: !done });
+            if (done && buffer.trim()) buffer += "\n";
 
             // Ollama emits NDJSON — one JSON object per line.
             let nl: number;
@@ -80,10 +82,11 @@ export class OllamaProvider implements AiProvider {
                 try {
                     parsed = JSON.parse(line);
                 } catch {
-                    // Partial line slipped through — skip; the next read will reconstruct.
-                    continue;
+                    throw new Error("Invalid AI stream JSON");
                 }
 
+                if (parsed?.message?.content !== undefined && typeof parsed.message.content !== "string") throw new Error("Invalid AI stream content");
+                if (parsed?.done === true) complete = true;
                 const delta: string = parsed?.message?.content ?? "";
                 if (delta) {
                     text += delta;
@@ -94,9 +97,11 @@ export class OllamaProvider implements AiProvider {
                     throw new Error(`Ollama error: ${parsed.error}`);
                 }
             }
+            if (done) break;
         }
-
+        if (!complete || !text.trim()) throw new Error("Incomplete AI stream");
         return { text };
+        } finally { void reader.cancel().catch(() => {}); reader.releaseLock(); }
     }
 
     /**

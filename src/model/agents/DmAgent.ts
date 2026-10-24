@@ -4,6 +4,7 @@ import { useWorldEventStore } from "../../store/useWorldEventStore";
 import { CampaignSession, useSessionStore } from "../../store/useSessionStore";
 import { WorldTickEvent } from "./WorldTickAgent";
 import { AgentMessage } from "./NpcAgent";
+import { withAiDeadline } from "../ai/requestRecovery";
 
 /** Special agent key used by `useAgentStore` for the global DM conversation. */
 export const DM_AGENT_ID = "__dm__";
@@ -143,6 +144,7 @@ export async function runDmTurn(
     priorHistory: AgentMessage[],
     newPlayerMessage: string,
     onPartial: (partial: string) => void,
+    signal?: AbortSignal,
 ): Promise<string> {
     const state = useModelStore.getState();
     const entities = state.entityNodes.map((n) => n.data as Entity);
@@ -170,11 +172,20 @@ export async function runDmTurn(
 
     const messages = buildDmMessages(ctx, newPlayerMessage);
 
-    const { text } = await (await currentProvider()).streamChat(messages, {
-        model: currentModel(),
-        temperature: 0.85,
-        onPartial,
-    });
+    const { text } = await withAiDeadline(async (requestSignal) => {
+        const provider = await currentProvider();
+        requestSignal.throwIfAborted();
+        const result = await provider.streamChat(messages, {
+            model: currentModel(),
+            temperature: 0.85,
+            signal: requestSignal,
+            onPartial: (partial) => { if (!requestSignal.aborted) onPartial(partial); },
+        });
+        requestSignal.throwIfAborted();
+        if (!result.text.trim()) throw new Error("Empty AI response");
+        return result;
+    }, signal);
+    signal?.throwIfAborted();
 
     // Bump the acknowledgement watermark so the same events are not re-fed on
     // the next DM turn. We only acknowledge on success — if the stream throws,

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { AiProvider, AiProviderId } from "../model/ai/types";
+import { AiModuleLoadError } from "../model/ai/requestRecovery";
 import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
 import {
     clearSessionCredentials,
@@ -130,7 +131,7 @@ export const useAiConfigStore = create<AiConfigState>((set, get) => {
         },
 
         getProvider: async () => {
-            const { buildProvider } = await import("../model/ai/providerFactory");
+            const { buildProvider } = await import("../model/ai/providerFactory").catch(() => { throw new AiModuleLoadError(); });
             return buildProvider(get());
         },
     };

@@ -1,5 +1,5 @@
-import { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
-import { zodToJsonSchema } from "./zodToJsonSchema";
+import type { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
+import { zodToJsonSchema } from "./zodToJsonSchema.ts";
 
 const DEFAULT_MODEL = "claude-opus-4-7";
 const API_URL = "https://api.anthropic.com/v1/messages";
@@ -76,12 +76,14 @@ export class AnthropicProvider implements AiProvider {
 
         let buffer = "";
         let text = "";
+        let complete = false;
 
+        try {
         for (;;) {
             const { value, done } = await reader.read();
-            if (done) break;
 
-            buffer += decoder.decode(value, { stream: true });
+            buffer += decoder.decode(value, { stream: !done });
+            if (done && buffer.trim()) buffer += "\n";
 
             // SSE is line-oriented; deltas come as `data: { ... }` lines.
             let nl: number;
@@ -97,10 +99,12 @@ export class AnthropicProvider implements AiProvider {
                 try {
                     event = JSON.parse(payload);
                 } catch {
-                    continue;
+                    throw new Error("Invalid AI stream JSON");
                 }
 
+                if (event?.type === "message_stop") complete = true;
                 if (event?.type === "content_block_delta" && event.delta?.type === "text_delta") {
+                    if (typeof event.delta.text !== "string") throw new Error("Invalid AI stream content");
                     const delta: string = event.delta.text ?? "";
                     if (delta) {
                         text += delta;
@@ -111,9 +115,11 @@ export class AnthropicProvider implements AiProvider {
                     throw new Error(`Anthropic stream error: ${msg}`);
                 }
             }
+            if (done) break;
         }
-
+        if (!complete || !text.trim()) throw new Error("Incomplete AI stream");
         return { text };
+        } finally { void reader.cancel().catch(() => {}); reader.releaseLock(); }
     }
 
     /**
