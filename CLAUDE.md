@@ -72,6 +72,7 @@ Single source of truth: [`ROADMAP.md`](ROADMAP.md). Done / active / next / backl
 
 ## D&D Context
 
-- SRD 5.1 content (Open Gaming License) is the baseline
+- Where rules material from SRD 5.1 is included, use the Creative Commons
+  Attribution 4.0 baseline and exact attribution; make no OGL claim.
 - D&D terminology: characters = heroes/NPCs, events = sessions, locations = dungeons/towns
 - AI prompts should be D&D-aware: describe scenes with fantasy atmosphere, generate stat blocks, use D&D mechanics
