@@ -20,8 +20,32 @@ test("canvas tabs stay clear of campaign actions", async () => {
     assert.match(view, /aria-label="Переписать текст из графа"/);
     assert.match(timeline, /aria-label="Прокрутить таймлайн влево"/);
     assert.match(timeline, /aria-label="Прокрутить таймлайн вправо"/);
+    assert.match(timeline, /data-testid="action-timeline-label"/);
+    assert.match(timeline, /whiteSpace:\s*'nowrap'/);
+    assert.match(timeline, /textOverflow:\s*'ellipsis'/);
+    assert.match(timeline, /data-testid="action-timeline"/);
     assert.match(history, /aria-label="Отменить последнее изменение"/);
     assert.match(history, /aria-label="Вернуть отменённое изменение"/);
+});
+
+test("server-owned campaign path keeps room data behind authenticated campaign APIs", async () => {
+    const [page, remote] = await Promise.all([
+        readFile(new URL("../src/view/dnd/SharedTablePage.tsx", import.meta.url), "utf8"),
+        readFile(new URL("../src/model/dnd/remoteCampaign.ts", import.meta.url), "utf8"),
+    ]);
+
+    assert.match(page, /MANAGED_AI_ENABLED/);
+    assert.match(page, /joinRemoteCampaign/);
+    assert.match(page, /appendRemoteEvent/);
+    assert.match(remote, /dndApiJson/);
+    assert.match(remote, /\/api\/v1\/campaigns/);
+    assert.match(remote, /Idempotency-Key/);
+    assert.match(page, /type: "initiative[.]set"/);
+    assert.match(page, /type: "character[.]upsert"/);
+    assert.match(page, /Сохранить инициативу/);
+    assert.match(page, /Сохранить лист/);
+    assert.match(remote, /getRemoteCampaignEvents/);
+    assert.match(remote, /afterRevision/);
 });
 
 test("mobile workspace exposes one obvious pane and bounded overlays", async () => {

@@ -126,8 +126,23 @@ export default function EntityNodeComponent(props: NodeProps<EntityNode>) {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 10, background: 'rgb(243 244 246)', width: 40, height: 40, borderRadius: 99999 }}>
           {props.data.emoji}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-          <span style={{ fontWeight: 800, lineHeight: 1.1 }}>{props.data.name}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, minWidth: 0, maxWidth: 150 }}>
+          <span
+            title={props.data.name}
+            aria-label={props.data.name}
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: '16ch',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontWeight: 800,
+              lineHeight: 1.1,
+            }}
+          >
+            {props.data.name}
+          </span>
           {props.data.kind && props.data.kind !== 'unknown' && (
             <span
               style={{

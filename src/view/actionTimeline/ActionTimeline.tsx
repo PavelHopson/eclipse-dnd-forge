@@ -26,7 +26,7 @@ const paddingLeft = 150;
 const paddingTop = 15
 
 const timelineHeight = 1;
-const timelineSpacing = 30;
+const timelineSpacing = 36;
 
 const actionSpacing = 30;
 const actionWidth = 5;
@@ -35,9 +35,31 @@ const actionLeftPadding = actionSpacing / 2;
 
 
 function TimelineNode(props: NodeProps<Timeline>) {
+  const label = `${props.data.entity.data.emoji} ${props.data.entity.data.name}`;
   return <>
     <div style={{ width: props.data.width, height: props.data.height, background: '#dddddd', borderRadius: 3, transform: 'translate(0%, -50%)' }}>
-      <span style={{ transform: 'translate(-100%, -50%)', position: 'absolute', left: -10 }}>{props.data.entity.data.emoji} {props.data.entity.data.name}</span>
+      <span
+        data-testid="action-timeline-label"
+        title={label}
+        aria-label={label}
+        style={{
+          position: 'absolute',
+          left: -10,
+          top: '50%',
+          width: paddingLeft - 20,
+          maxWidth: paddingLeft - 20,
+          transform: 'translate(-100%, -50%)',
+          display: 'block',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          lineHeight: 1.2,
+          textAlign: 'right',
+          pointerEvents: 'none',
+        }}
+      >
+        {label}
+      </span>
     </div>
   </>
 }
@@ -218,7 +240,7 @@ export default function ActionTimeline() {
       </Button>
       </div>
     </div>
-      <div style={{ width: '100%', height: 300 }}>
+      <div data-testid="action-timeline" style={{ width: '100%', height: Math.max(300, maxHeight + 24), overflow: 'hidden' }}>
         <ReactFlow
           onMouseMove={(e) => {
             const pos = reactFlow.screenToFlowPosition({ x: e.clientX, y: e.clientY }, { snapToGrid: false })
