@@ -1,0 +1,16 @@
+{
+  "service": "OnePromptDesign",
+  "source": "https://onepromptdesign.com/",
+  "prompt_structure_reference": "https://onepromptdesign.com/prompt/5099dbc8-915b-4a2c-a835-ea8179b864ec/portal-in-pink-fields",
+  "created_date": "2026-10-14",
+  "purpose": "Пробный фон для DnD с местом под название приключения",
+  "generator": "Built-in image_gen",
+  "prompt": "prompt.txt",
+  "output": "dnd-gateway.png",
+  "width": 1672,
+  "height": 941,
+  "sha256": "5F7C8CFC873583F4E4EDAD821CB01D025CF86B9FF38461F0C8801F3596A3CE5C",
+  "approach": "Самостоятельный промпт по приёму задания палитры, объектов, плотности деталей, свободной зоны и формата. Изображения-референсы сайта не использовались.",
+  "visual_check": "Проход справа, холодный туман и тёплый свет внутри, зона слева для текста, нет надписей и водяных знаков. Оценка пользователя ещё не получена.",
+  "publication": "Internal-review-only; present in the dirty checkout for local QA, not approved for public or commercial distribution."
+}

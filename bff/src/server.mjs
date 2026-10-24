@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypt
 import { createServer } from 'node:http';
 import { isIP } from 'node:net';
 import { AtomicBudgetStore, BudgetExceededError } from './budget.mjs';
+import { CampaignStoreError, createCampaignStore } from './campaignStore.mjs';
 import { IdentityValidationError, JwksVerifier } from './identity.mjs';
 
 class HttpError extends Error {
@@ -59,9 +60,9 @@ function sendJson(response, status, payload, requestId, origin, extraHeaders = {
 }
 
 function sendError(response, error, requestId, origin) {
-  const status = error instanceof HttpError ? error.status : 500;
-  const code = error instanceof HttpError ? error.code : 'internal_error';
-  const message = error instanceof HttpError ? error.message : 'DnD service request failed';
+  const status = error instanceof HttpError || error instanceof CampaignStoreError ? error.status : 500;
+  const code = error instanceof HttpError || error instanceof CampaignStoreError ? error.code : 'internal_error';
+  const message = error instanceof HttpError || error instanceof CampaignStoreError ? error.message : 'DnD service request failed';
   const headers = error instanceof HttpError ? error.headers : {};
   sendJson(response, status, { error: { code, message, requestId } }, requestId, origin, headers);
 }
@@ -230,6 +231,7 @@ export async function createDndBffServer(config, options = {}) {
     timeoutMs: Math.min(config.timeoutMs, 10_000),
   });
   const budgets = options.budgets ?? await AtomicBudgetStore.create(config);
+  const campaigns = options.campaigns ?? await createCampaignStore({ filePath: config.campaignFile });
   const sessions = new Map();
   const usedIdentityJtis = new Map();
   const exchangeLimiter = new KeyedFixedWindowLimiter(30, 5 * 60_000);
@@ -385,6 +387,96 @@ export async function createDndBffServer(config, options = {}) {
       }
 
       const session = requireSession(request);
+
+      if (request.method === 'GET' && url.pathname === '/api/v1/campaigns') {
+        sendJson(response, 200, { campaigns: campaigns.list(session.subject) }, requestId, origin);
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/v1/campaigns') {
+        requireCsrf(request, session);
+        const body = await readJson(request, config.maxBodyBytes);
+        if (!body || Object.keys(body).length !== 1 || typeof body.title !== 'string') {
+          throw new HttpError(400, 'invalid_request', 'Название кампании обязательно.');
+        }
+        const campaign = await campaigns.create(session.subject, session.displayName, body?.title);
+        sendJson(response, 201, { campaign }, requestId, origin);
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/v1/campaigns/join') {
+        requireCsrf(request, session);
+        const body = await readJson(request, config.maxBodyBytes);
+        if (!body || Object.keys(body).length !== 1 || typeof body.inviteToken !== 'string') {
+          throw new HttpError(400, 'invalid_invite', 'Нужен invite token.');
+        }
+        const campaign = await campaigns.redeemInvite(session.subject, session.displayName, body.inviteToken);
+        sendJson(response, 200, { campaign }, requestId, origin);
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/v1/campaigns/restore') {
+        requireCsrf(request, session);
+        const body = await readJson(request, config.maxBodyBytes);
+        if (!body || Object.keys(body).length !== 1 || !body.backup) {
+          throw new HttpError(400, 'invalid_backup', 'Нужен backup кампании.');
+        }
+        const campaign = await campaigns.restore(session.subject, session.displayName, body.backup);
+        sendJson(response, 201, { campaign }, requestId, origin);
+        return;
+      }
+
+      const campaignMatch = url.pathname.match(
+        /^\/api\/v1\/campaigns\/(campaign-[A-Za-z0-9_-]{20,80})(?:\/(invites|events|backup))?$/,
+      );
+      if (campaignMatch) {
+        const campaignId = campaignMatch[1];
+        const resource = campaignMatch[2] ?? 'campaign';
+        if (request.method === 'GET' && resource === 'campaign') {
+          sendJson(response, 200, { campaign: campaigns.get(campaignId, session.subject) }, requestId, origin);
+          return;
+        }
+        if (request.method === 'GET' && resource === 'events') {
+          const afterRevision = Number(url.searchParams.get('afterRevision') ?? '0');
+          sendJson(response, 200, campaigns.events(campaignId, session.subject, afterRevision), requestId, origin);
+          return;
+        }
+        if (request.method === 'GET' && resource === 'backup') {
+          sendJson(response, 200, { backup: campaigns.backup(campaignId, session.subject) }, requestId, origin);
+          return;
+        }
+        if (request.method === 'POST' && resource === 'invites') {
+          requireCsrf(request, session);
+          const body = await readJson(request, config.maxBodyBytes);
+          const role = body?.role ?? 'player';
+          const expiresInSeconds = body?.expiresInSeconds ?? 86_400;
+          if (!body || Object.keys(body).some((key) => !['role', 'expiresInSeconds'].includes(key))) {
+            throw new HttpError(400, 'invalid_invite', 'Некорректные параметры приглашения.');
+          }
+          sendJson(response, 201, await campaigns.createInvite(campaignId, session.subject, role, expiresInSeconds), requestId, origin);
+          return;
+        }
+        if (request.method === 'POST' && resource === 'events') {
+          requireCsrf(request, session);
+          const idempotencyKey = request.headers['idempotency-key'];
+          const body = await readJson(request, config.maxBodyBytes);
+          if (!body || Object.keys(body).sort().join(',') !== 'expectedRevision,payload,type') {
+            throw new HttpError(400, 'invalid_event', 'Событие должно содержать type, payload и expectedRevision.');
+          }
+          const result = await campaigns.appendEvent({
+            campaignId,
+            subject: session.subject,
+            type: body.type,
+            payload: body.payload,
+            expectedRevision: body.expectedRevision,
+            idempotencyKey,
+          });
+          sendJson(response, result.replayed ? 200 : 201, result, requestId, origin);
+          return;
+        }
+        throw new HttpError(405, 'method_not_allowed', 'Метод недоступен.');
+      }
+
       if (!config.aiEnabled) throw new HttpError(503, 'ai_disabled', 'AI временно отключён оператором');
 
       if (request.method === 'GET' && url.pathname === '/api/v1/ai/models') {
@@ -458,7 +550,7 @@ export async function createDndBffServer(config, options = {}) {
         sendError(response, new HttpError(401, error.code, 'Eclipse Chat identity token is invalid'), requestId, origin);
         return;
       }
-      if (!(error instanceof HttpError)) {
+      if (!(error instanceof HttpError) && !(error instanceof CampaignStoreError)) {
         logger.error({ event: 'dnd_bff_failed', requestId, error: error instanceof Error ? error.name : 'unknown' });
       }
       sendError(response, error, requestId, origin);

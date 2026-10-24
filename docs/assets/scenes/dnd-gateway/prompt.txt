@@ -1,0 +1,7 @@
+Use case: stylized-concept.
+Deliverable: one wide 16:9 fantasy adventure title background for a DnD session. Generate a complete original scene from this written brief, without any reference image.
+A narrow ancient basalt gateway stands on the right-hand third of a deserted highland path. Beyond its open arch, a faint warm light suggests a passage into a forgotten underground hall. Rough dark stones have believable weight, chipped edges and restrained patches of moss. Short wet grass and a few weathered steps anchor the structure.
+Cinematic realistic fantasy matte painting with subtle fine detail, natural atmospheric perspective and grounded materials. Cool overcast dawn, low mist hugging the ground, restrained amber light inside the passage, no neon glow.
+Palette: charcoal stone, desaturated blue-grey mist, muted moss green, a small amber accent.
+Composition: gateway completely inside frame, strong readable silhouette. Keep the left 45 percent quiet: uninterrupted mist and distant shadowed hillside, smooth tonal variation suitable for a title overlay. Clear foreground-to-background depth. Low visual density; only the gateway, path, grass, stones and distant hills.
+No people, animals, lettering, logos, watermarks, ornamental borders or UI. No text is to be rendered.

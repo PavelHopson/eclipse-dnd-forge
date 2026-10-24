@@ -41,14 +41,14 @@ function redirectEndpoint(value) {
   return url.toString();
 }
 
-function absoluteDataFile(value, production) {
+function absoluteDataFile(value, production, name) {
   if (!value?.trim()) {
-    if (production) throw new Error('DND_BFF_BUDGET_FILE is required in production');
+    if (production) throw new Error(`${name} is required in production`);
     return undefined;
   }
   const file = normalize(value.trim());
   if (!isAbsolute(file) || !/^[A-Za-z0-9._/\\:\- ]+$/.test(file)) {
-    throw new Error('DND_BFF_BUDGET_FILE must be an absolute path without shell metacharacters');
+    throw new Error(`${name} must be an absolute path without shell metacharacters`);
   }
   return file;
 }
@@ -115,6 +115,7 @@ export function loadBffConfig(env = process.env) {
       name: 'DND_BFF_PRODUCT_DAILY_TOKENS',
     }),
     aiEnabled: env.DND_BFF_AI_ENABLED !== 'false',
-    budgetFile: absoluteDataFile(env.DND_BFF_BUDGET_FILE, production),
+    budgetFile: absoluteDataFile(env.DND_BFF_BUDGET_FILE, production, 'DND_BFF_BUDGET_FILE'),
+    campaignFile: absoluteDataFile(env.DND_BFF_CAMPAIGN_FILE, production, 'DND_BFF_CAMPAIGN_FILE'),
   });
 }

@@ -83,6 +83,15 @@ export default function Launcher() {
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
           <Suspense fallback={<p role="status">Загружаем сохранённые кампании…</p>}><CampaignLibraryPanel /></Suspense>
+          <Button
+            as="a"
+            href="#/party"
+            color="primary"
+            variant="bordered"
+            style={{ marginTop: 14, width: '100%' }}
+          >
+            Открыть общий стол для ведущего и игрока
+          </Button>
         </CardBody>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>

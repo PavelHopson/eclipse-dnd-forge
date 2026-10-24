@@ -36,6 +36,7 @@ function testConfig() {
     productDailyTokens: 5_000_000,
     aiEnabled: true,
     budgetFile: undefined,
+    campaignFile: undefined,
   };
 }
 

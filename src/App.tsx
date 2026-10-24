@@ -9,6 +9,7 @@ import './view/dnd/CampaignLibrary.css';
 
 const VisualWritingInterface = lazy(() => import('./view/VisualWritingInterface'));
 const CampaignBar = lazy(() => import('./view/dnd/CampaignBar'));
+const SharedTablePage = lazy(() => import('./view/dnd/SharedTablePage'));
 const StudyInterface = lazy(() => import('./study/StudyInterface'));
 const BaselineInterface = lazy(() => import('./study/BaselineInterface'));
 
@@ -41,6 +42,10 @@ const router = createHashRouter([
     },
     element: deferred(<div className="campaign-frame"><CampaignBar /><div className="campaign-frame__body"><VisualWritingInterface /></div></div>),
     errorElement: <CampaignLoadError />,
+  },
+  {
+    path: 'party',
+    element: deferred(<SharedTablePage />),
   },
   {
     path: 'study',
