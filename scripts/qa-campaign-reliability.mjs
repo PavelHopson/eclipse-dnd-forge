@@ -2,9 +2,13 @@
 // --enable-automation --headless --user-data-dir=<...eclivarium-reliability-...>
 // --remote-debugging-port=9230. This script refuses ordinary user profiles.
 import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const port = Number(process.argv[2] ?? 9230);
 const baseUrl = process.argv[3] ?? 'http://127.0.0.1:4173/';
+const bibleOnly = process.argv.includes('--bible-only');
+const screenshotDir = process.env.QA_SCREENSHOT_DIR;
 assert.match(baseUrl, /^http:\/\/127\.0\.0\.1:\d+\/$/, 'QA only accepts a loopback preview URL');
 assert.ok(Number.isInteger(port) && port >= 1024 && port <= 65535);
 const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
@@ -57,8 +61,8 @@ async function template(name) {
     await pause(500); await workspaceReady();
 }
 async function key(key, code, modifiers = 0) {
-    const windowsVirtualKeyCode = key.toUpperCase().charCodeAt(0);
-    await rpc('Input.dispatchKeyEvent', { type: 'rawKeyDown', key, code, modifiers, windowsVirtualKeyCode });
+    const windowsVirtualKeyCode = ({ Enter: 13, Tab: 9, Escape: 27 })[key] ?? key.toUpperCase().charCodeAt(0);
+    await rpc('Input.dispatchKeyEvent', { type: key === 'Enter' ? 'keyDown' : 'rawKeyDown', ...(key === 'Enter' ? { text: '\r' } : {}), key, code, modifiers, windowsVirtualKeyCode });
     await rpc('Input.dispatchKeyEvent', { type: 'keyUp', key, code, windowsVirtualKeyCode }); await pause(350);
 }
 async function drawRoom() {
@@ -79,18 +83,118 @@ async function drawRoom() {
 }
 const draft = async () => JSON.parse((await active()).resources['eclivarium_living_atlas_draft_v1:location-0']);
 let checks = 0;
+let verifiedQaProfile = false;
 const pass = label => { console.log(`PASS ${++checks}: ${label}`); };
+
+async function keyboardButton(label) {
+    await until(`!![...document.querySelectorAll('button')].find(e => e.textContent.trim() === ${JSON.stringify(label)} || e.getAttribute('aria-label') === ${JSON.stringify(label)})`, `button: ${label}`);
+    await evaluate(`(() => { const button = [...document.querySelectorAll('button')].find(e => e.textContent.trim() === ${JSON.stringify(label)} || e.getAttribute('aria-label') === ${JSON.stringify(label)}); if (!button || button.disabled) throw new Error('Unavailable button'); button.scrollIntoView({block:'center'}); button.focus(); if(document.activeElement !== button) throw new Error('Button not focusable'); })()`);
+    await key('Enter', 'Enter');
+}
+async function bibleFields(values) {
+    await evaluate(`document.querySelector('.reference-form-grid input').focus()`);
+    for (let i = 0; i < values.length; i++) {
+        assert.equal(await evaluate(`document.activeElement === document.querySelectorAll('.reference-form-grid input, .reference-form-grid textarea')[${i}]`), true, 'Bible fields follow keyboard order');
+        await key('a', 'KeyA', 2);
+        await rpc('Input.insertText', { text: values[i] });
+        await key('Tab', 'Tab');
+    }
+    assert.equal(await evaluate(`document.activeElement?.textContent.trim()`), 'Сохранить project bible');
+}
+async function screenshot(name) {
+    if (!screenshotDir || !verifiedQaProfile) return;
+    await mkdir(screenshotDir, { recursive: true });
+    const result = await rpc('Page.captureScreenshot', { format: 'png' });
+    await writeFile(join(screenshotDir, `${name}.png`), Buffer.from(result.data, 'base64'));
+}
+async function bibleRecovery() {
+    for (const [name, width, height, mobile] of [['desktop', 1440, 1000, false], ['mobile', 390, 844, true]]) {
+        await rpc('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile });
+        if (mobile) await click('Мир и инструменты');
+        await click('Открыть Reference Board кампании');
+        await keyboardButton('Редактировать');
+        const baseline = [`QA ${name} saved`, 'Тихая гавань', 'синий\nзолото', 'На уровне глаз', 'Маяк остаётся белым', 'Без надписей'];
+        await bibleFields(baseline); await key('Enter', 'Enter');
+        assert.ok(await evaluate(`document.querySelector('.reference-board-panel [role=status]')?.textContent.includes('Project bible сохранена')`));
+        await keyboardButton('Редактировать');
+        assert.equal(await evaluate(`!!document.querySelector('.reference-board-panel [role=status]')`), false, 'Editing clears stale success');
+        const changed = [`QA ${name} retry`, 'Светлая гавань после дождя', 'бирюза\nмедь', 'Широкий план', 'Маяк остаётся белым\nЛодки деревянные', 'Без надписей\nБез логотипов'];
+        await bibleFields(changed);
+        const previous = (await active()).resources.eclipse_dnd_reference_board_v1;
+        await evaluate(`window.qaBibleSetItem = Storage.prototype.setItem; window.qaBibleFailures = 0; Storage.prototype.setItem = function(k,v) { if(k === 'eclivarium_campaign_v1:' + sessionStorage.getItem('eclivarium_active_campaign_v1') && JSON.parse(v).resources.eclipse_dnd_reference_board_v1 !== ${JSON.stringify(previous)}) { window.qaBibleFailures++; throw new DOMException('QA quota', 'QuotaExceededError'); } return window.qaBibleSetItem.call(this,k,v); };`);
+        try {
+            await key('Enter', 'Enter');
+            assert.ok(await evaluate('window.qaBibleFailures > 0'), 'Quota failure was exercised');
+            assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.reference-form-grid input, .reference-form-grid textarea'), e => e.value)`), changed, 'All unsaved fields survive failure');
+            assert.equal((await active()).resources.eclipse_dnd_reference_board_v1, previous, 'Durable board unchanged');
+            assert.equal(await evaluate(`document.querySelector('.reference-bible-card h3').textContent`), baseline[0], 'In-memory board unchanged');
+            assert.equal(await evaluate(`!!document.querySelector('.reference-board-panel [role=status]')`), false, 'No success on failure');
+            assert.ok(await evaluate(`document.querySelector('.reference-form-grid [role=alert]')?.textContent.includes('Не удалось сохранить')`));
+            assert.equal(await evaluate(`document.activeElement?.textContent.trim()`), 'Сохранить project bible', 'Keyboard retry stays reachable');
+            assert.ok(await evaluate(`(() => { const a=document.querySelector('.reference-form-grid [role=alert]'); const r=a.getBoundingClientRect(); const p=document.querySelector('.reference-board-panel').getBoundingClientRect(); return r.top >= p.top && r.bottom <= Math.min(p.bottom, innerHeight); })()`), 'Failure message is visible without manual scrolling');
+            assert.equal(await evaluate('document.documentElement.scrollWidth'), width, 'No horizontal page overflow');
+            await screenshot(`bible-${name}-failure`);
+        } finally { await evaluate('Storage.prototype.setItem = window.qaBibleSetItem; delete window.qaBibleSetItem;'); }
+        await key('Enter', 'Enter');
+        assert.equal(await evaluate(`!!document.querySelector('.reference-form-grid')`), false, 'Editor closes only after successful retry');
+        assert.equal(await evaluate(`!!document.querySelector('.reference-board-panel [role=alert]')`), false, 'Retry clears error');
+        assert.equal(await evaluate(`document.activeElement?.textContent.trim()`), 'Редактировать', 'Success returns keyboard focus');
+        assert.ok(await evaluate(`document.querySelector('.reference-board-panel [role=status]')?.textContent.includes('Project bible сохранена')`));
+        await screenshot(`bible-${name}-success`);
+        await reload();
+        if (mobile) await click('Мир и инструменты');
+        await click('Открыть Reference Board кампании'); await keyboardButton('Редактировать');
+        assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.reference-form-grid input, .reference-form-grid textarea'), e => e.value)`), changed, 'All fields reload from durable storage');
+        await screenshot(`bible-${name}-reload`);
+        await keyboardButton('Закрыть Reference Board');
+        pass(`Project Bible ${name}: keyboard quota failure -> all drafts retained -> retry -> durable reload`);
+    }
+    await rpc('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+}
+
+async function timelineVisualRegression() {
+    await until(`document.querySelectorAll('[data-testid="action-timeline-label"]').length >= 3`, 'timeline labels');
+    const desktopMetrics = await evaluate(`Array.from(document.querySelectorAll('[data-testid="action-timeline-label"]')).map((label) => {
+        const style = getComputedStyle(label);
+        const rect = label.getBoundingClientRect();
+        return { whiteSpace: style.whiteSpace, height: rect.height, lineHeight: parseFloat(style.lineHeight) || 0 };
+    })`);
+    assert.ok(desktopMetrics.every(({ whiteSpace, height, lineHeight }) =>
+        whiteSpace === 'nowrap' && height <= Math.max(24, lineHeight * 1.5)
+    ), 'Timeline labels must remain single-line and readable');
+    await screenshot('timeline-desktop');
+
+    await rpc('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await pause(400);
+    const mobileMetrics = await evaluate(`Array.from(document.querySelectorAll('[data-testid="action-timeline-label"]')).map((label) => {
+        const style = getComputedStyle(label);
+        const rect = label.getBoundingClientRect();
+        return { whiteSpace: style.whiteSpace, height: rect.height, lineHeight: parseFloat(style.lineHeight) || 0 };
+    })`);
+    assert.ok(mobileMetrics.every(({ whiteSpace, height, lineHeight }) =>
+        whiteSpace === 'nowrap' && height <= Math.max(24, lineHeight * 1.5)
+    ), 'Mobile timeline labels must remain single-line and readable');
+    await screenshot('timeline-mobile');
+    await rpc('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    pass('world timeline labels stay single-line on desktop and mobile');
+}
 
 try {
     const command = await rpc('Browser.getBrowserCommandLine');
     assert.ok(command.arguments.some(arg => arg.startsWith('--user-data-dir=') && arg.includes('eclivarium-reliability-')), 'Refusing non-QA browser profile');
     assert.ok(command.arguments.some(arg => arg.startsWith('--headless')), 'QA requires a headless isolated browser');
+    verifiedQaProfile = true;
     await rpc('Browser.setDownloadBehavior', { behavior: 'deny' });
     await rpc('Runtime.enable'); await rpc('Page.enable');
+    await rpc('Page.navigate', { url: baseUrl });
+    await until(`document.readyState === 'complete' && !!document.querySelector('#root')`, 'local preview loaded');
     await rpc('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     assert.equal(await evaluate(`Object.keys(localStorage).filter(k => k.startsWith('eclivarium_campaign_v1:')).length`), 0, 'Use a fresh disposable profile');
     await click('Ollama (локально)');
     await template('Синдер-Холлоу —');
+    await timelineVisualRegression();
+    await bibleRecovery();
+    if (!bibleOnly) {
     const first = await active(); assert.equal(first.world.locationNodes.length, 3);
     const marker = 'QA: мир должен пережить перезагрузку и отказ записи.';
     await evaluate(`(() => { const editor = document.querySelector('[contenteditable=true]'); editor.focus(); window.getSelection().selectAllChildren(editor); })()`);
@@ -183,7 +287,11 @@ try {
     await until(`document.body.innerText.includes('Не удалось открыть кампанию')`, 'corruption recovery screen');
     assert.equal(await evaluate(`localStorage.getItem('eclivarium_campaign_v1:' + sessionStorage.getItem('eclivarium_active_campaign_v1'))`), '{broken');
     pass('corrupt campaign fails closed without overwriting its raw data');
+    }
     console.log(`Campaign reliability browser checks passed: ${checks}`);
+} catch (reason) {
+    await screenshot('bible-qa-failure');
+    throw reason;
 } finally {
     for (const call of pending.values()) clearTimeout(call.timer);
     socket.close();

@@ -33,3 +33,16 @@ test("Reference Board visual contract covers mobile, focus and reduced motion", 
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /grid-template-columns: 1fr/);
 });
+
+test("Project Bible success requires a durable save and keeps a keyboard recovery path", async () => {
+  const panel = await readFile(new URL("src/view/dnd/ReferenceBoardPanel.tsx", root), "utf8");
+  const store = await readFile(new URL("src/store/useReferenceBoardStore.ts", root), "utf8");
+  const handler = panel.slice(panel.indexOf("const saveBible ="), panel.indexOf("const downloadBoard ="));
+  assert.match(store, /saveBible: \(bible: Omit<ReferenceProjectBible, "updatedAt">\) => boolean/);
+  assert.match(handler, /setFeedback\(null\)/);
+  assert.match(handler, /if \(!saved\) return;/);
+  assert.ok(handler.indexOf("if (!saved) return;") < handler.indexOf("setIsEditingBible(false)"));
+  assert.match(handler, /bibleEditButtonRef\.current\?\.focus\(\)/);
+  assert.match(panel, /className="reference-message is-error is-wide" role="alert"/);
+  assert.match(panel, /bibleErrorRef\.current\?\.scrollIntoView\(\{ block: "center" \}\)/);
+});

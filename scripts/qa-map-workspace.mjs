@@ -2,6 +2,8 @@
 // --enable-automation --headless --user-data-dir=<...eclivarium-reliability-...>
 // --remote-debugging-port=9230. This script refuses ordinary user profiles.
 import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const port = Number(process.argv[2] ?? 9231);
 const baseUrl = process.argv[3] ?? 'http://127.0.0.1:5197/';
@@ -102,12 +104,61 @@ const mapList=async()=>JSON.parse((await active()).resources.eclipse_location_ma
 async function uploadProject(raw) {
     await evaluate(`(() => {const e=document.querySelector('.atlas-project-actions input[type=file]');const dt=new DataTransfer();dt.items.add(new File([${JSON.stringify(raw)}],'qa.eclatlas.json',{type:'application/json'}));e.files=dt.files;e.dispatchEvent(new Event('change',{bubbles:true}));})()`);await pause(400);
 }
+async function deletionRecovery() {
+    await rpc('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+    await reload(); await visibleButton('Мир и локации'); await visibleButton('Открыть создание и импорт карты мира');
+    const [target, other] = await mapList();
+    assert.ok(target && other, 'Two maps are required to check deletion isolation');
+    await evaluate(`(() => { const card=[...document.querySelectorAll('.map-library-card')].find(e=>e.querySelector('strong').textContent===${JSON.stringify(other.name)}); [...card.querySelectorAll('button')].find(e=>e.textContent.trim()==='Открыть').click(); })()`);
+    await pause(); await visibleButton('Метка в центре');
+    await evaluate(`(() => { const card=[...document.querySelectorAll('.map-library-card')].find(e=>e.querySelector('strong').textContent===${JSON.stringify(target.name)}); [...card.querySelectorAll('button')].find(e=>e.textContent.trim()==='Открыть').click(); })()`);
+    await pause();
+    const before = await active();
+    const pinsBefore = JSON.parse(before.resources.eclipse_map_story_pins_v1).pins;
+    assert.ok(pinsBefore.some(p=>p.mapId===target.id) && pinsBefore.some(p=>p.mapId===other.id));
+    await evaluate(`window.qaDeleteConfirm=window.confirm; window.confirm=message=>{ if(!message.startsWith('Удалить карту и её сюжетные метки?'))throw Error('Unexpected confirmation'); return true; };`);
+    try {
+        for (const resource of ['eclipse_location_maps_v1','eclipse_map_story_pins_v1']) {
+            await evaluate(`window.qaDeleteSet=Storage.prototype.setItem; window.qaDeleteRejected=0; Storage.prototype.setItem=function(k,v){if(k==='eclivarium_campaign_v1:'+sessionStorage.getItem('eclivarium_active_campaign_v1') && JSON.parse(v).resources[${JSON.stringify(resource)}]!==${JSON.stringify(before.resources[resource])}){window.qaDeleteRejected++;throw new DOMException('QA deletion quota','QuotaExceededError');}return window.qaDeleteSet.call(this,k,v);};`);
+            try {
+                await visibleButton('Удалить карту '+target.name);
+                assert.ok(await evaluate('window.qaDeleteRejected > 0'), 'Deletion failure must actually occur');
+                const failed = await active();
+                assert.ok(failed.resources.eclipse_location_maps_v1 === before.resources.eclipse_location_maps_v1, 'Failed deletion must retain the map');
+                assert.ok(failed.resources.eclipse_map_story_pins_v1 === before.resources.eclipse_map_story_pins_v1, 'Failed deletion must retain all pins');
+                assert.equal(await evaluate('document.querySelectorAll(".map-library-card").length'),2,'Failed deletion keeps both UI cards');
+                assert.equal(await evaluate('document.querySelectorAll(".map-story-marker").length'),pinsBefore.filter(p=>p.mapId===target.id).length,'Failed deletion keeps the visible map pin store');
+                assert.ok(await evaluate('!!document.querySelector(".location-map-workshop [role=alert]")'));
+                assert.ok(await evaluate(`(() => {const e=document.querySelector('.location-map-workshop [role=alert]');const r=e.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight && document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e;})()`),'Deletion error is visibly reachable');
+                assert.equal(await evaluate('!!document.querySelector(".location-map-workshop .is-success")'),false,'Failure must not show stale success');
+                if(process.env.QA_SCREENSHOT_DIR){await mkdir(process.env.QA_SCREENSHOT_DIR,{recursive:true});const shot=await rpc('Page.captureScreenshot',{format:'png'});await writeFile(join(process.env.QA_SCREENSHOT_DIR,`map-delete-${resource}-failure.png`),Buffer.from(shot.data,'base64'));}
+            } finally { await evaluate('Storage.prototype.setItem=window.qaDeleteSet;delete window.qaDeleteSet;'); }
+        }
+        await evaluate(`window.qaDeleteObserve=Storage.prototype.setItem;window.qaDeleteCommits=[];Storage.prototype.setItem=function(k,v){if(k==='eclivarium_campaign_v1:'+sessionStorage.getItem('eclivarium_active_campaign_v1')){const old=JSON.parse(this.getItem(k));const next=JSON.parse(v);const maps=old.resources.eclipse_location_maps_v1!==next.resources.eclipse_location_maps_v1;const pins=old.resources.eclipse_map_story_pins_v1!==next.resources.eclipse_map_story_pins_v1;if(maps||pins)window.qaDeleteCommits.push({maps,pins,revisionDelta:next.revision-old.revision,worldUnchanged:JSON.stringify(old.world)===JSON.stringify(next.world)});}return window.qaDeleteObserve.call(this,k,v);};`);
+        try {
+            await visibleButton('Удалить карту '+target.name);
+            assert.deepEqual(await evaluate('window.qaDeleteCommits'),[{maps:true,pins:true,revisionDelta:1,worldUnchanged:true}], 'One resource-changing commit; unrelated world autosave is not a deletion');
+        } finally { await evaluate('Storage.prototype.setItem=window.qaDeleteObserve;delete window.qaDeleteObserve;'); }
+    } finally { await evaluate('window.confirm=window.qaDeleteConfirm;delete window.qaDeleteConfirm;'); }
+    const after = await active();
+    assert.deepEqual(JSON.parse(after.resources.eclipse_location_maps_v1).maps,[other]);
+    assert.deepEqual(JSON.parse(after.resources.eclipse_map_story_pins_v1).pins,pinsBefore.filter(p=>p.mapId!==target.id));
+    // Force-layout can autosave positions independently; the observer above checks the deletion payload itself.
+    await reload(); await visibleButton('Мир и локации'); await visibleButton('Открыть создание и импорт карты мира');
+    assert.deepEqual(await mapList(),[other]);
+    assert.deepEqual(JSON.parse((await active()).resources.eclipse_map_story_pins_v1).pins,pinsBefore.filter(p=>p.mapId!==target.id));
+    assert.equal(await evaluate('document.querySelectorAll(".map-library-card").length'),1);
+    await visibleButton('Закрыть карты кампании');
+    pass('map/pins failures preserve both resources; retry deletes only the selected pair in one write and survives reload');
+}
 try {
     const command=await rpc('Browser.getBrowserCommandLine');
     assert.ok(command.arguments.some(a=>a.includes('eclivarium-reliability-mapworkspace-')));
     assert.ok(command.arguments.some(a=>a.startsWith('--headless')));
     await rpc('Browser.setDownloadBehavior',{behavior:'deny'});
     await rpc('Runtime.enable');await rpc('Page.enable');
+    await rpc('Page.navigate',{url:baseUrl});
+    await until("document.readyState==='complete' && !!document.querySelector('#root')",'local preview loaded');
     await rpc('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
     assert.equal(await evaluate("Object.keys(localStorage).filter(k=>k.startsWith('eclivarium_campaign_v1:')).length"),0,'Fresh QA profile required');
     await click('Ollama (локально)');await template('Синдер-Холлоу —');
@@ -188,5 +239,6 @@ try {
     await visibleButton('Закрыть карты кампании');
     assert.equal(await evaluate("document.querySelector('#root').inert"),false);
     pass('keyboard focus stays inside the dialog and canvas Escape closes only the editor');
+    await deletionRecovery();
     console.log('Map workspace browser checks passed: '+checks);
 } finally {for(const call of pending.values())clearTimeout(call.timer);socket.close();}

@@ -17,7 +17,6 @@ import {
     validateLocationMapSourceHeader,
 } from "../../model/dnd/locationMap";
 import { useLocationMapStore } from "../../store/useLocationMapStore";
-import { useMapStoryPinStore } from "../../store/useMapStoryPinStore";
 import LivingAtlasEditor from "./LivingAtlasEditor";
 import type { LivingAtlasDocument } from "../../model/dnd/livingAtlas";
 import MapStoryPins from "./MapStoryPins";
@@ -123,6 +122,7 @@ export default function LocationMapWorkshop({ onEditorChange }: { onEditorChange
     const [pendingAtlas, setPendingAtlas] = useState<LivingAtlasDocument | undefined>();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const importRef = useRef<HTMLDetailsElement>(null);
+    const storageErrorRef = useRef<HTMLParagraphElement>(null);
     useEffect(() => { onEditorChange?.(isAtlasOpen); }, [isAtlasOpen, onEditorChange]);
     useEffect(() => {
         if (!isAtlasOpen && previewDataUrl) importRef.current?.scrollIntoView({ block: "start" });
@@ -243,8 +243,12 @@ export default function LocationMapWorkshop({ onEditorChange }: { onEditorChange
 
     const removeMap = (mapId: string) => {
         if (!window.confirm("Удалить карту и её сюжетные метки? Для восстановления нужна резервная копия кампании.")) return;
-        if (!useLocationMapStore.getState().removeMap(mapId)) return;
-        useMapStoryPinStore.getState().removePinsForMap(mapId);
+        setError(null);
+        setFeedback(null);
+        if (!useLocationMapStore.getState().removeMap(mapId)) {
+            requestAnimationFrame(() => storageErrorRef.current?.scrollIntoView({ block: "center" }));
+            return;
+        }
         if (activeMapId === mapId) setActiveMapId("");
     };
 
@@ -351,7 +355,7 @@ export default function LocationMapWorkshop({ onEditorChange }: { onEditorChange
                 </Button>
             </div>
 
-            {(error || storageError) && <p role="alert" className="map-message is-error">{error || storageError}</p>}
+            {(error || storageError) && <p ref={storageErrorRef} role="alert" className="map-message is-error">{error || storageError}</p>}
             {feedback && <p aria-live="polite" className="map-message is-success">{feedback}</p>}
 
             {activeMap && <MapStoryPins key={activeMap.id} map={activeMap} />}

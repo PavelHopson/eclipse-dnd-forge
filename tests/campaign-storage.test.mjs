@@ -46,6 +46,58 @@ test('quota failure leaves the durable document and successful revision unchange
     assert.equal(storage.getItem(CAMPAIGN_PREFIX + id), before);
     assert.equal(repo.getStatus().state, 'error');
 });
+
+test('resource batch failure is atomic and retry persists both resources in one revision', () => {
+    const { storage, tab, repo, id } = fixture();
+    repo.writeResource('eclipse_location_maps_v1', 'map-before');
+    repo.writeResource('eclipse_map_story_pins_v1', 'pins-before');
+    const before = storage.getItem(CAMPAIGN_PREFIX + id);
+    const revision = repo.getActive().revision;
+    const patch = { eclipse_location_maps_v1: 'map-after', eclipse_map_story_pins_v1: 'pins-after' };
+    storage.fail = true;
+    assert.throws(() => repo.writeResources(patch), /записать/);
+    assert.equal(storage.getItem(CAMPAIGN_PREFIX + id), before);
+    assert.equal(repo.readResource('eclipse_location_maps_v1'), 'map-before');
+    assert.equal(repo.readResource('eclipse_map_story_pins_v1'), 'pins-before');
+    storage.fail = false;
+    let writes = 0;
+    const originalSet = storage.setItem.bind(storage);
+    storage.setItem = (key, value) => { writes++; originalSet(key, value); };
+    repo.writeResources(patch);
+    assert.equal(writes, 1);
+    const reload = new CampaignRepository(storage, tab);
+    assert.equal(reload.getActive().revision, revision + 1);
+    for (const [key, value] of Object.entries(patch)) assert.equal(reload.readResource(key), value);
+    repo.writeResources(patch);
+    for (const [key, value] of Object.entries(patch)) assert.equal(repo.readResource(key), value, 'Repeated patch leaves resources identical');
+});
+
+test('resource batches reject a blocked or invalid member without updating another member', () => {
+    for (const blocked of [true, false]) {
+        const { repo, storage, id } = fixture();
+        repo.writeResource('eclipse_location_maps_v1', 'keep map');
+        const before = storage.getItem(CAMPAIGN_PREFIX + id);
+        const key = blocked ? 'eclipse_map_story_pins_v1' : 'unknown-resource';
+        if (blocked) repo.blockResource(key);
+        assert.throws(() => repo.writeResources({ eclipse_location_maps_v1: 'delete map', [key]: 'delete pins' }), /нельзя перезаписать/);
+        assert.equal(storage.getItem(CAMPAIGN_PREFIX + id), before);
+        assert.equal(repo.readResource('eclipse_location_maps_v1'), 'keep map');
+    }
+});
+
+test('resource batches retain writer ownership and stale revision guards', () => {
+    const { repo, storage, tab, id } = fixture();
+    const patch = { eclipse_location_maps_v1: 'maps', eclipse_map_story_pins_v1: 'pins' };
+    repo.requireWriterLock();
+    assert.throws(() => repo.writeResources(patch), /правом записи/);
+    repo.grantWriterLock(id);
+    const other = new CampaignRepository(storage, tab); other.getActive();
+    other.writeResource('eclipse_dnd_sessions_v1', 'newer');
+    const before = storage.getItem(CAMPAIGN_PREFIX + id);
+    assert.throws(() => repo.writeResources(patch), /другой вкладке/);
+    assert.equal(storage.getItem(CAMPAIGN_PREFIX + id), before);
+    assert.equal(repo.readResource('eclipse_location_maps_v1'), null);
+});
 test('a second tab cannot silently overwrite a changed campaign', () => {
     const { storage, tab, repo, id } = fixture();
     const second = new CampaignRepository(storage, tab); second.getActive();

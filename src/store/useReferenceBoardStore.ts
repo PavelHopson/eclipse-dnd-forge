@@ -51,7 +51,7 @@ function persistBoard(board: ReferenceBoard): string | null {
 interface ReferenceBoardState {
     board: ReferenceBoard;
     storageError: string | null;
-    saveBible: (bible: Omit<ReferenceProjectBible, "updatedAt">) => void;
+    saveBible: (bible: Omit<ReferenceProjectBible, "updatedAt">) => boolean;
     saveAsset: (asset: ReferenceAsset) => boolean;
     removeAsset: (assetId: string) => void;
     clearStorageError: () => void;
@@ -67,9 +67,15 @@ export const useReferenceBoardStore = create<ReferenceBoardState>((set, get) => 
                 ...get().board,
                 bible: { ...bible, updatedAt: Date.now() },
             };
-            const validated = readReferenceBoard(JSON.stringify(board));
-            const storageError = persistBoard(validated);
-            set(storageError ? { storageError } : { board: validated, storageError: null });
+            try {
+                const validated = readReferenceBoard(JSON.stringify(board));
+                const storageError = persistBoard(validated);
+                set(storageError ? { storageError } : { board: validated, storageError: null });
+                return storageError === null;
+            } catch {
+                set({ storageError: "Не удалось проверить project bible. Проверьте длину значений и повторите сохранение." });
+                return false;
+            }
         },
         saveAsset: (asset) => {
             const current = get().board;

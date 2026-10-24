@@ -33,7 +33,33 @@
 
 - This is non-destructive visual floor union, not a polygon topology/navmesh engine. Arbitrary cutouts, resize/group transforms, curved walls, layers, hex grids, lighting and fog remain future slices. Doors currently use horizontal/vertical grid placement.
 - PNG/WebP previews and editable data remain browser-local; localStorage quota and the four-MiB map library/eight-map cap still apply. IndexedDB/media scaling and cloud collaboration are not implemented.
-- Deletion of maps and their pins still uses separate resource writes; a second-write failure can leave orphaned pins, rather than deleting a map that failed to save. A future multi-resource transaction should cover that cleanup.
+- Historical residual: deletion used separate map/pin writes and a second-write failure could leave orphaned pins. The local atomic-write fix and verification are recorded below (2026-10-09); publication is not implied.
 - Commercial/IP/name gates from the audit remain open; real AI and production configuration were not exercised. Reference Board UI and unrelated app files were not changed in this slice.
 - The requested design-taste skill was unavailable; the implementation follows project UX principles and established components/icons, not a third-party interface replica.
 - Next: user review of the local editor, then editable geometry controls (resize/groups and layers). Preserve the combined dirty tree; publish only on an explicit user instruction after reviewing the intended diff.
+
+## 2026-10-09 — atomic map/pin deletion residual, local only
+
+- Scope: the later deletion residual documented above, not a redefinition or closure of the original geometry/lifecycle audit A06. Checkout `E:/projects/eclipse-dnd-forge`, `main`, HEAD `82b81fe`. No commit, push or deployment in this slice.
+- Reproduction: the old browser path passed the existing eight map checks, then failed the new check `Failed deletion must retain the map` when a pins-changing storage write was rejected. The map had already been persisted as deleted while its pins remained.
+- Fix: `CampaignRepository.writeResources` validates every resource before using the existing single-document commit, including writer ownership, revision and storage bounds checks. Map deletion reads both libraries from the campaign repository and submits both replacements together. Stores and selection update only after success; failure keeps the map and pins, displays the existing error and scrolls it into view. Retry deletes only the selected map and its pins. No schema migration or dependency change.
+- Exact write-set: `src/model/dnd/campaignStorage.ts`, `src/store/useLocationMapStore.ts`, `src/view/dnd/LocationMapWorkshop.tsx`, `tests/campaign-storage.test.mjs`, `tests/map-story-pins-ui.test.mjs`, `scripts/qa-map-workspace.mjs`, `docs/MAP-WORKSPACE-STATUS.md`.
+- The accepted Project Bible slice (five files listed in `CAMPAIGN-RELIABILITY-STATUS.md`) and unrelated `README.md` were preserved, with before/after SHA-256 checks. No Reference Board UI/store changes were made in this slice.
+
+### Verification
+
+- `npm.cmd test`: **114/114 passed**. `node --experimental-strip-types --test tests/campaign-storage.test.mjs tests/map-story-pins-ui.test.mjs tests/atlas-workspace.test.mjs`: **32/32 passed**.
+- `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run build`, `npm.cmd run bundle:check`: passed. Bundle budget: initial graph 580.4 KiB, largest deferred chunk 291.7 KiB. `node --check scripts/qa-map-workspace.mjs`: passed.
+- `node scripts/qa-map-workspace.mjs 9232 http://127.0.0.1:5198/`: **9/9 passed**, production build served by Vite preview, disposable headless Edge profile. The new desktop scenario rejects a maps-changing write and then a pins-changing write; both retain durable resources and visible map/pins without false success. Retry produces exactly one map/pins-changing commit with revision +1 and unchanged world payload; another map and its pins survive, including reload.
+- Independent graph-layout autosaves may advance the campaign revision during the scenario. The regression measures the deletion commit itself, not all unrelated autosaves over the whole scenario.
+- `node scripts/qa-campaign-reliability.mjs 9232 http://127.0.0.1:5198/`: **14/14 passed** in a separate fresh profile, including Project Bible failure/retry/reload, campaign isolation, backup and corruption handling.
+- Existing map desktop/mobile and keyboard checks passed; the new deletion fault scenario ran at 1440×1000. Native confirmation was stubbed to accept the exact deletion prompt; the native dialog itself, physical touch/stylus, screen readers, Firefox and Safari were not tested.
+- Visual evidence retained locally in `C:/Users/garaa/Documents/Codex/2026-08-23/dnd/a06-map-delete-2026-10-09-after/`: `map-delete-eclipse_location_maps_v1-failure.png` and `map-delete-eclipse_map_story_pins_v1-failure.png`. The latter was visually inspected for the visible error and retained map/pin.
+- Proportional storage security review covered blocked/unknown resources, writer ownership and stale revisions with negative tests. No new confirmed security finding in this bounded surface; this is not general security clearance. No dependency changes or fresh dependency advisory audit in this slice.
+- Remaining boundaries: browser-local storage limits still apply. A07/IP/trademark, server-owned ACL, authentication/PKCE, rollback/SLO and full player journeys remain outside this fix and are not accepted by these checks. No paid AI calls or real campaign data were used.
+
+### Independent local acceptance — A-00, 2026-10-09
+
+- A-00 accepted this deletion residual locally after reviewing the atomic commit, validation, writer-ownership and stale-revision guards; independently repeated focused tests **32/32**, a fresh build and map browser regression **9/9** on its own preview/headless Edge. Both injected write failures retained map/pins in UI and storage; retry used one resource-changing write, with the second map preserved after reload. A-00 also inspected the visible failure screenshot.
+- Local evidence: [A-00 receipt](C:/Users/garaa/.codex/visualizations/2026/09/13/01a09b0e-bbf6-71b3-bbd4-bd865dc5e8a7/portfolio-goal-2026-10-08/dnd-map-delete-review-20261009/receipt.json), timestamp `2026-10-09T11:39:07.385Z`, result `PASS`, browser exit `0`. All four source SHA-256 values in the receipt were matched against this checkout before recording acceptance.
+- Native confirmation was accepted by the QA harness; no real campaign data, providers or production were used. This acceptance does not authorize merge, push or deployment. The user's clarification of upload meaning/scope remains pending; no new implementation work is started.

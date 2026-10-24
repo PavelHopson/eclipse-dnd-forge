@@ -42,7 +42,9 @@ test("Story Pins render bounded React text without active remote surfaces", () =
 });
 
 test("deleting a saved map also removes its local story pins", () => {
-    assert.match(workshop, /removePinsForMap\(mapId\)/);
+    assert.match(workshop, /if \(!useLocationMapStore.getState\(\).removeMap\(mapId\)\) \{/);
+    assert.match(workshop, /storageErrorRef\.current\?\.scrollIntoView/);
+    assert.doesNotMatch(workshop, /removePinsForMap\(mapId\)/);
     assert.match(workshop, /<MapStoryPins key=\{activeMap\.id\} map=\{activeMap\}/);
 });
 

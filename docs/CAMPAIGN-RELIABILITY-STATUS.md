@@ -1,5 +1,58 @@
 # Campaign reliability — status
 
+## Current combined QA — 2026-10-20
+
+- Полный `node scripts/qa-campaign-reliability.mjs` на production build,
+  isolated headless Edge, desktop 1440×1000 и mobile 390×844: **15/15 PASS**.
+- В этот прогон входят world timeline label regression, browser writer lock,
+  archive/backup/retry, campaign isolation, map drafts, Reference Board,
+  mobile overflow и fail-closed corruption recovery.
+- Screenshot harness capture через `QA_SCREENSHOT_DIR` подтвердил 8 PNG:
+  timeline desktop/mobile и Project Bible desktop/mobile failure/success/reload.
+- Тестовый harness для offline Shared Table использует явный active lifecycle,
+  чтобы visibility check не зависел от поведения headless browser.
+
+## EF-05 / Project Bible recovery — 2026-10-08
+
+- Scope: the residual false-success finding adjacent to A02, not a reopening of the fixed session-archive bug. Local implementation only on existing `main`, HEAD `82b81fe`; no branch, commit, push or deploy. Pre-existing README and untracked documentation remain untouched.
+- `saveBible` now returns durable success explicitly. Validation/storage failure keeps the previous board and exposes a bounded error. The UI retains the editor and all six draft fields, clears stale success, and shows the error beside the retry action. Error scrolling preserves keyboard focus; successful retry returns focus to Edit.
+- The draft is retained in the open editor, not a new persistent draft service: explicitly closing the panel or reloading before a successful retry can still discard unsaved edits.
+- Write-set: `src/store/useReferenceBoardStore.ts`, `src/view/dnd/ReferenceBoardPanel.tsx`, `scripts/qa-campaign-reliability.mjs`, `tests/reference-board-ui.test.mjs`, this status file. No storage schema, dependencies, auth, media-rights rules or campaign-content changes.
+
+### Acceptance evidence
+
+- Local production build, isolated headless Edge, desktop **1440x1000** and mobile emulation **390x844**: **2/2 focused scenarios passed**. All six fields are filled through keyboard input/Tab; Enter triggers save and retry. Board opening uses the existing click helper, not an end-to-end keyboard-only application journey.
+- Each scenario first saves a baseline, then intercepts only a changed Reference Board write in the active synthetic campaign with `QuotaExceededError`. Verified: the failure is actually triggered, prior durable/in-memory board is unchanged, all draft values remain, no success appears, the alert is visible, focus remains on Save, retry clears the error, and all six values survive reload.
+- Full `node scripts/qa-campaign-reliability.mjs 9231 http://127.0.0.1:5197/`: **14/14 passed** (the previous 12 scenarios plus the two recovery scenarios).
+- `npm test`: **111/111 passed**. Focused model/UI-contract/storage tests: **21/21 passed**. The UI-contract test reads source; browser evidence above is the behavioral proof.
+- `npm run typecheck`, `npm run lint`, `npm run build`, `npm run bundle:check`: passed. Final bundle: initial graph **580.4 KiB**, largest deferred chunk **291.2 KiB**.
+- `node --check scripts/qa-campaign-reliability.mjs`, `git diff --check`, scoped credential/private-key pattern scan and manual diff review: passed. No new security finding identified in this bounded change; validation and campaign isolation are unchanged, and draft content is not logged or sent remotely. No fresh dependency audit or production security test was run.
+- Six local PNGs capture failure/success/reload on both sizes via optional `QA_SCREENSHOT_DIR`. Failure and success screenshots were visually reviewed. Existing mobile workspace tabs overlap part of the panel header; the tested error/retry controls remain visible. That surrounding layout, physical touch, screen readers and Safari/Firefox are not accepted by this slice.
+
+### Local reproduction
+
+Use a fresh disposable headless Edge/Chromium profile whose `--user-data-dir` contains `eclivarium-reliability-`, with `--enable-automation`, `--headless=new`, `--remote-debugging-port=9231`, and the preview URL below. Do not reuse an ordinary profile; the script rejects it. Check that ports 5197/9231 are available before starting your own processes.
+
+```powershell
+Set-Location E:\projects\eclipse-dnd-forge
+npm.cmd run build
+# Stop if the build fails. In a separate terminal, serve the build:
+npm.cmd run preview -- --host 127.0.0.1 --port 5197 --strictPort
+```
+
+With preview and the isolated browser running, run one of the following against a fresh profile (the full suite includes the focused scenarios):
+
+```powershell
+Set-Location E:\projects\eclipse-dnd-forge
+node scripts/qa-campaign-reliability.mjs 9231 http://127.0.0.1:5197/ --bible-only
+# Or, in another fresh profile:
+node scripts/qa-campaign-reliability.mjs 9231 http://127.0.0.1:5197/
+```
+
+A07/IP/notices/trademark, server campaign ACL, real-user PKCE canary, rollback/SLO, the three full player journeys, and atomic map/pins deletion remain open. No paid AI or production calls, billing changes or table edits were performed.
+
+## Historical campaign reliability slice — 2026-09-05
+
 - Date: 2026-09-05
 - Checkout: `E:\projects\eclipse-dnd-forge`, branch `main`; existing dirty work preserved.
 - Scope: audit A01–A04 — durable campaign snapshots, campaign isolation, truthful archival and scoped undo.
@@ -35,7 +88,7 @@
 - A master backup includes narrative secrets and private campaign content; it is not a player handout, encryption or access control. Existing map/media rights gates remain unchanged.
 - Browser locks fail closed if unsupported; Safari/Firefox, physical touch/stylus, large-world performance and actual production/AI flows were not tested.
 - DM/NPC/play-loop transient conversations remain ephemeral by the existing design. Switching clears them rather than transferring them to another campaign; this slice does not add transcript retention.
-- The protected Reference Board UI still emits its old project-bible success feedback unconditionally on save. Store state remains unchanged on failure and the error is exposed, but that UI message needs a separately approved correction. Global undo in other existing panels also remains outside the local Atlas fix.
+- At the September 5 checkpoint, the protected Reference Board UI still emitted project-bible success feedback unconditionally on save. This residual is superseded by the local October 8 recovery evidence above. Global undo in other existing panels remains outside the local Atlas fix.
 - Map workspace sizing and geometry (A05–A06), commercial/IP/name gates (A07), real AI verification and the Low dependency advisory are not closed by this slice.
 - The requested design-taste skill was unavailable; new controls use existing components/styles and the project's UX principles. No redesign of the existing workspace was attempted.
 

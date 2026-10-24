@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { campaignRepository, campaignResourceStorage } from "../model/dnd/campaignStorage";
+import { emptyMapStoryPinLibrary, readMapStoryPinLibrary, serializeMapStoryPinLibrary } from "../model/dnd/mapStoryPins";
+import { useMapStoryPinStore } from "./useMapStoryPinStore";
 import {
     LocationMapAsset,
     LocationMapLibrary,
@@ -81,13 +83,28 @@ export const useLocationMapStore = create<LocationMapState>((set, get) => {
             }
         },
         removeMap: (mapId) => {
-            const library = readLocationMapLibrary(JSON.stringify({
-                ...get().library,
-                maps: get().library.maps.filter((map) => map.id !== mapId),
-            }));
-            const storageError = persistLibrary(library);
-            set(storageError ? { storageError } : { library, storageError: null });
-            return storageError === null;
+            try {
+                const repo = campaignRepository();
+                const mapsRaw = repo.readResource(STORAGE_KEY);
+                const pinsKey = "eclipse_map_story_pins_v1";
+                const pinsRaw = repo.readResource(pinsKey);
+                // Read both durable resources, never replace a damaged library with an empty store.
+                const maps = mapsRaw === null ? emptyLocationMapLibrary() : readLocationMapLibrary(mapsRaw);
+                const pins = pinsRaw === null ? emptyMapStoryPinLibrary() : readMapStoryPinLibrary(pinsRaw);
+                const library = { ...maps, maps: maps.maps.filter((map) => map.id !== mapId) };
+                const pinLibrary = { ...pins, pins: pins.pins.filter((pin) => pin.mapId !== mapId) };
+                repo.writeResources({
+                    [STORAGE_KEY]: serializeLocationMapLibrary(library),
+                    [pinsKey]: serializeMapStoryPinLibrary(pinLibrary),
+                });
+                // No optimistic removal or compensating second write after a failed commit.
+                useMapStoryPinStore.setState({ library: pinLibrary, storageError: null });
+                set({ library, storageError: null });
+                return true;
+            } catch {
+                set({ storageError: "Не удалось удалить карту и её метки. Данные не изменены. Повторите удаление после устранения ошибки хранения." });
+                return false;
+            }
         },
         clearStorageError: () => set({ storageError: null }),
     };

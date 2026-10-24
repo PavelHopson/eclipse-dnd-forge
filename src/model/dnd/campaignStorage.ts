@@ -130,10 +130,16 @@ export class CampaignRepository {
         this.reportError(new Error("Часть сохранённых данных повреждена. Исходник оставлен без изменений; скачайте резервную копию для восстановления."));
     }
     writeResource(key: string, value: string) {
+        this.writeResources({ [key]: value });
+    }
+    /** Related resources share the existing document commit and revision/lock checks. */
+    writeResources(values: Record<string, string>) {
         try {
-            if (!isResourceKey(key) || this.blocked.has(key)) throw new Error("Этот ресурс нельзя перезаписать: сначала восстановите его из резервной копии.");
+            for (const key of Object.keys(values)) {
+                if (!isResourceKey(key) || this.blocked.has(key)) throw new Error("Этот ресурс нельзя перезаписать: сначала восстановите его из резервной копии.");
+            }
             const doc = this.getActive(); if (!doc) throw new Error("Сначала откройте кампанию.");
-            this.commit({ ...doc, resources: { ...doc.resources, [key]: value } });
+            this.commit({ ...doc, resources: { ...doc.resources, ...values } });
         } catch (error) { this.reportError(error); throw error; }
     }
     exportRaw(world?: CampaignWorld): string {

@@ -43,6 +43,7 @@ DND_CHAT_REDIRECT_URI=https://dnd.eclipse-forge.ru/
 DND_AI_GATEWAY_BASE_URL=https://<private-ai-gateway-host>
 DND_AI_GATEWAY_SERVICE_TOKEN=<dedicated-32+-character-secret>
 DND_BFF_BUDGET_FILE=/var/lib/eclipse-dnd-forge/budgets.json
+DND_BFF_CAMPAIGN_FILE=/var/lib/eclipse-dnd-forge/campaigns.json
 
 DND_BFF_USER_REQUESTS_PER_15_MINUTES=60
 DND_BFF_USER_DAILY_TOKENS=250000
@@ -130,14 +131,37 @@ TLS/Nginx and a VPS-generated Chat Ed25519 key with rollback, then makes the Cha
 ## Current constraints
 
 - Run exactly one BFF process. Sessions are in memory and the atomic budget file
-  is designed for one writer; horizontal scale needs Redis/Postgres transactions.
+  and campaign file are designed for one writer; horizontal scale needs
+  Redis/Postgres transactions.
 - Chat authorization codes are also single-process memory state. Chat must use
   sticky/single-instance routing until the code store moves to shared storage.
 - A banned Chat account may retain an already-created DnD session for at most one
   hour. Immediate cross-service revocation needs a separate signed revocation or
   introspection contract.
-- Campaigns are currently browser-local, so the BFF authenticates the DnD user
-  but cannot yet enforce per-campaign ACLs. Server-owned campaigns are a separate
-  data migration.
+- Campaigns use authenticated server-owned routes under `/api/v1/campaigns`.
+  The current file-backed store is a single-process migration slice with
+  revisioned events, idempotency and player-safe projections; it is not yet a
+  horizontally scalable production data layer.
 - Structured JSON uses schema instructions plus local validation because `ai.v1`
   does not expose a provider-neutral JSON-schema response contract yet.
+
+## Campaign API
+
+The authenticated campaign slice owns the campaign id, membership roles,
+player-safe projection, revisioned event log, reconnect polling and backup/restore.
+The minimum routes are:
+
+```text
+GET/POST /api/v1/campaigns
+GET      /api/v1/campaigns/:campaignId
+POST     /api/v1/campaigns/join
+POST     /api/v1/campaigns/:campaignId/invites
+GET/POST /api/v1/campaigns/:campaignId/events
+GET      /api/v1/campaigns/:campaignId/backup
+POST     /api/v1/campaigns/restore
+```
+
+Every mutating event requires the authenticated session, CSRF validation and an
+`Idempotency-Key`. The frontend uses this path in managed mode; loopback Shared
+Table remains only a local-development and synthetic-QA adapter until the
+transactional store and remote two-user playtest gates are complete.
