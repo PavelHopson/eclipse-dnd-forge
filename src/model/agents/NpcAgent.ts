@@ -55,7 +55,7 @@ export function buildNpcSystemPrompt(ctx: NpcAgentContext): string {
         .join("\n") || "- (no other named characters in the scene)";
 
     return [
-        `You are playing ${entity.name}, a character in a Dungeons & Dragons 5th Edition campaign.`,
+        `You are playing ${entity.name}, a character in a fantasy tabletop roleplaying 5th Edition campaign.`,
         `You are speaking directly with a player at the table. Stay in character at all times.`,
         ``,
         `CHARACTER:`,

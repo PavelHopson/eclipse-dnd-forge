@@ -47,7 +47,7 @@ export function buildNpcPrompt(criteria: NpcCriteria): string {
     const party = typeof criteria.partyLevel === "number" && criteria.partyLevel > 0 ? criteria.partyLevel : 3;
     const hostility = criteria.hostility && criteria.hostility !== "any" ? criteria.hostility : "DM's choice";
 
-    return `You are a Dungeons & Dragons 5th Edition Dungeon Master assistant. ` +
+    return `You are a fantasy tabletop roleplaying 5th Edition Dungeon Master assistant. ` +
         `Generate a single NPC ready to be dropped into the current scene.\n\n` +
         `Criteria:\n` +
         `- Race / creature type hint: ${criteria.race?.trim() || "any (you pick something interesting)"}\n` +
@@ -60,7 +60,7 @@ export function buildNpcPrompt(criteria: NpcCriteria): string {
         `- name: a fitting D&D-style proper name (no titles unless they ARE the name)\n` +
         `- emoji: a single emoji that captures the NPC visually (avoid generic 🧙 / 👤 unless they truly fit)\n` +
         `- kind: "npc" if friendly or neutral, "monster" if clearly hostile / a creature\n` +
-        `- role: short archetype label, max 4 words, written in D&D terms (e.g. "Halfling Cutpurse", "Frost Giant Skald", "Dwarven Smith of Moradin")\n` +
+        `- role: short archetype label, max 4 words, written in D&D terms (e.g. "Halfling Cutpurse", "Frost Giant Skald", "Dwarven Smith of Auron")\n` +
         `- properties: exactly 3 D&D-flavoured adjective traits on a 1-10 intensity scale. ` +
         `Prefer traits like "cunning", "ferocity", "piety", "greed", "loyalty", "menace", "fear", "scholarship" over generic feelings.\n` +
         `- abilities: STR, DEX, CON, INT, WIS, CHA each 3-20, scaled to the creature type and CR. ` +

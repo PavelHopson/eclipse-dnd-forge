@@ -4,6 +4,7 @@ import { AnthropicProvider } from "./AnthropicProvider";
 import { EclipseGatewayProvider } from "./EclipseGatewayProvider";
 import { FallbackProvider } from "./FallbackProvider";
 import { OllamaProvider } from "./OllamaProvider";
+import { isAllowedOllamaBaseUrl } from "./ollamaUrl";
 import { OpenAIProvider } from "./OpenAIProvider";
 
 export interface ProviderRuntimeConfig extends CloudCredentials {
@@ -23,6 +24,10 @@ function buildProviderFor(id: AiProviderId, state: ProviderRuntimeConfig): AiPro
     return new OpenAIProvider();
 }
 
+function canUseOllama(baseUrl: string): boolean {
+    return isAllowedOllamaBaseUrl(baseUrl);
+}
+
 export function buildProvider(state: ProviderRuntimeConfig): AiProvider {
     const primary = buildProviderFor(state.providerId, state);
     if (!state.useFallback || state.providerId === "eclipse") return primary;
@@ -33,7 +38,7 @@ export function buildProvider(state: ProviderRuntimeConfig): AiProvider {
         .filter((providerId) => {
             if (providerId === "eclipse") return false;
             if (providerId === "openai") return state.openaiApiKey.length > 0;
-            if (providerId === "ollama") return state.ollamaBaseUrl.length > 0;
+            if (providerId === "ollama") return canUseOllama(state.ollamaBaseUrl);
             if (providerId === "anthropic") return state.anthropicApiKey.length > 0;
             return false;
         });

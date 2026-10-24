@@ -38,7 +38,7 @@ export function buildCombatSystemPrompt(ctx: CombatTacticContext): string {
     const monsterBlock = otherMonsters.length > 0 ? otherMonsters.map(formatLine).join("\n") : "- (no allied creatures listed)";
 
     return [
-        `You are a tactical combat advisor for a Dungeons & Dragons 5e DM.`,
+        `You are a tactical combat advisor for a fantasy tabletop roleplaying 5e DM.`,
         `You propose the single next action that ${monster.name} (${monster.role ?? "creature"}) would take this turn.`,
         ``,
         `THE CREATURE YOU ARE ADVISING:`,

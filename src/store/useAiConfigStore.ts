@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { AiProvider, AiProviderId } from "../model/ai/types";
 import { AiModuleLoadError } from "../model/ai/requestRecovery";
+import { DEFAULT_OLLAMA_URL, normalizeOllamaBaseUrl } from "../model/ai/ollamaUrl";
 import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
 import {
     clearSessionCredentials,
@@ -26,7 +27,7 @@ interface PersistedConfig {
 const DEFAULT_CONFIG: PersistedConfig = {
     providerId: MANAGED_AI_ENABLED ? "eclipse" : "openai",
     gatewayModel: "auto/best-chat",
-    ollamaBaseUrl: "http://localhost:11434",
+    ollamaBaseUrl: DEFAULT_OLLAMA_URL,
     ollamaModel: "llama3.2",
     openaiModel: "gpt-4o-2024-08-06",
     anthropicModel: "claude-opus-4-7",
@@ -45,7 +46,9 @@ function loadConfig(): PersistedConfig {
         return {
             providerId,
             gatewayModel: typeof parsed.gatewayModel === "string" ? parsed.gatewayModel : DEFAULT_CONFIG.gatewayModel,
-            ollamaBaseUrl: typeof parsed.ollamaBaseUrl === "string" ? parsed.ollamaBaseUrl : DEFAULT_CONFIG.ollamaBaseUrl,
+            ollamaBaseUrl: typeof parsed.ollamaBaseUrl === "string"
+                ? (() => { try { return normalizeOllamaBaseUrl(parsed.ollamaBaseUrl); } catch { return DEFAULT_CONFIG.ollamaBaseUrl; } })()
+                : DEFAULT_CONFIG.ollamaBaseUrl,
             ollamaModel: typeof parsed.ollamaModel === "string" ? parsed.ollamaModel : DEFAULT_CONFIG.ollamaModel,
             openaiModel: typeof parsed.openaiModel === "string" ? parsed.openaiModel : DEFAULT_CONFIG.openaiModel,
             anthropicModel: typeof parsed.anthropicModel === "string" ? parsed.anthropicModel : DEFAULT_CONFIG.anthropicModel,

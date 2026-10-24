@@ -4,6 +4,7 @@ import { GiScrollQuill, GiSpellBook } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
 import { insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { GeneratedNpc, NpcCriteria, generateNpcIntoScene } from "../../model/prompts/generators/NpcGenerator";
+import { aiRecoveryMessage } from "../../model/ai/requestRecovery";
 
 interface NpcGeneratorPanelProps {
     onClose: () => void;
@@ -49,9 +50,8 @@ export default function NpcGeneratorPanel({ onClose, canvasCenter, defaultLocati
                 canvasCenter,
             );
             setResult(npc);
-        } catch (e: any) {
-            const message = typeof e?.message === "string" ? e.message : "Не удалось сгенерировать NPC. Проверьте API-ключ и попробуйте снова.";
-            setError(message);
+        } catch (e) {
+            setError(aiRecoveryMessage(e));
         } finally {
             setIsGenerating(false);
         }

@@ -8,6 +8,7 @@ import { suggestCombatTactic } from "../../model/agents/CombatAgent";
 import { runNpcDialogue } from "../../model/agents/NpcAgent";
 import { insertTextAtCursor, insertNpcQuoteAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
+import { aiRecoveryMessage } from "../../model/ai/requestRecovery";
 
 interface NpcDialoguePanelProps {
     entityId: string;
@@ -67,13 +68,11 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
             await runNpcDialogue(entityId, priorHistory, trimmed, (partial) => {
                 useAgentStore.getState().updateAssistantStream(entityId, partial);
             });
-        } catch (e: any) {
-            const message = typeof e?.message === "string"
-                ? e.message
-                : "Не удалось получить ответ. Проверьте API-ключ и попробуйте снова.";
-            setError(message);
-            // Replace the empty assistant bubble with an in-character apology so the log stays coherent.
-            useAgentStore.getState().updateAssistantStream(entityId, `*замолкает, выглядит растерянно.* Я... потерял мысль на мгновение. (${message})`);
+        } catch (e) {
+            setError(aiRecoveryMessage(e));
+            // Keep provider details out of the NPC history; the alert is the
+            // recovery surface and the empty stream is never a canonical reply.
+            useAgentStore.getState().updateAssistantStream(entityId, "");
         } finally {
             useAgentStore.getState().setStreaming(entityId, false);
         }
@@ -93,9 +92,8 @@ export default function NpcDialoguePanel({ entityId, onClose }: NpcDialoguePanel
         setTacticStreaming(true);
         try {
             await suggestCombatTactic(entityId, (partial) => setTactic(partial));
-        } catch (e: any) {
-            const message = typeof e?.message === "string" ? e.message : "Не удалось получить тактическое предложение.";
-            setError(message);
+        } catch (e) {
+            setError(aiRecoveryMessage(e));
         } finally {
             setTacticStreaming(false);
         }

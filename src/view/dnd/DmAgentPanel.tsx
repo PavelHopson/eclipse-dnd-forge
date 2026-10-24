@@ -186,7 +186,7 @@ export default function DmAgentPanel({ onClose }: DmAgentPanelProps) {
                         <GiCrown style={{ fontSize: 32, opacity: 0.4 }} />
                         <div style={{ marginTop: 6 }}>Расскажите DM что делает ваш персонаж — или попросите задать сцену.</div>
                         <div style={{ marginTop: 4, opacity: 0.7 }}>
-                            <em>«Опиши открывающую сцену.»</em> · <em>«Я осматриваю общий зал таверны.»</em> · <em>«Что мы видим, въезжая в Фандалин?»</em>
+                            <em>«Опиши открывающую сцену.»</em> · <em>«Я осматриваю общий зал таверны.»</em> · <em>«Что мы видим, въезжая в Эмберфолл?»</em>
                         </div>
                     </div>
                 )}

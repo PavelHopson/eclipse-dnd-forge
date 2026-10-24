@@ -13,7 +13,7 @@ export async function generateSessionRecap(sessionText: string, sessionName?: st
     if (!trimmed) return "";
 
     const sysPrompt = [
-        `You are summarising the just-ended chapter of a Dungeons & Dragons campaign for a DM recap log.`,
+        `You are summarising the just-ended chapter of a fantasy tabletop roleplaying campaign for a DM recap log.`,
         ``,
         `RULES:`,
         `- 2-4 sentences. Tight. Past tense.`,

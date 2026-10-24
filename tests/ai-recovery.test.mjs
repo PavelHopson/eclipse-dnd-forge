@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { withAiDeadline, aiRecoveryMessage, AiModuleLoadError } from '../src/model/ai/requestRecovery.ts';
+import { normalizeOllamaBaseUrl, isAllowedOllamaBaseUrl } from '../src/model/ai/ollamaUrl.ts';
 import { saveDmRecovery, readDmRecovery } from '../src/model/agents/dmRecoverySnapshot.ts';
 // Provider classes use parameter properties: transpile in-memory with the existing TS dependency.
 import ts from 'typescript';
@@ -8,8 +9,10 @@ import { readFile } from 'node:fs/promises';
 const moduleUrl = source => 'data:text/javascript;base64,' + Buffer.from(ts.transpile(source, {target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext})).toString('base64');
 async function providerClass(file, name) {
     const schemaSource = (await readFile(new URL('../src/model/ai/zodToJsonSchema.ts', import.meta.url),'utf8')).replace('"zod"',JSON.stringify(import.meta.resolve('zod')));
+    const ollamaUrlSource = await readFile(new URL('../src/model/ai/ollamaUrl.ts', import.meta.url),'utf8');
     const source = (await readFile(new URL('../src/model/ai/' + file, import.meta.url), 'utf8'))
-        .replace('"./zodToJsonSchema.ts"', JSON.stringify(moduleUrl(schemaSource)));
+        .replace('"./zodToJsonSchema.ts"', JSON.stringify(moduleUrl(schemaSource)))
+        .replace('"./ollamaUrl"', JSON.stringify(moduleUrl(ollamaUrlSource)));
     return (await import(moduleUrl(source)))[name];
 }
 const FallbackProvider = await providerClass('FallbackProvider.ts','FallbackProvider');
@@ -38,6 +41,35 @@ test('player-facing errors never expose provider payload, path or key', () => {
     }
     assert.match(aiRecoveryMessage(new DOMException('secret','AbortError')),/остановлен/);
     assert.match(aiRecoveryMessage(new DOMException('secret','TimeoutError')),/45 секунд/);
+});
+test('non-DM AI surfaces use bounded errors and Ollama stays on loopback', async () => {
+    for (const file of [
+        '../src/view/dnd/NpcDialoguePanel.tsx',
+        '../src/view/dnd/NpcGeneratorPanel.tsx',
+        '../src/view/dnd/EncounterGeneratorPanel.tsx',
+        '../src/view/dnd/SessionsPanel.tsx',
+        '../src/model/agents/DmOrchestrator.ts',
+        '../src/model/agents/WorldTickAgent.ts',
+        '../src/view/dnd/WorldTickPanel.tsx',
+    ]) {
+        const source = await readFile(new URL(file, import.meta.url), 'utf8');
+        assert.match(source, /aiRecoveryMessage/);
+        assert.doesNotMatch(source, /e\?\.message\s*\?\?|e\?\.message\s*:/);
+    }
+    for (const value of [
+        'http://localhost:11434',
+        'http://127.0.0.1:11434/',
+        'https://[::1]:11434',
+    ]) assert.equal(normalizeOllamaBaseUrl(value).startsWith('http'), true);
+    assert.equal(isAllowedOllamaBaseUrl('http://127.0.0.1:11434'), true);
+    assert.equal(isAllowedOllamaBaseUrl('https://example.com'), false);
+    assert.equal(isAllowedOllamaBaseUrl('http://localhost:11434/path'), false);
+    for (const value of [
+        'https://example.com:11434',
+        'http://localhost:11434/api?x=1',
+        'http://user:pass@localhost:11434',
+        'file:///tmp/ollama',
+    ]) assert.throws(() => normalizeOllamaBaseUrl(value));
 });
 test('fallback never starts next provider after abort/timeout for stream or structured calls',async()=>{
     for(const name of ['AbortError','TimeoutError','APIUserAbortError']) {
@@ -75,14 +107,22 @@ test('Ollama and Anthropic reject malformed/truncated/empty streams and accept s
             ['OllamaProvider.ts','OllamaProvider','{"message":{"content":"hello"}}\n{"done":true}','{"message":{"content":"broken"}}\n'],
             ['AnthropicProvider.ts','AnthropicProvider','data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"hello"}}\ndata: {"type":"message_stop"}','data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"broken"}}\n'],
         ]) {
-            const C=await providerClass(file,name); const provider = new C('synthetic-local-only');
+            const C=await providerClass(file,name); const provider = new C(name === 'OllamaProvider' ? 'http://localhost:11434' : 'synthetic-local-only');
             for(const body of ['',truncated,name==='OllamaProvider'?'{bad}\n':'data: {bad}\n']) {
                 globalThis.fetch=async()=>new Response(body);
                 await assert.rejects(provider.streamChat([]));
             }
             globalThis.fetch=async()=>new Response(new ReadableStream({start(c){const bytes=new TextEncoder().encode(valid);c.enqueue(bytes.slice(0,17));c.enqueue(bytes.slice(17));c.close();}}));
             assert.deepEqual(await provider.streamChat([]),{text:'hello'});
-            for(const status of [401,429,503]) { globalThis.fetch=async()=>new Response('PRIVATE',{status});await assert.rejects(provider.streamChat([])); }
+            for(const status of [401,429,503]) {
+                globalThis.fetch=async()=>new Response('PRIVATE',{status});
+                await assert.rejects(provider.streamChat([]), error => !String(error?.message).includes('PRIVATE'));
+            }
+            const providerError = name === 'OllamaProvider'
+                ? '{"error":"PRIVATE"}\n'
+                : 'data: {"type":"error","error":{"message":"PRIVATE"}}\n';
+            globalThis.fetch=async()=>new Response(providerError);
+            await assert.rejects(provider.streamChat([]), error => !String(error?.message).includes('PRIVATE'));
         }
     } finally {globalThis.fetch=oldFetch;}
 });

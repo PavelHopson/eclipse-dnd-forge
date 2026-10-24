@@ -7,6 +7,7 @@ import { WorldTickEvent, runWorldTick } from "../../model/agents/WorldTickAgent"
 import { appendNpcQuoteToSession, appendParagraphToSession, insertNpcQuoteAtCursor, insertTextAtCursor } from "../../model/agents/sessionInjector";
 import { useAgentStore } from "../../store/useAgentStore";
 import { WORLD_TICK_INTERVAL_LABELS, WorldTickInterval, useWorldEventStore } from "../../store/useWorldEventStore";
+import { aiRecoveryMessage } from "../../model/ai/requestRecovery";
 
 interface WorldTickPanelProps {
     onClose: () => void;
@@ -76,8 +77,8 @@ export default function WorldTickPanel({ onClose }: WorldTickPanelProps) {
             // Stamp lastAutoTickAt so the auto-scheduler doesn't immediately
             // re-fire after this manual tick.
             useWorldEventStore.getState().markAutoTicked();
-        } catch (e: any) {
-            setError(typeof e?.message === "string" ? e.message : "Тик мира не удался.");
+        } catch (e) {
+            setError(aiRecoveryMessage(e));
         } finally {
             useWorldEventStore.getState().setRunning(false);
         }

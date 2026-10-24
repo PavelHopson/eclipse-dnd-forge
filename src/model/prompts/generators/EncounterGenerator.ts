@@ -64,7 +64,7 @@ export function buildEncounterPrompt(criteria: EncounterCriteria): string {
     const loc = criteria.location;
 
     return [
-        `You are a Dungeons & Dragons 5e DM assistant. Generate a CR-balanced encounter for the party at the named location.`,
+        `You are a fantasy tabletop roleplaying 5e DM assistant. Generate a CR-balanced encounter for the party at the named location.`,
         ``,
         `LOCATION:`,
         `- Name: ${loc.name}`,
@@ -84,7 +84,7 @@ export function buildEncounterPrompt(criteria: EncounterCriteria): string {
         `- Total CR weight should plausibly hit the XP budget for the target difficulty. Don't overshoot deadly into TPK.`,
         `- Each group has a clear combatRole: brute (front-line damage), skirmisher (mobility / harass), controller (status / debuff), support (heal / buff allies), leader (commands others), minion (low-HP swarm).`,
         `- One concrete environmental TWIST grounded in the location's biome and danger — terrain, hazard, lighting, sound, weather, or an interactable object. NOT just "they ambush from cover".`,
-        `- For each monster group also fill: short role label (e.g. "Cragmaw Goblin Sharpshooter"), single emoji, 6 ability scores (3-20), hp / ac / cr scaled to creature type + party level, a short goal sentence (what they want in THIS fight), 3-4 knowledge bullets (what they know about the area or their target).`,
+        `- For each monster group also fill: short role label (e.g. "Ashclaw Goblin Sharpshooter"), single emoji, 6 ability scores (3-20), hp / ac / cr scaled to creature type + party level, a short goal sentence (what they want in THIS fight), 3-4 knowledge bullets (what they know about the area or their target).`,
         `- xpBudgetEstimate: your honest estimate of the total XP value across all groups (so the DM can sanity-check against the target budget above).`,
         `- Match the campaign's language: if biome/role descriptions are in Russian elsewhere, write the goal/knowledge in Russian too.`,
         ``,

@@ -5,6 +5,7 @@ import { IoClose } from "react-icons/io5";
 import { Location, useModelStore } from "../../model/Model";
 import { EncounterCriteria, EncounterDifficulty, GeneratedEncounter, calcXpBudget, generateEncounterIntoScene } from "../../model/prompts/generators/EncounterGenerator";
 import { insertTextAtCursor } from "../../model/agents/sessionInjector";
+import { aiRecoveryMessage } from "../../model/ai/requestRecovery";
 
 interface EncounterGeneratorPanelProps {
     onClose: () => void;
@@ -52,8 +53,8 @@ export default function EncounterGeneratorPanel({ onClose, locationId, canvasCen
             };
             const { encounter } = await generateEncounterIntoScene(criteria, canvasCenter);
             setResult(encounter);
-        } catch (e: any) {
-            setError(typeof e?.message === "string" ? e.message : "Не удалось сгенерировать энкаунтер.");
+        } catch (e) {
+            setError(aiRecoveryMessage(e));
         } finally {
             setIsGenerating(false);
         }

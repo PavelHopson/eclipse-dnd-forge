@@ -74,11 +74,11 @@ export type LocationNode = Node<Location>;
 
 const hardcodedText = `Session 1 — The Stonefang Pass
 
-The party arrived at the gates of Phandalin just before dusk. Thalia, a half-elf ranger, scouted the treeline while Bren, a dwarven cleric of Moradin, addressed the worried townsfolk gathered at the Stonehill Inn. Mira, a tiefling rogue, slipped into the market crowd to listen for rumors about the missing caravan.
+The party arrived at the gates of Emberfall just before dusk. Thalia, a half-elf ranger, scouted the treeline while Bren, a dwarven cleric of Auron, addressed the worried townsfolk gathered at the Hearthstone Inn. Mira, a tiefling rogue, slipped into the market crowd to listen for rumors about the missing caravan.
 
-In the Stonehill common room, the innkeeper Toblen told them that goblin raiders had been seen near the Triboar Trail. A merchant named Linan Swift offered fifty gold pieces for the rescue of his guard captain, Sildar, who had been taken alive into Cragmaw Hideout — a cave warren somewhere in the Neverwinter Wood.
+In the Hearthstone common room, the innkeeper Tovin told them that goblin raiders had been seen near the Three-Road Trail. A merchant named Mara Quill offered fifty gold pieces for the rescue of his guard captain, Edrin, who had been taken alive into Ashclaw Hideout — a cave warren somewhere in the Northmere Wood.
 
-At first light the party rode north. Two miles up the trail they found a dead horse pierced by black-fletched arrows. Thalia spotted goblin tracks leading off into the undergrowth. Mira readied her shortbow. Bren raised the symbol of Moradin and whispered a prayer for the road ahead.`
+At first light the party rode north. Two miles up the trail they found a dead horse pierced by black-fletched arrows. Thalia spotted goblin tracks leading off into the undergrowth. Mira readied her shortbow. Bren raised the symbol of Auron and whispered a prayer for the road ahead.`
 
 /**
  * Model

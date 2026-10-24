@@ -1,5 +1,6 @@
 import type { AiMessage, AiProvider, AiStreamOptions, AiStreamResult, StructuredOutputOptions, StructuredOutputSpec } from "./types";
 import { zodToJsonSchema } from "./zodToJsonSchema.ts";
+import { normalizeOllamaBaseUrl } from "./ollamaUrl";
 
 const DEFAULT_BASE_URL = "http://localhost:11434";
 const DEFAULT_MODEL = "llama3.2";
@@ -11,9 +12,9 @@ const DEFAULT_MODEL = "llama3.2";
  *  - Run Ollama locally (https://ollama.com)
  *  - Pull a chat-capable model: `ollama pull llama3.2`
  *  - Make sure CORS lets the browser talk to it. Ollama only allows the
- *    request origin if you launch it with `OLLAMA_ORIGINS="*"` (or a more
- *    specific allow-list). On Windows, set the env var before starting
- *    Ollama; on macOS/Linux: `OLLAMA_ORIGINS="*" ollama serve`.
+ *    request origin if you launch it with a narrow allow-list. On Windows,
+ *    set `OLLAMA_ORIGINS` to the exact local app origin before starting
+ *    Ollama; on macOS/Linux: `OLLAMA_ORIGINS="http://localhost:5173" ollama serve`.
  *  - Default base URL is http://localhost:11434.
  *
  * The streaming endpoint is `POST /api/chat` with `stream: true`. The body
@@ -25,11 +26,16 @@ const DEFAULT_MODEL = "llama3.2";
 export class OllamaProvider implements AiProvider {
     readonly id = "ollama" as const;
     readonly displayName = "Ollama (self-hosted)";
+    readonly baseUrl: string;
+    readonly defaultModel: string;
 
     constructor(
-        public baseUrl: string = DEFAULT_BASE_URL,
-        public defaultModel: string = DEFAULT_MODEL,
-    ) {}
+        baseUrl: string = DEFAULT_BASE_URL,
+        defaultModel: string = DEFAULT_MODEL,
+    ) {
+        this.baseUrl = normalizeOllamaBaseUrl(baseUrl);
+        this.defaultModel = defaultModel;
+    }
 
     async streamChat(messages: AiMessage[], options: AiStreamOptions = {}): Promise<AiStreamResult> {
         const url = `${this.baseUrl.replace(/\/+$/, "")}/api/chat`;
@@ -50,8 +56,7 @@ export class OllamaProvider implements AiProvider {
         });
 
         if (!response.ok) {
-            const errText = await response.text().catch(() => "");
-            throw new Error(`Ollama HTTP ${response.status}: ${errText || response.statusText}`);
+            throw new Error(`Ollama HTTP ${response.status}`);
         }
         if (!response.body) {
             throw new Error("Ollama: response body is empty (streaming not supported by this environment?)");
@@ -94,7 +99,7 @@ export class OllamaProvider implements AiProvider {
                 }
 
                 if (parsed?.error) {
-                    throw new Error(`Ollama error: ${parsed.error}`);
+                        throw new Error("Ollama stream error");
                 }
             }
             if (done) break;
@@ -145,8 +150,7 @@ export class OllamaProvider implements AiProvider {
         });
 
         if (!response.ok) {
-            const errText = await response.text().catch(() => "");
-            throw new Error(`Ollama HTTP ${response.status}: ${errText || response.statusText}`);
+            throw new Error(`Ollama HTTP ${response.status}`);
         }
         const data: any = await response.json();
         const content: string = data?.message?.content ?? "";
@@ -157,8 +161,8 @@ export class OllamaProvider implements AiProvider {
         let parsed: any;
         try {
             parsed = JSON.parse(content);
-        } catch (e: any) {
-            throw new Error(`Ollama structured output: invalid JSON (${e?.message ?? e}). Raw: ${content.slice(0, 200)}`);
+        } catch {
+            throw new Error("Ollama structured output: invalid JSON");
         }
 
         return spec.schema.parse(parsed);

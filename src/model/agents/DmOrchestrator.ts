@@ -4,6 +4,7 @@ import { GameLoopEntry, useGameLoopStore } from "../../store/useGameLoopStore";
 import { AgentMessage, AgentMessageRole, runNpcDialogue } from "./NpcAgent";
 import { runDmTurn } from "./DmAgent";
 import { extractNpcQuotes, mirrorDmQuotesToNpcHistories } from "./dmCrossReference";
+import { aiRecoveryMessage } from "../ai/requestRecovery";
 
 /**
  * Autonomous play loop — slice 21, core turn.
@@ -33,10 +34,7 @@ import { extractNpcQuotes, mirrorDmQuotesToNpcHistories } from "./dmCrossReferen
 const MAX_REACTING_NPCS = 3;
 
 function errMsg(e: unknown): string {
-    if (e && typeof e === "object" && "message" in e && typeof (e as { message?: unknown }).message === "string") {
-        return (e as { message: string }).message;
-    }
-    return "неизвестная ошибка";
+    return aiRecoveryMessage(e);
 }
 
 /** Flatten a beat of DM narration into a single short line for an NPC cue. */

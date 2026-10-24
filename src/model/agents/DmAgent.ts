@@ -65,7 +65,7 @@ export function buildDmSystemPrompt(ctx: DmAgentContext): string {
         : null;
 
     const sections: string[] = [
-        `You are the Dungeon Master of a Dungeons & Dragons 5th Edition campaign.`,
+        `You are the Dungeon Master of a fantasy tabletop roleplaying 5th Edition campaign.`,
         `You are speaking directly to the players around a table. Your job is to narrate the world, voice NPCs, drive the plot, and react to player actions naturally.`,
     ];
 

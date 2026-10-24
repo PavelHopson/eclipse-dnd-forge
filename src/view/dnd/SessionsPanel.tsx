@@ -6,6 +6,7 @@ import { useModelStore } from "../../model/Model";
 import { generateSessionRecap } from "../../model/agents/SessionRecapAgent";
 import { useSessionStore } from "../../store/useSessionStore";
 import { flushCampaign } from "../../model/dnd/campaignPersistence";
+import { aiRecoveryMessage } from "../../model/ai/requestRecovery";
 
 interface SessionsPanelProps {
     onClose: () => void;
@@ -51,10 +52,10 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
             if (!skipRecap) {
                 try {
                     recap = await generateSessionRecap(currentText, proposedName);
-                } catch (e: any) {
+                } catch (e) {
                     // Don't block archival on recap failure — store the session
                     // and surface a message so the user can retry later.
-                    setError(`Не удалось сгенерировать recap: ${e?.message ?? e}. Сессия архивирована без recap'а — можно перегенерировать из списка ниже.`);
+                    setError(`Не удалось сгенерировать recap: ${aiRecoveryMessage(e)} Сессия архивирована без recap'а — можно перегенерировать из списка ниже.`);
                 }
             }
 
@@ -89,8 +90,8 @@ export default function SessionsPanel({ onClose }: SessionsPanelProps) {
         try {
             const recap = await generateSessionRecap(target.text, target.name);
             useSessionStore.getState().updateRecap(sessionId, recap);
-        } catch (e: any) {
-            setError(`Не удалось перегенерировать recap: ${e?.message ?? e}`);
+        } catch (e) {
+            setError(`Не удалось перегенерировать recap: ${aiRecoveryMessage(e)}`);
         } finally {
             setRegeneratingFor(null);
         }

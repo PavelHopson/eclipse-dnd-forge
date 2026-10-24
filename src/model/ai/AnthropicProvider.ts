@@ -64,8 +64,7 @@ export class AnthropicProvider implements AiProvider {
         });
 
         if (!response.ok) {
-            const errText = await response.text().catch(() => "");
-            throw new Error(`Anthropic HTTP ${response.status}: ${errText || response.statusText}`);
+            throw new Error(`Anthropic HTTP ${response.status}`);
         }
         if (!response.body) {
             throw new Error("Anthropic: empty response body (streaming not supported here?)");
@@ -111,8 +110,7 @@ export class AnthropicProvider implements AiProvider {
                         options.onPartial?.(text);
                     }
                 } else if (event?.type === "error") {
-                    const msg = event.error?.message || "unknown error";
-                    throw new Error(`Anthropic stream error: ${msg}`);
+                    throw new Error("Anthropic stream error");
                 }
             }
             if (done) break;
@@ -174,8 +172,7 @@ export class AnthropicProvider implements AiProvider {
         });
 
         if (!response.ok) {
-            const errText = await response.text().catch(() => "");
-            throw new Error(`Anthropic HTTP ${response.status}: ${errText || response.statusText}`);
+            throw new Error(`Anthropic HTTP ${response.status}`);
         }
         const data: any = await response.json();
 

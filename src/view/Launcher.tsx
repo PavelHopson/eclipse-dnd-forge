@@ -181,7 +181,7 @@ export default function Launcher() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ fontSize: 12, color: '#5a4a3a', margin: 0 }}>
                   Общается с локальным <a href="https://ollama.com" style={{ color: '#7a1f1f', textDecoration: 'underline' }}>Ollama</a> daemon — для диалогов NPC, нарратива DM, world tick и (через <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>format: "json"</code>) извлечения сущностей + генерации NPC. Качество структурированного вывода зависит от модели — instruction-tuned модели (llama 3.x, qwen) справляются хорошо.
-                  Запускайте Ollama с <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="*"</code>, чтобы браузер мог достучаться.
+                  Запускайте Ollama с точным origin приложения, например <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>OLLAMA_ORIGINS="http://localhost:5173"</code>. Не используйте wildcard <code style={{ background: '#f0e4c8', padding: '0 4px', borderRadius: 3 }}>*</code>.
                 </p>
                 <div className="launcher-provider-fields">
                   <Input

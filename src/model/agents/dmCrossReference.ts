@@ -3,7 +3,7 @@ import { useAgentStore } from "../../store/useAgentStore";
 
 /**
  * Parsed quote extracted from a DM narration block.
- * Example match: `**Toblen Stonehill:** *Wipes a mug.* "Aye, three nights..."`
+ * Example match: `**Tovin Hearthstone:** *Wipes a mug.* "Aye, three nights..."`
  */
 export interface ParsedNpcQuote {
     entityId: string;
@@ -37,8 +37,8 @@ export function extractNpcQuotes(dmText: string, entityNodes: EntityNode[]): Par
         if (!rawName || !rawLine) continue;
 
         // Case-insensitive match against the world graph. We compare against
-        // exact entity names — for now, partial matches (e.g. "Toblen" matching
-        // "Toblen Stonehill") are intentionally not supported, to avoid
+        // exact entity names — for now, partial matches (e.g. "Tovin" matching
+        // "Tovin Hearthstone") are intentionally not supported, to avoid
         // mirroring the wrong NPC's voice into the chat history.
         const entity = entityNodes.find(
             (n) => (n.data.name as string).toLowerCase() === rawName.toLowerCase(),

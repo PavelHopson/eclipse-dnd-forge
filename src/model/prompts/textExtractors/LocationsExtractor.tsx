@@ -24,7 +24,7 @@ export function extractedLocationsToNodeLocations(extractedData: { locations: Lo
 
 export function LocationExtractor(text : string, center: {x: number, y: number}) : Promise<LocationNode[]> {
     const prompt = text +
-    `\n\nYou are extracting locations from a Dungeons & Dragons campaign log or session notes. ` +
+    `\n\nYou are extracting locations from a fantasy tabletop roleplaying campaign log or session notes. ` +
     `Identify every named place that the party visits, references, or hears about as a destination. ` +
     `For each location, extract:\n` +
     `- 'name': the location's proper name\n` +

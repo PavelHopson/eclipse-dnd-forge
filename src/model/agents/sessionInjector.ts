@@ -27,7 +27,7 @@ export function appendParagraphToSession(text: string): void {
  * markdown so it reads naturally inside the session text once promoted.
  *
  * Example output paragraph:
- *   **Toblen Stonehill:** *Pours an ale.* "Aye, three nights ago a streak of fire..."
+ *   **Tovin Hearthstone:** *Pours an ale.* "Aye, three nights ago a streak of fire..."
  */
 export function appendNpcQuoteToSession(speakerName: string, text: string): void {
     const trimmed = text.trim();

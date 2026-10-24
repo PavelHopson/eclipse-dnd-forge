@@ -1,5 +1,6 @@
 import { Entity, useModelStore } from "../Model";
 import { currentModel, currentProvider } from "../../store/useAiConfigStore";
+import { aiRecoveryMessage } from "../ai/requestRecovery";
 
 export interface WorldTickEvent {
     id: string;
@@ -45,7 +46,7 @@ export function buildWorldTickSystemPrompt(ctx: WorldTickContext): string {
         .join("\n") || "- (no other named characters in the world)";
 
     return [
-        `You are running an off-screen world-simulation tick for ${entity.name} in a Dungeons & Dragons 5e campaign.`,
+        `You are running an off-screen world-simulation tick for ${entity.name} in a fantasy tabletop roleplaying 5e campaign.`,
         ``,
         `THE CHARACTER YOU ARE SIMULATING:`,
         `- Name: ${entity.name}`,
@@ -70,12 +71,12 @@ export function buildWorldTickSystemPrompt(ctx: WorldTickContext): string {
         `  "consequence": optional one short sentence describing a surfaceable side-effect the DM can show players later — a rumour, a sighting, a missing item, a new NPC contact, a fresh track. Omit the field entirely if there is nothing the players could plausibly notice.`,
         ``,
         `Examples for tone (do NOT copy them verbatim):`,
-        `  {"action":"Toblen paid five gold to the Redbrand he caught in his stable, hoping to keep them away from his daughter.","consequence":"A traveller saw the exchange — rumours are spreading in Thundertree about Toblen's arrangement."}`,
-        `  {"action":"Cragmaw goblin scouts dragged a fresh captive deeper into the hideout, leaving heavy tracks on the Triboar Trail.","consequence":"A torn merchant cloak with a noble crest was lost in the drag — anyone on the trail this morning would spot it."}`,
-        `  {"action":"Strahd sent a single dire wolf to circle the village of Barovia at dusk, watching Ireena's window.","consequence":"Paw prints too large for an ordinary wolf in the eastern garden."}`,
+        `  {"action":"Tovin paid five gold to the Red Sash he caught in his stable, hoping to keep them away from his daughter.","consequence":"A traveller saw the exchange — rumours are spreading in Emberfall about Tovin's arrangement."}`,
+        `  {"action":"Ashclaw goblin scouts dragged a fresh captive deeper into the hideout, leaving heavy tracks on the Three-Road Trail.","consequence":"A torn merchant cloak with a noble crest was lost in the drag — anyone on the trail this morning would spot it."}`,
+        `  {"action":"Veyr sent a single dire wolf to circle the village of Greyfen at dusk, watching Irena's window.","consequence":"Paw prints too large for an ordinary wolf in the eastern garden."}`,
         ``,
         `RULES:`,
-        `- One concrete action. Stay in character voice and stat block (a cleric of Moradin does not steal; a panicked merchant does not assault anyone).`,
+        `- One concrete action. Stay in character voice and stat block (a cleric of Auron does not steal; a panicked merchant does not assault anyone).`,
         `- No game-mechanic mentions (no rolls, AC, HP, modifiers).`,
         `- The reply MUST be valid JSON parsable by JSON.parse — no markdown fences, no commentary.`,
         `- Match the campaign's language: if scene text is in Russian, write the action and consequence in Russian.`,
@@ -186,14 +187,14 @@ export async function runWorldTick(options: {
                 const event = await tickEntity(node.data as Entity, node.id, tickId);
                 events.push(event);
                 options.onEventCommitted(event);
-            } catch (e: any) {
+            } catch (e) {
                 const failureEvent: WorldTickEvent = {
                     id: `${tickId}-${node.id}-error`,
                     tickId,
                     entityId: node.id,
                     entityName: (node.data as Entity).name,
                     action: "",
-                    raw: `(тик не удался: ${e?.message ?? "неизвестная ошибка"})`,
+                    raw: `(тик не удался: ${aiRecoveryMessage(e)})`,
                     createdAt: Date.now(),
                 };
                 events.push(failureEvent);

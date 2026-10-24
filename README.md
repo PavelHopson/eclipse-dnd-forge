@@ -102,7 +102,7 @@ Eclipse DnD Forge — **операционная система мастера D
 - **Eclipse AI** (managed, инфраструктура активна, UI скрыт) — вход через Eclipse Chat, server-side secrets и per-user budgets; отдельный `#/auth/canary` проверяет identity без включения моделей, а сам provider появится после authenticated canary, rollback и 24h SLO
 - **OpenAI** (cloud) — `gpt-4o` по умолчанию, нужен ключ с <https://platform.openai.com>
 - **Anthropic Claude** (cloud) — `claude-opus-4-7` по умолчанию, нужен ключ с <https://console.anthropic.com>
-- **Ollama** (self-hosted) — локальный daemon, ключ не нужен. Запускать с `OLLAMA_ORIGINS="*"` чтобы браузер мог достучаться
+- **Ollama** (self-hosted) — локальный daemon, ключ не нужен. Запускать с точным origin приложения, например `OLLAMA_ORIGINS="http://localhost:5173"`; wildcard `*` не использовать.
 
 Опционально: **fallback chain** — активный провайдер первым, остальные с валидным конфигом по очереди при ошибках.
 
@@ -160,7 +160,7 @@ JSONPrompt────→ │  generateStructured()       │
 - **Off-screen World Tick** — все сущности с `goal` действуют off-screen параллельно (concurrency cap 3)
 - **Auto-scheduling** — off / 5min / 15min / 1h / 4h, persisted timer переживает reload
 - **DM ↔ Tick awareness** — pending events автоматически складываются в DM system prompt с инструкцией "weave at least one in naturally"
-- **DM ↔ NPC cross-reference** — когда DM воспроизводит `**Toblen:** "..."`, реплика мирится в chat-историю Toblen для будущих диалогов
+- **DM ↔ NPC cross-reference** — когда DM воспроизводит `**Tovin:** "..."`, реплика мирится в chat-историю Tovin для будущих диалогов
 - **Persistent event log** — 200 событий cap, localStorage
 - **Sessions** — главы с AI-recap'ом. Последние 3 recap'а уходят в "PREVIOUSLY ON THIS CAMPAIGN" блок DM-промпта
 
@@ -183,21 +183,21 @@ JSONPrompt────→ │  generateStructured()       │
 
 3 hand-authored seed campaigns с полностью прописанными NPC backstories (goal/secret/knowledge):
 
-- **Phandalin — Lost Mine Opener** (Toblen Stonehill / Linan Swift / Sildar / Cragmaw Goblins)
-- **Barovia — Mists of Strahd** (Strahd / Father Donavich / Mad Mary / Doru)
-- **Cinder Hollow — Falling Star** (Old Mab / Sheriff Vance / Deputy Wren / Clerics of Pelor / Zhentarim Broker / Hooded Stranger)
+- **Emberfall — Broken Lantern Opener** (Tovin Hearthstone / Mara Quill / Edrin / Ashclaw Goblins)
+- **Greyfen — The Long Mist** (Veyr / Father Oren / Mara Grief / Derran)
+- **Cinder Hollow — Falling Star** (Old Mab / Sheriff Vance / Deputy Wren / Clerics of Solara / Umbral Cartel Broker / Hooded Stranger)
 - **Blank Campaign** (пустое поле)
 
 ---
 
 ## 🎬 Полный gameplay loop
 
-1. Открыть [демо](https://dnd.eclipse-forge.ru/) → выбрать провайдера → ввести ключ → запустить **Фандалин**
-2. 👑 **DM** → «Опиши открывающую сцену» → стримит описание таверны → `**Toblen:** «...»` авто-зеркалится в чат-историю Toblen
+1. Открыть [демо](https://dnd.eclipse-forge.ru/) → выбрать провайдера → ввести ключ → запустить **Эмберфолл**
+2. 👑 **DM** → «Опиши открывающую сцену» → стримит описание таверны → `**Tovin:** «...»` авто-зеркалится в чат-историю Tovin
 3. 📜 **Вставить в сессию** → нарратив встаёт в нужное место текста сессии
-4. 💬 Кликнуть Toblen → **Поговорить** → диалог с памятью DM-сцены
+4. 💬 Кликнуть Tovin → **Поговорить** → диалог с памятью DM-сцены
 5. ⏳ Поставить **Авто-тик: Каждые 15 минут** → каждые 15 мин тики → «🌍 N событий ждёт» в DM
-6. На вкладке «Мир и локации» выбрать **логово Cragmaw** → 🪓 **Сгенерировать энкаунтер** → 4 группы монстров с тактикой
+6. На вкладке «Мир и локации» выбрать **логово Ashclaw** → 🪓 **Сгенерировать энкаунтер** → 4 группы монстров с тактикой
 7. 🌍 **Карта мира** → Скопировать бриф → Открыть Azgaar → `Export → JSON → Minimal` → проверить preview → добавить города без дублей
 8. 🗺️ **Карта локации** → выбрать PNG/JPEG/WebP → задать сетку и provenance → сохранить локальный preview с rights state
 9. На вкладке «Герои и NPC» выбрать монстра → ⚔️ **Предложить тактику** → вставить результат в сессию
