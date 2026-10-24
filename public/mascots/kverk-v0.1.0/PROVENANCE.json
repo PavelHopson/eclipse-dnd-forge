@@ -1,0 +1,31 @@
+{
+  "id": "dnd-kverk",
+  "name": "Кверк",
+  "assetVersion": "0.1.0",
+  "contractVersion": "0.1",
+  "status": "working-vector-sketch",
+  "source": "EclipseForgeLanding/docs/eclipse-forge-os/design/mascots/collection.json",
+  "license": "LicenseRef-Eclipse-Internal-Review",
+  "permission": "Local internal prototype only. Public redistribution requires the owner's separate decision. Not final production sprites.",
+  "geometry": {
+    "viewBox": [
+      0,
+      0,
+      256,
+      256
+    ],
+    "anchor": [
+      128,
+      232
+    ]
+  },
+  "normalization": "SVG markup unchanged; one trailing newline added in this snapshot.",
+  "sourceSha256": {
+    "idle.svg": "88b71467ff9aadc29ddc1d5dbfddcf5963ee8b744c38de77b937b5cae841de06",
+    "greet.svg": "7b3bc1c2a3501cbc14a63ef8ef2d01102fe071463cc22e10d047e21726fffa23",
+    "curious.svg": "35a87dcf16ada0eca837eaec64678eeb09f6cbb19a13ddaaf2a6fbc8a2a4ffd3",
+    "delight.svg": "91c0d2bb3ffc3bb14514cb9c6eaa7d9aea1984a9903d861a4190ececbedb6f75",
+    "rest.svg": "91e18ac41836e46e42c3b39647318d79aaee4a0d3de39eb5e7b40abf101e1743"
+  },
+  "provenance": "Original code-authored SVG sketches supplied by A-40 for IDEA-028; no Koboyo art, private photographs or third-party characters used. Product adapter belongs to eclipse-dnd-forge."
+}

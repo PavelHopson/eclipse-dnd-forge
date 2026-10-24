@@ -12,6 +12,9 @@ const CampaignBar = lazy(() => import('./view/dnd/CampaignBar'));
 const SharedTablePage = lazy(() => import('./view/dnd/SharedTablePage'));
 const StudyInterface = lazy(() => import('./study/StudyInterface'));
 const BaselineInterface = lazy(() => import('./study/BaselineInterface'));
+const SelenePreview = lazy(() => import('./view/dnd/SelenePreview'));
+const MascotPreview = lazy(() => import('./view/dnd/MascotPreview'));
+const MascotDirectionBoard = lazy(() => import('./view/dnd/MascotDirectionBoard'));
 
 function RouteLoading() {
   return (
@@ -54,6 +57,18 @@ const router = createHashRouter([
   {
     path: 'baseline',
     element: deferred(<BaselineInterface />),
+  },
+  {
+    path: 'selene-preview',
+    element: deferred(<SelenePreview />),
+  },
+  {
+    path: 'mascots-preview',
+    element: deferred(<MascotPreview />),
+  },
+  {
+    path: 'mascots-directions',
+    element: deferred(<MascotDirectionBoard />),
   },
   {
     path: 'auth/callback',

@@ -5,6 +5,7 @@ import { useAiConfigStore } from "../store/useAiConfigStore";
 import type { AiProviderId } from "../model/ai/types";
 import { useDndIdentity } from "../hooks/useDndIdentity";
 import { MANAGED_AI_ENABLED } from "../model/auth/dndSession";
+import WelcomeFamiliar from "./dnd/WelcomeFamiliar";
 const CampaignLibraryPanel = lazy(() => import("./dnd/CampaignLibraryPanel"));
 
 function CampaignMark() {
@@ -79,6 +80,7 @@ export default function Launcher() {
           <span style={{ fontSize: 13, color: '#5a4a3a', marginTop: 4, marginLeft: 44 }}>
             AI-менеджер кампаний · визуальный граф мира · таймлайн сессий · операционная система мастера
           </span>
+          <WelcomeFamiliar />
         </CardHeader>
         <Divider />
         <CardBody style={{ padding: '16px 24px' }}>
